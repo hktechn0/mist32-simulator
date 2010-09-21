@@ -10,7 +10,7 @@ int gr[32];
 
 int exec(Instruction *buffer, unsigned int size)
 {
-  Instruction inst;
+  Instruction *inst;
   OpcodeTable *opcode_t;
   
   /* opcode table init */
@@ -20,9 +20,11 @@ int exec(Instruction *buffer, unsigned int size)
   
   while(ip < size) {
     /* fetch */
-    inst = buffer[ip++];
-    (*(opcode_t[inst.base.opcode]))(inst);
+    inst = buffer + ip++;
+    (*(opcode_t[inst->base.opcode]))(inst);
   }
+
+  free(opcode_t);
   
   return 0;
 }
@@ -57,6 +59,8 @@ int main(int argc, char **argv)
 
   /* Execute */
   exec(buffer, count);
+  
+  free(buffer);
 
   printf("IP: 0x%x, FLAGS: %d\n", ip * 4, flags);
   for(i = 0; i < 32; i++) {
