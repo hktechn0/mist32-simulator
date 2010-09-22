@@ -36,28 +36,28 @@ void i_sch(Instruction *inst) {
 /* Shift, Rotate */
 void i_lshl(Instruction *inst) {
   if(inst->i5.is_immediate) {
-    (unsigned int)gr[inst->i5.operand] <<= inst->i5.immediate;
+    gr[inst->i5.operand] = (unsigned int)gr[inst->i5.operand] << inst->i5.immediate;
   }
   else {
-    (unsigned int)gr[inst->o2.operand1] <<= gr[inst->o2.operand2];
+    gr[inst->o2.operand1] = (unsigned int)gr[inst->o2.operand1] << gr[inst->o2.operand2];
   }
 }
 
 void i_lshr(Instruction *inst) {
   if(inst->i5.is_immediate) {
-    (unsigned int)gr[inst->i5.operand] >>= inst->i5.immediate;
+    gr[inst->i5.operand] = (unsigned int)gr[inst->i5.operand] >> inst->i5.immediate;
   }
   else {
-    (unsigned int)gr[inst->o2.operand1] >>= gr[inst->o2.operand2];
+    gr[inst->o2.operand1] = (unsigned int)gr[inst->o2.operand1] >> gr[inst->o2.operand2];
   }
 }
 
 void i_ashr(Instruction *inst) {
   if(inst->i5.is_immediate) {
-    (signed int)gr[inst->i5.operand] >>= inst->i5.immediate;
+    gr[inst->i5.operand] >>= inst->i5.immediate;
   }
   else {
-    (signed int)gr[inst->o2.operand1] >>= gr[inst->o2.operand2];
+    gr[inst->o2.operand1] >>= gr[inst->o2.operand2];
   }
 }
 
