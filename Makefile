@@ -1,4 +1,4 @@
-CFLAGS = -g
+CFLAGS = -g -Wall
 OBJS = simulator.o opcode_table.o instructions.o tools.o
 
 simulator: $(OBJS)

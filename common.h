@@ -72,11 +72,13 @@ union instruction {
 };
 
 typedef union instruction Instruction;
-typedef void (**OpcodeTable) (Instruction *);
+typedef void (*pOpcodeFunc) (Instruction *);
+typedef pOpcodeFunc* OpcodeTable;
 
 extern int ip, sp;
 extern int flags;
 extern int gr[32];
 
+OpcodeTable opcode_table_init(void);
 unsigned int immediate_i11(Instruction *inst);
 unsigned int immediate_i16(Instruction *inst);
