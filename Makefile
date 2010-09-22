@@ -9,3 +9,6 @@ simulator: $(OBJS)
 
 simulator.o: common.h
 instructions.o: instructions.h
+
+clean:
+	rm *.o

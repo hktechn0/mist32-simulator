@@ -61,7 +61,7 @@ struct instruction_c {
 };
 
 union instruction {
-  unsigned int value;
+  unsigned int value : 32;
   struct instruction_base base;
   struct instruction_i5   i5;
   struct instruction_i11  i11;
@@ -72,7 +72,7 @@ union instruction {
 };
 
 typedef union instruction Instruction;
-typedef void (*OpcodeTable) (Instruction *);
+typedef void (**OpcodeTable) (Instruction *);
 
 extern int ip, sp;
 extern int flags;

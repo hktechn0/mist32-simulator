@@ -2,10 +2,10 @@
 #include "common.h"
 #include "instructions.h"
 
-OpcodeTable *opcode_table_init(void)
+OpcodeTable opcode_table_init(void)
 {
-  OpcodeTable *opcode_t;
-  opcode_t = (OpcodeTable *)calloc(1024, sizeof(void *));
+  OpcodeTable opcode_t;
+  opcode_t = (OpcodeTable)calloc(1024, sizeof(void *));
   
   opcode_t[0] = i_nop;
   

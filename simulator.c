@@ -11,10 +11,10 @@ int gr[32];
 int exec(Instruction *buffer, unsigned int size)
 {
   Instruction *inst;
-  OpcodeTable *opcode_t;
+  OpcodeTable opcode_t;
   
   /* opcode table init */
-  opcode_t = (OpcodeTable *)opcode_table_init();
+  opcode_t = (OpcodeTable)opcode_table_init();
   
   ip = 0;
   
