@@ -4,9 +4,12 @@
 
 #define BUFFER_SIZE 1024
 
-int ip, sp;
-int flags;
 int gr[32];
+unsigned int ip;
+unsigned int flags;
+
+union memory_p mem;
+union memory_p sp;
 
 int exec(Instruction *buffer, unsigned int size)
 {
@@ -57,11 +60,18 @@ int main(int argc, char **argv)
   count = fread(buffer, sizeof(Instruction), BUFFER_SIZE, fp);
   fclose(fp);
 
+  /* virtual memory allocate */
+  mem.byte = (unsigned char *)malloc(sizeof(unsigned char) * (1024 * 1024));
+
+  /* set stack pointer (bottom of memory) */
+  sp.byte = mem.byte + (1024 * 1024);
+  
   /* Execute */
   exec(buffer, count);
   
+  free(mem.byte);
   free(buffer);
-
+  
   printf("IP: 0x%x, FLAGS: %d\n", ip * 4, flags);
   for(i = 0; i < 32; i++) {
     printf("GR%2d: 0x%08x ", i, gr[i]);

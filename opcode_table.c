@@ -16,17 +16,15 @@ OpcodeTable opcode_table_init(void)
   
   opcode_t[9] = i_sch;
   
-  /*
-  opcode_t[40] = ;
-  opcode_t[41] = ;
-
-  opcode_t[44] = ;
-  opcode_t[45] = ;
-
-  opcode_t[48] = ;
-  opcode_t[49] = ;
-  */
+  opcode_t[40] = i_lshl;
+  opcode_t[41] = i_lshr;
   
+  /*opcode_t[44] = i_ashl;*/
+  opcode_t[45] = i_ashr;
+  
+  /*opcode_t[48] = i_rol;*/
+  opcode_t[49] = i_ror;
+
   opcode_t[60] = i_and;
   opcode_t[61] = i_or;
   opcode_t[62] = i_not;
@@ -34,8 +32,13 @@ OpcodeTable opcode_table_init(void)
   opcode_t[64] = i_nand;
   opcode_t[65] = i_nor;
   
+  opcode_t[90] = i_load;
+  opcode_t[93] = i_store;
+  
   opcode_t[137] = i_push;
   opcode_t[138] = i_pop;
+
+  opcode_t[149] = i_mov;
   
   opcode_t[174] = i_halt;
   

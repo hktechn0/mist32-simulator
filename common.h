@@ -71,13 +71,21 @@ union instruction {
   struct instruction_c    c;
 };
 
+union memory_p {
+  unsigned char *byte;
+  unsigned int *word;
+};
+
 typedef union instruction Instruction;
 typedef void (*pOpcodeFunc) (Instruction *);
 typedef pOpcodeFunc* OpcodeTable;
 
-extern int ip, sp;
-extern int flags;
 extern int gr[32];
+extern unsigned int ip;
+extern unsigned int flags;
+
+extern union memory_p mem;
+extern union memory_p sp;
 
 OpcodeTable opcode_table_init(void);
 unsigned int immediate_i11(Instruction *inst);
