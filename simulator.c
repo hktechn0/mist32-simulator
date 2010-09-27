@@ -6,7 +6,7 @@
 
 int gr[32];
 unsigned int ip;
-unsigned int flags;
+struct FLAGS flags;
 
 union memory_p mem;
 union memory_p sp;
@@ -72,7 +72,9 @@ int main(int argc, char **argv)
   free(mem.byte);
   free(buffer);
   
-  printf("IP: 0x%x, FLAGS: %d\n", ip * 4, flags);
+  printf("IP: 0x%08x\n", ip * 4);
+  printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
+	 flags.zero, flags.parity, flags.carry, flags.overflow, flags.sign);
   for(i = 0; i < 32; i++) {
     printf("GR%2d: 0x%08x ", i, gr[i]);
     if(!((i + 1) % 4)) { printf("\n"); }

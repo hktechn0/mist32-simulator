@@ -60,6 +60,15 @@ struct instruction_c {
   unsigned int _extend      : 1;
 };
 
+struct FLAGS {
+  unsigned int          : 27;
+  unsigned int sign     : 1;
+  unsigned int overflow : 1;
+  unsigned int carry    : 1;
+  unsigned int parity   : 1;
+  unsigned int zero     : 1;
+};
+
 union instruction {
   unsigned int value : 32;
   struct instruction_base base;
@@ -82,11 +91,20 @@ typedef pOpcodeFunc* OpcodeTable;
 
 extern int gr[32];
 extern unsigned int ip;
-extern unsigned int flags;
+extern struct FLAGS flags;
 
 extern union memory_p mem;
 extern union memory_p sp;
 
 OpcodeTable opcode_table_init(void);
+
 unsigned int immediate_i11(Instruction *inst);
 unsigned int immediate_i16(Instruction *inst);
+
+void ops_o2_i5(Instruction *inst, int **op1, int *op2);
+void ops_o2_i11(Instruction *inst, int **op1, int *op2);
+
+void clr_flags(void);
+void set_flags(int value);
+void set_overflow(unsigned int d, unsigned int s, unsigned int r);
+void set_carry(unsigned int d, unsigned int s, unsigned int r);
