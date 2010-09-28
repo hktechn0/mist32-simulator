@@ -42,10 +42,9 @@ void set_flags(int value) {
 }
 
 void set_overflow(unsigned int d, unsigned int s, unsigned int r) {
-  return;
+  flags.overflow = !!(((~(d ^ s)) & (d ^ r)) & 0x80000000);
 }
 
 void set_carry(unsigned int d, unsigned int s, unsigned int r) {
-  printf("CF 0x%x 0x%x 0x%x\n", d, s, r);
   flags.carry = !!(((d & s) | ((d ^ s) & (~r))) & 0x80000000);
 }
