@@ -10,7 +10,7 @@ void i_add(Instruction *inst) {
   int src, result;
   
   ops_o2_i11(inst, &dest, &src);
-
+  
   result = (*dest) + src;
   
   clr_flags();

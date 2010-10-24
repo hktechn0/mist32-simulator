@@ -1,11 +1,28 @@
 #include "common.h"
 
 unsigned int immediate_i11(Instruction *inst) {
-  return (inst->i11.immediate1 << 10) + inst->i11.immediate2;
+  unsigned int imm;
+  
+  imm = (inst->i11.immediate1 << 5) + inst->i11.immediate2;
+  
+  if(inst->i11.immediate1 & 0x20) {
+    /* check immediate sign flag */
+    imm |= (~0x7ff);
+  }
+  
+  return imm;
 }
 
 unsigned int immediate_i16(Instruction *inst) {
-  return (inst->i16.immediate1 << 10) + inst->i16.immediate2;
+  unsigned int imm;
+
+  imm = (inst->i16.immediate1 << 5) + inst->i16.immediate2;
+
+  if(inst->i16.immediate1 & 0x80) {
+    imm |= (~0xff);
+  }
+  
+  return imm;
 }
 
 void ops_o2_i5(Instruction *inst, int **op1, int *op2) {
