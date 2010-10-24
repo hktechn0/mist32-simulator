@@ -19,6 +19,13 @@ void i_exor(Instruction *inst);
 void i_nand(Instruction *inst);
 void i_nor(Instruction *inst);
 
+void i_wb1(Instruction *inst);
+void i_wb2(Instruction *inst);
+void i_clb(Instruction *inst);
+void i_stb(Instruction *inst);
+void i_clw(Instruction *inst);
+void i_stw(Instruction *inst);
+
 void i_load(Instruction *inst);
 void i_store(Instruction *inst);
 

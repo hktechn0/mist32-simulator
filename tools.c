@@ -1,30 +1,37 @@
 #include "common.h"
 
+/* fetch immediate for i11 format */
 unsigned int immediate_i11(Instruction *inst) {
   unsigned int imm;
   
   imm = (inst->i11.immediate1 << 5) + inst->i11.immediate2;
   
+  /* check immediate sign flag */
   if(inst->i11.immediate1 & 0x20) {
-    /* check immediate sign flag */
-    imm |= (~0x7ff);
+    imm |= 0xfffff800;
   }
   
   return imm;
 }
 
+/* fetch immediate for i16 format */
 unsigned int immediate_i16(Instruction *inst) {
   unsigned int imm;
 
   imm = (inst->i16.immediate1 << 5) + inst->i16.immediate2;
 
-  if(inst->i16.immediate1 & 0x80) {
-    imm |= (~0xff);
+  /* check immediate sign flag */
+  if(inst->i16.immediate1 & 0x400) {
+    imm |= 0xffff0000;
   }
   
   return imm;
 }
 
+/* fetch o2 or i5 format operand
+  inst: Instruction struct,
+  op1:  store operand1 pointer (writable, directly to register),
+  op2:  store operand2 (read only) */
 void ops_o2_i5(Instruction *inst, int **op1, int *op2) {
   if(inst->i5.is_immediate) {
     *op1 = &(gr[inst->i5.operand]);
@@ -36,6 +43,10 @@ void ops_o2_i5(Instruction *inst, int **op1, int *op2) {
   }
 }
 
+/* fetch o2 or i11 format operand
+  inst: Instruction struct,
+  op1:  store operand1 pointer (writable, directly to register),
+  op2:  store operand2 (read only) */
 void ops_o2_i11(Instruction *inst, int **op1, int *op2) {
   if(inst->i11.is_immediate) {
     *op1 = &(gr[inst->i11.operand]);

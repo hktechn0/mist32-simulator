@@ -31,6 +31,13 @@ OpcodeTable opcode_table_init(void)
   opcode_t[63] = i_exor;
   opcode_t[64] = i_nand;
   opcode_t[65] = i_nor;
+
+  opcode_t[70] = i_wb1;
+  opcode_t[71] = i_wb2;
+  opcode_t[72] = i_clb;
+  opcode_t[73] = i_stb;
+  opcode_t[74] = i_clw;
+  opcode_t[75] = i_stw;
   
   opcode_t[90] = i_load;
   opcode_t[93] = i_store;
