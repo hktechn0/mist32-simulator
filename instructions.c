@@ -1,4 +1,5 @@
 #include "common.h"
+#define msb(word) (!!((word) & 0x80000000))
 
 void i_nop(Instruction *inst) {
   return;
@@ -14,8 +15,8 @@ void i_add(Instruction *inst) {
   result = (*dest) + src;
   
   clr_flags();
-  set_overflow(*dest, src, result);
-  set_carry(*dest, src, result);
+  flags.overflow = msb(~(*dest) & ~src & result);
+  flags.carry = msb((*dest & src) | (~result & (*dest | src)));
   set_flags(result);
   
   *dest = result;
@@ -30,8 +31,8 @@ void i_sub(Instruction *inst) {
   result = (*dest) - src;
   
   clr_flags();
-  set_overflow(*dest, -src, result);
-  set_carry(*dest, -src, result);
+  flags.overflow = msb(*dest & ~src & ~result);
+  flags.carry = ((unsigned int)*dest < (unsigned int)src);
   set_flags(result);
   
   *dest = result;

@@ -68,11 +68,3 @@ void set_flags(int value) {
   flags.parity = !(value & 0x00000001);
   flags.sign = (value < 0);
 }
-
-void set_overflow(unsigned int d, unsigned int s, unsigned int r) {
-  flags.overflow = !!(((~(d ^ s)) & (d ^ r)) & 0x80000000);
-}
-
-void set_carry(unsigned int d, unsigned int s, unsigned int r) {
-  flags.carry = !!(((d & s) | ((d ^ s) & (~r))) & 0x80000000);
-}
