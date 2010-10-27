@@ -1,0 +1,10 @@
+	XOR	r1, r1
+	ADD	r1, 10
+	PUSH	r1
+	ADD	r1, 100
+	PUSH	r1
+	POP	r2
+	SUB	r2, 5
+	PUSH	r2
+	POP	r3
+	POP	r4
