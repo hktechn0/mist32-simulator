@@ -10,6 +10,7 @@ void i_sch(Instruction *inst);
 void i_lshl(Instruction *inst);
 void i_lshr(Instruction *inst);
 void i_ashr(Instruction *inst);
+void i_rol(Instruction *inst);
 void i_ror(Instruction *inst);
 
 void i_and(Instruction *inst);

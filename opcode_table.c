@@ -19,10 +19,10 @@ OpcodeTable opcode_table_init(void)
   opcode_t[40] = i_lshl;
   opcode_t[41] = i_lshr;
   
-  /*opcode_t[44] = i_ashl;*/
+  opcode_t[44] = i_lshl;
   opcode_t[45] = i_ashr;
   
-  /*opcode_t[48] = i_rol;*/
+  opcode_t[48] = i_rol;
   opcode_t[49] = i_ror;
 
   opcode_t[60] = i_and;

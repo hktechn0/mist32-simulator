@@ -46,6 +46,7 @@ void i_div(Instruction *inst) {
 
 void i_sch(Instruction *inst) {
   gr[inst->o2.operand1] = -gr[inst->o2.operand2];
+  set_flags(gr[inst->o2.operand1]);
 }
 
 /* Shift, Rotate */
@@ -85,13 +86,26 @@ void i_ashr(Instruction *inst) {
   set_flags(*dest);
 }
 
+void i_rol(Instruction *inst) {
+  unsigned int *dest;
+  int n;
+  
+  ops_o2_i5(inst, (int **)&dest, &n);
+  
+  *dest = ((*dest) << n) | ((*dest) >> (32 - n));
+  
+  clr_flags();
+  set_flags(*dest);
+  flags.carry = !!(*dest & 0x00000001);
+}
+
 void i_ror(Instruction *inst) {
   unsigned int *dest;
   int n;
   
   ops_o2_i5(inst, (int **)&dest, &n);
   
-  *dest = ((*dest) << (32 - n)) & ((*dest) >> n);
+  *dest = ((*dest) << (32 - n));
   
   clr_flags();
   set_flags(*dest);
