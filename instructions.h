@@ -1,8 +1,7 @@
-void i_nop(Instruction *inst);
-
 void i_add(Instruction *inst);
 void i_sub(Instruction *inst);
-void i_mul(Instruction *inst);
+void i_mull(Instruction *inst);
+void i_mulh(Instruction *inst);
 void i_div(Instruction *inst);
 
 void i_sch(Instruction *inst);
@@ -35,4 +34,5 @@ void i_pop(Instruction *inst);
 
 void i_mov(Instruction *inst);
 
+void i_nop(Instruction *inst);
 void i_halt(Instruction *inst);

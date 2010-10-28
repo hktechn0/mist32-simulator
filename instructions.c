@@ -1,10 +1,6 @@
 #include "common.h"
 #define msb(word) (!!((word) & 0x80000000))
 
-void i_nop(Instruction *inst) {
-  return;
-}
-
 /* Arithmetic */
 void i_add(Instruction *inst) {
   int *dest;
@@ -38,7 +34,13 @@ void i_sub(Instruction *inst) {
   *dest = result;
 }
 
-void i_mul(Instruction *inst) {
+void i_cmp(Instruction *inst) {
+}
+
+void i_mull(Instruction *inst) {
+}
+
+void i_mulh(Instruction *inst) {
 }
 
 void i_div(Instruction *inst) {
@@ -202,6 +204,10 @@ void i_pop(Instruction *inst) {
 
 void i_mov(Instruction *inst) {
   gr[inst->o2.operand1] = gr[inst->o2.operand2];
+}
+
+void i_nop(Instruction *inst) {
+  return;
 }
 
 void i_halt(Instruction *inst) {
