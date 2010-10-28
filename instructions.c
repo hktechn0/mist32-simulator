@@ -35,6 +35,11 @@ void i_sub(Instruction *inst) {
 }
 
 void i_cmp(Instruction *inst) {
+  int dest;
+  
+  dest = gr[inst->o2.operand1];
+  i_sub(inst);
+  gr[inst->o2.operand1] = dest;
 }
 
 void i_mull(Instruction *inst) {
@@ -49,6 +54,7 @@ void i_div(Instruction *inst) {
 void i_sch(Instruction *inst) {
   gr[inst->o2.operand1] = -gr[inst->o2.operand2];
   set_flags(gr[inst->o2.operand1]);
+  if(gr[inst->o2.operand1] == 0x80000000) { flags.overflow = 1; }
 }
 
 /* Shift, Rotate */
@@ -174,6 +180,10 @@ void i_stw(Instruction *inst) {
   gr[inst->o1.operand1] = (unsigned int)0xffffffff;
 }
 
+void i_mov(Instruction *inst) {
+  gr[inst->o2.operand1] = gr[inst->o2.operand2];
+}
+
 /* Load, Store */
 void i_load(Instruction *inst) {
   if(inst->i11.is_immediate) {
@@ -193,6 +203,15 @@ void i_store(Instruction *inst) {
   }
 }
 
+/* Branch */
+void i_pjmp(Instruction *inst) {
+  ip += src_o1_i11(inst);
+}
+
+void i_djmp(Instruction *inst) {
+  ip = src_o1_i11(inst);
+}
+
 /* Stack */
 void i_push(Instruction *inst) {
   *(--sp.word) = gr[inst->o1.operand1];
@@ -202,14 +221,14 @@ void i_pop(Instruction *inst) {
   gr[inst->o1.operand1] = *(sp.word++);
 }
 
-void i_mov(Instruction *inst) {
-  gr[inst->o2.operand1] = gr[inst->o2.operand2];
-}
-
 void i_nop(Instruction *inst) {
   return;
 }
 
 void i_halt(Instruction *inst) {
+  return;
+}
+
+void i_end(Instruction *inst) {
   return;
 }

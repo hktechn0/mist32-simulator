@@ -58,6 +58,26 @@ void ops_o2_i11(Instruction *inst, int **op1, int *op2) {
   }
 }
 
+/* return source operand value (I11, O2 format) */
+int src_o2_i11(Instruction *inst) {
+  if(inst->i11.is_immediate) {
+    return immediate_i11(inst);
+  }
+  else {
+    return gr[inst->o2.operand2];
+  }
+}
+
+/* return source operand value (I11, O2 format) */
+int src_o1_i11(Instruction *inst) {
+  if(inst->i11.is_immediate) {
+    return immediate_i11(inst);
+  }
+  else {
+    return gr[inst->o1.operand1];
+  }
+}
+
 /* Flags */
 void clr_flags(void) {
   *(unsigned int *)(&flags) = 0;

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "common.h"
 
-#define BUFFER_SIZE 1024
 #define DEBUG (0)
 
 int gr[32];
@@ -16,7 +15,7 @@ void print_registers(void)
 {
   unsigned int i;  
   
-  printf("IP: 0x%08x\n", ip * 4);
+  printf("IP: 0x%08x\n", ip);
   printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
 	 flags.zero, flags.parity, flags.carry, flags.overflow, flags.sign);
   for(i = 0; i < 32; i++) {
@@ -25,27 +24,34 @@ void print_registers(void)
   }
 }
 
-int exec(Instruction *buffer, unsigned int size)
+int exec(unsigned int offset, unsigned int size)
 {
   Instruction *inst;
   OpcodeTable opcode_t;
+  
+  /* insert END instruction to tail */
+  mem.word[size] = 0x1c600000;
   
   /* opcode table init */
   opcode_t = (OpcodeTable)opcode_table_init();
   
   ip = 0;
   
-  while(ip < size) {
+  do {
     /* instruction fetch */
-    inst = buffer + ip++;
+    inst = (Instruction *)(mem.byte + ip);
+    ip += 4;
     
     if(DEBUG) { printf("[debug] Ops: 0x%x, %x\n", inst->base.opcode, inst->value); }
     
     /* execute operation */
     (*(opcode_t[inst->base.opcode]))(inst);
     
-    if(DEBUG) { print_registers(); }
-  }
+    if(DEBUG) {
+      print_registers();
+      getchar();
+    }
+  } while(inst->base.opcode != 227);
   
   free(opcode_t);
   
@@ -54,7 +60,6 @@ int exec(Instruction *buffer, unsigned int size)
 
 int main(int argc, char **argv)
 {
-  Instruction *buffer;
   unsigned int count;
   
   char *filename;
@@ -65,30 +70,26 @@ int main(int argc, char **argv)
     return 0;
   }
   
-  /* Allocate buffer */
-  buffer = (Instruction *)calloc(BUFFER_SIZE, sizeof(Instruction));
-  if(buffer == NULL) {
-    puts("error: can't allocate buffer.");
+  /* Allocate virtual memory */
+  mem.byte = (unsigned char *)malloc(sizeof(unsigned char) * (1024 * 1024));
+  if(mem.byte == NULL) {
+    puts("error: can't allocate virtual memory.");
     return 1;
   }
   
   /* Read binary to execute */
   filename = argv[1];
   fp = fopen(filename, "rb");
-  count = fread(buffer, sizeof(Instruction), BUFFER_SIZE, fp);
+  count = fread(mem.word, sizeof(Instruction), 512, fp);
   fclose(fp);
-
-  /* virtual memory allocate */
-  mem.byte = (unsigned char *)malloc(sizeof(unsigned char) * (1024 * 1024));
-
+  
   /* set stack pointer (bottom of memory) */
   sp.byte = mem.byte + (1024 * 1024);
   
   /* Execute */
-  exec(buffer, count);
+  exec(0, count);
   
   free(mem.byte);
-  free(buffer);
   
   print_registers();
   

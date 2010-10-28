@@ -6,6 +6,8 @@ void i_div(Instruction *inst);
 
 void i_sch(Instruction *inst);
 
+void i_cmp(Instruction *inst);
+
 void i_lshl(Instruction *inst);
 void i_lshr(Instruction *inst);
 void i_ashr(Instruction *inst);
@@ -32,7 +34,11 @@ void i_store(Instruction *inst);
 void i_push(Instruction *inst);
 void i_pop(Instruction *inst);
 
+void i_pjmp(Instruction *inst);
+void i_djmp(Instruction *inst);
+
 void i_mov(Instruction *inst);
 
 void i_nop(Instruction *inst);
 void i_halt(Instruction *inst);
+void i_end(Instruction *inst);

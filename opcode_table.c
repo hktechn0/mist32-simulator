@@ -13,7 +13,7 @@ OpcodeTable opcode_table_init(void)
   opcode_t[3] = i_mulh;
   opcode_t[4] = i_div;
 
-  /*opcode_t[6] = i_cmp;*/
+  opcode_t[6] = i_cmp;
   
   opcode_t[9] = i_sch;
   
@@ -43,13 +43,15 @@ OpcodeTable opcode_table_init(void)
   opcode_t[136] = i_push;
   /*opcode_t[137] = i_ppush;*/
   opcode_t[144] = i_pop;
-
-  /*opcode_t[160] = i_pjmp;
-    opcode_t[162] = i_djmp;*/
-
+  
+  opcode_t[160] = i_pjmp;
+  opcode_t[162] = i_djmp;
+  
   opcode_t[224] = i_nop;
   opcode_t[225] = i_halt;
   opcode_t[226] = i_mov;
+  
+  opcode_t[227] = i_end;
   
   return opcode_t;
 }

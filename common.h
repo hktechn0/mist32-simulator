@@ -104,7 +104,7 @@ unsigned int immediate_i16(Instruction *inst);
 void ops_o2_i5(Instruction *inst, int **op1, int *op2);
 void ops_o2_i11(Instruction *inst, int **op1, int *op2);
 
+int src_o2_i11(Instruction *inst);
+
 void clr_flags(void);
 void set_flags(int value);
-void set_overflow(unsigned int d, unsigned int s, unsigned int r);
-void set_carry(unsigned int d, unsigned int s, unsigned int r);
