@@ -1,5 +1,5 @@
 CFLAGS = -g -Wall
-OBJS = simulator.o opcode_table.o instructions.o tools.o
+OBJS = simulator.o opstable.o instructions.o utils.o
 
 simulator: $(OBJS)
 	cc $(CFLAGS) -o $@ $(OBJS)
@@ -7,7 +7,6 @@ simulator: $(OBJS)
 .c.o:
 	cc $(CFLAGS) -c $<
 
-simulator.o: common.h
 instructions.o: instructions.h
 
 clean:
