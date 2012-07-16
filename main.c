@@ -73,7 +73,8 @@ int main(int argc, char **argv)
       data = NULL;
       while((data = elf_getdata(section, data)) != NULL) {
 	printf("d_off: %8d 0x%08x, d_size: %8d 0x%08x\n",
-	       data->d_off, data->d_off, data->d_size, data->d_size);
+	       (int)data->d_off, (unsigned int)data->d_off,
+	       (int)data->d_size, (unsigned int)data->d_size);
 	/*
 	for(i = 0; i < (data->d_size / 4); i++) {
 	  printf("%08x\n", *(((unsigned int *)data->d_buf) + i));
@@ -104,8 +105,6 @@ int main(int argc, char **argv)
   /* Execute */
   exec((Memory)header->e_entry);
   
-  print_registers();
-
   memory_free();
   elf_end(elf);
   close(elf_fd);

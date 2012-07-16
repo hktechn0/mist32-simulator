@@ -6,11 +6,14 @@
 #define DPUTS if(DEBUG) printf
 #define DEBUG (1)
 
+#define msb(word) (!!((word) & 0x80000000))
+
 extern Memory vmem;
 
 extern int gr[32];
 extern Memory sp;
 extern Memory pc;
+extern Memory next_pc;
 
 struct FLAGS {
   unsigned int          : 27;
@@ -30,14 +33,21 @@ typedef pOpcodeFunc* OpcodeTable;
 OpcodeTable opcode_table_init(void);
 
 /* utils */
-unsigned int immediate_i11(Instruction *inst);
-unsigned int immediate_i16(Instruction *inst);
+unsigned int immediate_ui11(Instruction *inst);
+int immediate_i11(Instruction *inst);
+unsigned int immediate_ui16(Instruction *inst);
+int immediate_i16(Instruction *inst);
 void ops_o2_i11(Instruction *inst, int **op1, int *op2);
+void ops_o2_ui11(Instruction *inst, unsigned int **op1, unsigned int *op2);
 int src_o2_i11(Instruction *inst);
 int src_o1_i11(Instruction *inst);
+int src_jo1_ji16(Instruction *inst);
+unsigned int src_jo1_jui16(Instruction *inst);
 int check_condition(Instruction *inst);
 void clr_flags(void);
 void set_flags(int value);
+void set_flags_add(unsigned int result, unsigned int dest, unsigned int src);
+void set_flags_sub(unsigned int result, unsigned int dest, unsigned int src);
 
 /* simulator */
 void print_registers(void);

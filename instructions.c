@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common.h"
 #include "instructions.h"
 
@@ -10,12 +11,7 @@ void i_add(Instruction *inst)
   ops_o2_i11(inst, &dest, &src);
   
   result = (*dest) + src;
-  
-  clr_flags();
-  flags.overflow = msb(~(*dest) & ~src & result);
-  flags.carry = msb((*dest & src) | (~result & (*dest | src)));
-  set_flags(result);
-  
+  set_flags_add(result, *dest, src);
   *dest = result;
 }
 
@@ -27,13 +23,62 @@ void i_sub(Instruction *inst)
   ops_o2_i11(inst, &dest, &src);
   
   result = (*dest) - src;
+  set_flags_sub(result, *dest, src);
+  *dest = result;
+}
+
+void i_mull(Instruction *inst)
+{
+  int *dest;
+  int src;
+
+  ops_o2_i11(inst, &dest, &src);
+  
+  *dest = *dest * src;
+
+  clr_flags();
+  /* FIXME: flags unavailable */
+}
+
+void i_mulh(Instruction *inst)
+{ 
+  int *dest;
+  int src;
+  long long result;
+
+  ops_o2_i11(inst, &dest, &src);
+
+  result = (long long)(*dest) * (long long)src;
+  *dest = result >> 32;
+
+  clr_flags();
+  /* FIXME: flags unavailable */
+}
+
+void i_udiv(Instruction *inst)
+{
+  unsigned int *dest;
+  unsigned int src;
+
+  ops_o2_ui11(inst, &dest, &src);
+
+  *dest = *dest / src;
   
   clr_flags();
-  flags.overflow = msb(*dest & ~src & ~result);
-  flags.carry = ((unsigned int)*dest < (unsigned int)src);
-  set_flags(result);
+  /* FIXME: flags unavailable */
+}
+
+void i_umod(Instruction *inst)
+{
+  unsigned int *dest;
+  unsigned int src;
+
+  ops_o2_ui11(inst, &dest, &src);
+
+  *dest = *dest % src;
   
-  *dest = result;
+  clr_flags();
+  /* FIXME: flags unavailable */
 }
 
 void i_cmp(Instruction *inst)
@@ -45,29 +90,113 @@ void i_cmp(Instruction *inst)
   gr[inst->o2.operand1] = dest;
 }
 
-void i_mull(Instruction *inst)
-{}
-
-void i_mulh(Instruction *inst)
-{}
-
 void i_div(Instruction *inst)
-{}
+{
+  int *dest;
+  int src;
 
-void i_sch(Instruction *inst)
+  ops_o2_i11(inst, &dest, &src);
+
+  *dest = *dest / src;
+  
+  clr_flags();
+  /* FIXME: flags unavailable */
+}
+
+void i_mod(Instruction *inst)
+{
+  int *dest;
+  int src;
+
+  ops_o2_i11(inst, &dest, &src);
+
+  *dest = *dest % src;
+  
+  clr_flags();
+  /* FIXME: flags unavailable */
+}
+
+void i_neg(Instruction *inst)
 {
   gr[inst->o2.operand1] = -gr[inst->o2.operand2];
   set_flags(gr[inst->o2.operand1]);
   if(gr[inst->o2.operand1] == 0x80000000) { flags.overflow = 1; }
 }
 
-/* Shift, Rotate */
-void i_lshl(Instruction *inst)
+void i_addc(Instruction *inst)
 {
-  unsigned int *dest;
-  int n;
+  int *dest;
+  int src, result;
   
-  ops_o2_i11(inst, (int **)&dest, &n);
+  ops_o2_i11(inst, &dest, &src);
+  
+  result = (*dest) + src;
+  set_flags_add(result, *dest, src);
+  *dest = flags.carry;
+}
+
+void i_inc(Instruction *inst)
+{
+  int *dest;
+  int src, result;
+  
+  dest = &gr[inst->o2.operand1];
+  src = gr[inst->o2.operand2];
+  
+  result = src + 1;
+  set_flags_add(result, src, 1);
+  *dest = result;
+}
+
+void i_dec(Instruction *inst)
+{
+  int *dest;
+  int src, result;
+  
+  dest = &gr[inst->o2.operand1];
+  src = gr[inst->o2.operand2];
+  
+  result = src - 1;
+  set_flags_sub(result, src, 1);
+  *dest = result;
+}
+
+void i_sext8(Instruction *inst)
+{
+  unsigned int *dest, src;
+  
+  dest = (unsigned int *)&gr[inst->o2.operand1];
+  src = (unsigned int)gr[inst->o2.operand2];
+
+  if(src & 0x80) {
+    *dest = src | 0xffffff00;
+  }
+  else {
+    *dest = src & 0xff;
+  }
+}
+
+void i_sext16(Instruction *inst)
+{
+  unsigned int *dest, src;
+  
+  dest = (unsigned int *)&gr[inst->o2.operand1];
+  src = (unsigned int)gr[inst->o2.operand2];
+
+  if(src & 0x8000) {
+    *dest = src | 0xffff0000;
+  }
+  else {
+    *dest = src & 0xffff;
+  }
+}
+
+/* Shift, Rotate */
+void i_shl(Instruction *inst)
+{
+  unsigned int *dest, n;
+  
+  ops_o2_ui11(inst, &dest, &n);
   
   clr_flags();
   flags.carry = (*dest) >> (32 - n);
@@ -75,12 +204,11 @@ void i_lshl(Instruction *inst)
   set_flags(*dest);
 }
 
-void i_lshr(Instruction *inst)
+void i_shr(Instruction *inst)
 {
-  unsigned int *dest;
-  int n;
+  unsigned int *dest, n;
   
-  ops_o2_i11(inst, (int **)&dest, &n);
+  ops_o2_ui11(inst, &dest, &n);
   
   clr_flags();
   flags.carry = (*dest >> (n - 1)) & 0x00000001;
@@ -88,12 +216,11 @@ void i_lshr(Instruction *inst)
   set_flags(*dest);
 }
 
-void i_ashr(Instruction *inst)
+void i_sar(Instruction *inst)
 {
-  int *dest;
-  int n;
+  unsigned int *dest, n;
   
-  ops_o2_i11(inst, (int **)&dest, &n);
+  ops_o2_ui11(inst, &dest, &n);
   
   clr_flags();
   flags.carry = ((*dest) >> (n - 1)) & 0x00000001;
@@ -103,10 +230,9 @@ void i_ashr(Instruction *inst)
 
 void i_rol(Instruction *inst)
 {
-  unsigned int *dest;
-  int n;
+  unsigned int *dest, n;
   
-  ops_o2_i11(inst, (int **)&dest, &n);
+  ops_o2_ui11(inst, &dest, &n);
   
   *dest = ((*dest) << n) | ((*dest) >> (32 - n));
   
@@ -117,10 +243,9 @@ void i_rol(Instruction *inst)
 
 void i_ror(Instruction *inst)
 {
-  unsigned int *dest;
-  int n;
+  unsigned int *dest, n;
   
-  ops_o2_i11(inst, (int **)&dest, &n);
+  ops_o2_ui11(inst, &dest, &n);
   
   *dest = ((*dest) << (32 - n));
   
@@ -149,7 +274,7 @@ void i_not(Instruction *inst)
   gr[inst->o2.operand1] = ~gr[inst->o2.operand2];
 }
 
-void i_exor(Instruction *inst)
+void i_xor(Instruction *inst)
 {
   gr[inst->o2.operand1] ^= gr[inst->o2.operand2];
   clr_flags();
@@ -170,76 +295,157 @@ void i_nor(Instruction *inst)
   set_flags(gr[inst->o2.operand1]);
 }
 
+void i_xnor(Instruction *inst)
+{
+  gr[inst->o2.operand1] = ~(gr[inst->o2.operand1] ^ gr[inst->o2.operand2]);
+  clr_flags();
+  set_flags(gr[inst->o2.operand1]);
+}
+
+void i_test(Instruction *inst)
+{
+  int dest;
+  
+  dest = gr[inst->o2.operand1];
+  i_and(inst);
+  gr[inst->o2.operand1] = dest;
+}
+
 /* Register operations */
-void i_wb1(Instruction *inst)
+void i_wl16(Instruction *inst)
 {
   gr[inst->i16.operand] = ((unsigned int)gr[inst->i16.operand] & 0xffff0000) | (immediate_i16(inst) & 0xffff);
 }
 
-void i_wb2(Instruction *inst)
+void i_wh16(Instruction *inst)
 {
   gr[inst->i16.operand] = ((unsigned int)gr[inst->i16.operand] & 0xffff) | ((immediate_i16(inst) & 0xffff) << 16);
 }
 
-void i_clb(Instruction *inst)
+void i_clrb(Instruction *inst)
 {
   gr[inst->i11.operand] &= ~((unsigned int)0x01 << immediate_i11(inst));
 }
 
-void i_stb(Instruction *inst)
+void i_setb(Instruction *inst)
 {
   gr[inst->i11.operand] |= (unsigned int)0x01 << immediate_i11(inst);
 }
 
-void i_clw(Instruction *inst)
+void i_clr(Instruction *inst)
 {
   gr[inst->o1.operand1] = 0x00000000;
 }
 
-void i_stw(Instruction *inst)
+void i_set(Instruction *inst)
 {
   gr[inst->o1.operand1] = (unsigned int)0xffffffff;
 }
 
-void i_mov(Instruction *inst)
+void i_revb(Instruction *inst)
 {
-  gr[inst->o2.operand1] = gr[inst->o2.operand2];
+  /* FIXME: not implement */
+  exit(EXIT_FAILURE);
+}
+void i_rev8(Instruction *inst)
+{
+  /* FIXME: not implement */
+  exit(EXIT_FAILURE);
+}
+void i_getb(Instruction *inst)
+{
+  /* FIXME: not implement */
+  exit(EXIT_FAILURE);
+}
+void i_get8(Instruction *inst)
+{
+  /* FIXME: not implement */
+  exit(EXIT_FAILURE);
+}
+
+void i_lil(Instruction *inst)
+{
+  gr[inst->i16.operand] = immediate_i16(inst);
+}
+
+void i_lih(Instruction *inst)
+{
+  gr[inst->i16.operand] = (unsigned int)immediate_ui16(inst) << 16;
+}
+
+void i_ulil(Instruction *inst)
+{
+  gr[inst->i16.operand] = immediate_ui16(inst);
 }
 
 /* Load, Store */
-void i_load(Instruction *inst)
+void i_ld8(Instruction *inst)
 {
+  unsigned int *dest, src;
+  
+  ops_o2_ui11(inst, &dest, &src);
+  *dest = *((unsigned char *)MEMP(src));
+}
+
+void i_ld16(Instruction *inst)
+{
+  unsigned int *dest, src;
+  
+  ops_o2_ui11(inst, &dest, &src);
+
   if(inst->i11.is_immediate) {
-    gr[inst->i11.operand] = *((unsigned int *)MEMP(immediate_i11(inst)));
+    src <<= 1;
   }
-  else {
-    gr[inst->o2.operand1] = *((unsigned int *)MEMP(gr[inst->o2.operand2]));
-  }
+  
+  *dest = *((unsigned short *)MEMP(src));
 }
 
-void i_store(Instruction *inst)
+void i_ld32(Instruction *inst)
 {
+  unsigned int *dest, src;
+  
+  ops_o2_ui11(inst, &dest, &src);
+
   if(inst->i11.is_immediate) {
-    *((unsigned int *)MEMP(immediate_i11(inst))) = gr[inst->i11.operand];
+    src <<= 2;
   }
-  else {
-    *((unsigned int *)MEMP(gr[inst->o2.operand2])) = gr[inst->o2.operand1];
-  }
+  
+  *dest = *((unsigned int *)MEMP(src));
 }
 
-/* Branch */
-void i_pjmp(Instruction *inst)
+void i_st8(Instruction *inst)
 {
-  if(check_condition(inst)) {
-    pc += src_o1_i11(inst);
-  }
+  unsigned int *dest, src;
+  
+  ops_o2_ui11(inst, &dest, &src);
+
+  *((unsigned char *)MEMP(src)) = (unsigned char)*dest;
 }
 
-void i_djmp(Instruction *inst)
+void i_st16(Instruction *inst)
 {
-  if(check_condition(inst)) {
-    pc = src_o1_i11(inst);
+  unsigned int *dest, src;
+  
+  ops_o2_ui11(inst, &dest, &src);
+
+  if(inst->i11.is_immediate) {
+    src <<= 1;
   }
+  
+  *((unsigned short *)MEMP(src)) = (unsigned short)*dest;
+}
+
+void i_st32(Instruction *inst)
+{
+  unsigned int *dest, src;
+  
+  ops_o2_ui11(inst, &dest, &src);
+
+  if(inst->i11.is_immediate) {
+    src <<= 2;
+  }
+  
+  *((unsigned int *)MEMP(src)) = *dest;
 }
 
 /* Stack */
@@ -248,9 +454,52 @@ void i_push(Instruction *inst)
   *((int *)MEMP(sp -= 4)) = gr[inst->o1.operand1];
 }
 
+void i_pushpc(Instruction *inst)
+{
+  *((int *)MEMP(sp -= 4)) = pc;
+}
+
 void i_pop(Instruction *inst)
 {
   gr[inst->o1.operand1] = *((int *)MEMP(sp += 4));
+}
+
+/* Branch */
+void i_bur(Instruction *inst)
+{
+  if(check_condition(inst)) {
+    next_pc = pc + src_jo1_jui16(inst);
+  }
+}
+
+void i_br(Instruction *inst)
+{
+  if(check_condition(inst)) {
+    next_pc = pc + src_jo1_ji16(inst);
+  }
+}
+
+void i_b(Instruction *inst)
+{
+  if(check_condition(inst)) {
+    next_pc = src_jo1_jui16(inst);
+  }
+}
+
+void i_ib(Instruction *inst)
+{
+  /* FIXME: not imeplement */
+  exit(EXIT_FAILURE);
+}
+
+void i_srspr(Instruction *inst)
+{
+  gr[inst->o1.operand1] = sp;
+}
+
+void i_srspw(Instruction *inst)
+{
+  sp = gr[inst->o1.operand1];
 }
 
 void i_nop(Instruction *inst)
@@ -260,10 +509,19 @@ void i_nop(Instruction *inst)
 
 void i_halt(Instruction *inst)
 {
-  return;
+  exit(EXIT_FAILURE);
 }
 
-void i_end(Instruction *inst)
+void i_move(Instruction *inst)
 {
-  return;
+  gr[inst->o2.operand1] = gr[inst->o2.operand2];
+}
+
+void i_movepc(Instruction *inst)
+{
+  int *dest, src;
+
+  ops_o2_i11(inst, &dest, &src);
+
+  *dest = pc + src;
 }

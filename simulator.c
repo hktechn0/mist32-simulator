@@ -8,6 +8,7 @@ struct FLAGS flags;
 Memory mem;
 Memory sp;
 Memory pc;
+Memory next_pc;
 
 void print_registers(void)
 {
@@ -30,18 +31,22 @@ int exec(Memory entry_p)
   /* opcode table init */
   opcode_t = (OpcodeTable)opcode_table_init();
   
-  pc = entry_p;
   if(DEBUG) {
     printf("Execution Start: entry = 0x%08x\n", pc);
     print_registers();
   }
   
+  pc = entry_p;
+  
   do {
+    next_pc = ~0;
+
     /* instruction fetch */
     inst = (Instruction *)MEMP(pc);
     
     if(DEBUG) {
-      printf("Op: 0x%03x(%d) Insn: 0x%08x\n",
+      puts("---");
+      printf("Op: 0x%03x(%4d) Insn: 0x%08x\n",
 	     inst->base.opcode, inst->base.opcode, inst->value);
     }
     
@@ -53,9 +58,15 @@ int exec(Memory entry_p)
       getchar();
     }
 
-    pc += 4;
-  } while(inst->base.opcode != 227);
-  
+    if(next_pc != ~0) {
+      pc = next_pc;
+    }
+    else {
+      pc += 4;
+    }
+  } while(pc != 0);
+
+  puts("Program Terminated");
   free(opcode_t);
   
   return 0;

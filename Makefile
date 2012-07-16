@@ -9,6 +9,8 @@ mist32_simulator: $(OBJS)
 	$(CC) $(CFLAGS) -c $<
 
 instructions.o: instructions.h
+opstable.o: instructions.h
+
 common.h: memory.h instruction_format.h
 
 clean:

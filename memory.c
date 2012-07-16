@@ -44,7 +44,7 @@ void *memory_page_addr(Memory addr)
     }
     entry->valid = true;
 
-    DPUTS("[Memory] alloc: Virt 0x%08x, Real 0x%08p on 0x%08x\n",
+    DPUTS("[Memory] alloc: Virt 0x%8p, Real 0x%08x on 0x%08x\n",
 	  entry->addr, addr & PAGE_INDEX_MASK, addr);
   }
 
