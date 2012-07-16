@@ -1,5 +1,5 @@
 #include "common.h"
-#define msb(word) (!!((word) & 0x80000000))
+#include "instructions.h"
 
 /* Arithmetic */
 void i_add(Instruction *inst)
@@ -67,7 +67,7 @@ void i_lshl(Instruction *inst)
   unsigned int *dest;
   int n;
   
-  ops_o2_i5(inst, (int **)&dest, &n);
+  ops_o2_i11(inst, (int **)&dest, &n);
   
   clr_flags();
   flags.carry = (*dest) >> (32 - n);
@@ -80,7 +80,7 @@ void i_lshr(Instruction *inst)
   unsigned int *dest;
   int n;
   
-  ops_o2_i5(inst, (int **)&dest, &n);
+  ops_o2_i11(inst, (int **)&dest, &n);
   
   clr_flags();
   flags.carry = (*dest >> (n - 1)) & 0x00000001;
@@ -93,7 +93,7 @@ void i_ashr(Instruction *inst)
   int *dest;
   int n;
   
-  ops_o2_i5(inst, (int **)&dest, &n);
+  ops_o2_i11(inst, (int **)&dest, &n);
   
   clr_flags();
   flags.carry = ((*dest) >> (n - 1)) & 0x00000001;
@@ -106,7 +106,7 @@ void i_rol(Instruction *inst)
   unsigned int *dest;
   int n;
   
-  ops_o2_i5(inst, (int **)&dest, &n);
+  ops_o2_i11(inst, (int **)&dest, &n);
   
   *dest = ((*dest) << n) | ((*dest) >> (32 - n));
   
@@ -120,7 +120,7 @@ void i_ror(Instruction *inst)
   unsigned int *dest;
   int n;
   
-  ops_o2_i5(inst, (int **)&dest, &n);
+  ops_o2_i11(inst, (int **)&dest, &n);
   
   *dest = ((*dest) << (32 - n));
   
@@ -183,12 +183,12 @@ void i_wb2(Instruction *inst)
 
 void i_clb(Instruction *inst)
 {
-  gr[inst->i5.operand] &= ~((unsigned int)0x01 << inst->i5.immediate);
+  gr[inst->i11.operand] &= ~((unsigned int)0x01 << immediate_i11(inst));
 }
 
 void i_stb(Instruction *inst)
 {
-  gr[inst->i5.operand] |= (unsigned int)0x01 << inst->i5.immediate;
+  gr[inst->i11.operand] |= (unsigned int)0x01 << immediate_i11(inst);
 }
 
 void i_clw(Instruction *inst)
@@ -210,20 +210,20 @@ void i_mov(Instruction *inst)
 void i_load(Instruction *inst)
 {
   if(inst->i11.is_immediate) {
-    gr[inst->i11.operand] = *((unsigned int *)(mem.byte + immediate_i11(inst)));
+    gr[inst->i11.operand] = *((unsigned int *)MEMP(immediate_i11(inst)));
   }
   else {
-    gr[inst->o2.operand1] = *((unsigned int *)(mem.byte + gr[inst->o2.operand2]));
+    gr[inst->o2.operand1] = *((unsigned int *)MEMP(gr[inst->o2.operand2]));
   }
 }
 
 void i_store(Instruction *inst)
 {
   if(inst->i11.is_immediate) {
-    *((unsigned int *)(mem.byte + immediate_i11(inst))) = gr[inst->i11.operand];
+    *((unsigned int *)MEMP(immediate_i11(inst))) = gr[inst->i11.operand];
   }
   else {
-    *((unsigned int *)(mem.byte + gr[inst->o2.operand2])) = gr[inst->o2.operand1];
+    *((unsigned int *)MEMP(gr[inst->o2.operand2])) = gr[inst->o2.operand1];
   }
 }
 
@@ -231,26 +231,26 @@ void i_store(Instruction *inst)
 void i_pjmp(Instruction *inst)
 {
   if(check_condition(inst)) {
-    ip += src_o1_i11(inst);
+    pc += src_o1_i11(inst);
   }
 }
 
 void i_djmp(Instruction *inst)
 {
   if(check_condition(inst)) {
-    ip = src_o1_i11(inst);
+    pc = src_o1_i11(inst);
   }
 }
 
 /* Stack */
 void i_push(Instruction *inst)
 {
-  *(--sp.word) = gr[inst->o1.operand1];
+  *((int *)MEMP(sp -= 4)) = gr[inst->o1.operand1];
 }
 
 void i_pop(Instruction *inst)
 {
-  gr[inst->o1.operand1] = *(sp.word++);
+  gr[inst->o1.operand1] = *((int *)MEMP(sp += 4));
 }
 
 void i_nop(Instruction *inst)

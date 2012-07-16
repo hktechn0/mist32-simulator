@@ -1,13 +1,16 @@
+CC= gcc
 CFLAGS = -g -Wall
-OBJS = simulator.o opstable.o instructions.o utils.o
+OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o
 
-simulator: $(OBJS)
-	cc $(CFLAGS) -o $@ $(OBJS)
+mist32_simulator: $(OBJS)
+	$(CC) $(CFLAGS) -lelf -o $@ $(OBJS)
 
-.c.o:
-	cc $(CFLAGS) -c $<
+.c.o: common.h
+	$(CC) $(CFLAGS) -c $<
 
 instructions.o: instructions.h
+common.h: memory.h instruction_format.h
 
 clean:
-	rm *.o
+	rm *.o mist32_simulator
+

@@ -1,3 +1,5 @@
+#define msb(word) (!!((word) & 0x80000000))
+
 void i_add(Instruction *inst);
 void i_sub(Instruction *inst);
 void i_mull(Instruction *inst);
