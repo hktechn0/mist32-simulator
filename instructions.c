@@ -373,9 +373,11 @@ void i_getb(Instruction *inst)
 
 void i_get8(Instruction *inst)
 {
-  /* FIXME: not implement */
-  fprintf(stderr, "[Error] %s not implemented yet.\n", "get8");
-  exit(EXIT_FAILURE);
+  unsigned int *dest, src;
+
+  ops_o2_ui11(inst, &dest, &src);
+
+  *dest = ((*dest) >> (src * 4)) & 0xff;
 }
 
 void i_lil(Instruction *inst)
