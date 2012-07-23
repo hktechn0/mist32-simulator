@@ -32,8 +32,8 @@ OpcodeTable opcode_table_init(void)
 
   opcode_t[96] = i_and;
   opcode_t[97] = i_or;
-  opcode_t[98] = i_not;
-  opcode_t[99] = i_xor;
+  opcode_t[98] = i_xor;
+  opcode_t[99] = i_not;
   opcode_t[100] = i_nand;
   opcode_t[101] = i_nor;
   opcode_t[102] = i_xnor;

@@ -219,10 +219,11 @@ void i_shr(Instruction *inst)
 
 void i_sar(Instruction *inst)
 {
-  unsigned int *dest, n;
-  
-  ops_o2_ui11(inst, &dest, &n);
-  
+  int *dest;
+  unsigned int n;
+
+  ops_o2_i11(inst, &dest, (int *)&n);
+
   clr_flags();
   flags.carry = ((*dest) >> (n - 1)) & 0x00000001;
   *dest = (*dest) >> n;
@@ -284,21 +285,27 @@ void i_xor(Instruction *inst)
 
 void i_nand(Instruction *inst)
 {
-  gr[inst->o2.operand1] = ~(gr[inst->o2.operand1] & gr[inst->o2.operand2]);
+  i_and(inst);
+  NOT(gr[inst->o2.operand1]);
+
   clr_flags();
   set_flags(gr[inst->o2.operand1]);
 }
 
 void i_nor(Instruction *inst)
 {
-  gr[inst->o2.operand1] = ~(gr[inst->o2.operand1] | gr[inst->o2.operand2]);
+  i_or(inst);
+  NOT(gr[inst->o2.operand1]);
+
   clr_flags();
   set_flags(gr[inst->o2.operand1]);
 }
 
 void i_xnor(Instruction *inst)
 {
-  gr[inst->o2.operand1] = ~(gr[inst->o2.operand1] ^ gr[inst->o2.operand2]);
+  i_xor(inst);
+  NOT(gr[inst->o2.operand1]);
+
   clr_flags();
   set_flags(gr[inst->o2.operand1]);
 }

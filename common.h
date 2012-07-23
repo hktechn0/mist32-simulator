@@ -9,6 +9,7 @@
 #define STACK_DEFAULT 0x04000000
 
 #define msb(word) (!!((word) & 0x80000000))
+#define NOT(reg) (reg = ~reg)
 
 extern Memory vmem;
 
