@@ -1,15 +1,18 @@
+#include <stdbool.h>
+
 #include "memory.h"
 #include "instruction_format.h"
 
 #define EM_MIST32 0x1032
 
 #define DPUTS if(DEBUG) printf
-#define DEBUG (1)
 
 #define STACK_DEFAULT 0x04000000
 
 #define msb(word) (!!((word) & 0x80000000))
 #define NOT(reg) (reg = ~reg)
+
+extern bool DEBUG;
 
 extern Memory vmem;
 

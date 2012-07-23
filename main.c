@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -12,6 +13,8 @@
 #include <gelf.h>
 
 #include "common.h"
+
+bool DEBUG = false;
 
 int main(int argc, char **argv)
 {
@@ -33,11 +36,22 @@ int main(int argc, char **argv)
     puts("error: no input file");
     return 0;
   }
+
+  if(argc == 3) {
+    filename = argv[2];
+
+    if(!strcmp(argv[1], "-d")) {
+      /* debug mode */
+      DEBUG = true;
+    }
+  }
+  else {
+    filename = argv[1];
+  }
   
   elf_version(EV_CURRENT);
 
   /* open ELF object file to exec */
-  filename = argv[1];
   elf_fd = open(filename, O_RDONLY);
   elf = elf_begin(elf_fd, ELF_C_READ, NULL);
 

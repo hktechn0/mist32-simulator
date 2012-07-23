@@ -1,5 +1,5 @@
 CC= gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -O2
 OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o
 
 mist32_simulator: $(OBJS)
