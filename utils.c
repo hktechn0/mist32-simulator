@@ -185,7 +185,11 @@ int check_condition(Instruction *inst)
 /* Flags */
 void clr_flags(void)
 {
-  *(unsigned int *)(&flags) = 0;
+  flags.sign = 0;
+  flags.overflow = 0;
+  flags.carry = 0;
+  flags.parity = 0;
+  flags.zero = 0;
 }
 
 void set_flags(int value)

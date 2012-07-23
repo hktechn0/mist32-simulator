@@ -56,6 +56,7 @@ int exec(Memory entry_p)
       pc += 4;
     }
   } while(!(pc == 0 && gr[31] == 0));
+  /* exit if b rret && rret == 0 */
 
   puts("Program Terminated");
   print_registers();
