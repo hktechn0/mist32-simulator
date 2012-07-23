@@ -6,6 +6,8 @@
 #define DPUTS if(DEBUG) printf
 #define DEBUG (1)
 
+#define STACK_DEFAULT 0x04000000
+
 #define msb(word) (!!((word) & 0x80000000))
 
 extern Memory vmem;
@@ -48,7 +50,8 @@ void clr_flags(void);
 void set_flags(int value);
 void set_flags_add(unsigned int result, unsigned int dest, unsigned int src);
 void set_flags_sub(unsigned int result, unsigned int dest, unsigned int src);
+void print_registers(void);
+void print_stack(Memory sp);
 
 /* simulator */
-void print_registers(void);
 int exec(Memory entry);

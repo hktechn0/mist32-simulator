@@ -75,6 +75,7 @@ OpcodeTable opcode_table_init(void)
   opcode_t[178] = i_b;   /* bn   */
 
   opcode_t[192] = i_srspr;
+  opcode_t[203] = i_sriosr;
   opcode_t[224] = i_srspw;
 
   opcode_t[256] = i_nop;

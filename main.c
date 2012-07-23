@@ -99,9 +99,6 @@ int main(int argc, char **argv)
   /* mist32 binary is big endian */
   memory_convert_endian();
 
-  /* set stack pointer (bottom of memory) */
-  sp = (Memory)UINT_MAX;
-
   /* Execute */
   exec((Memory)header->e_entry);
   

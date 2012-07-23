@@ -10,19 +10,6 @@ Memory sp;
 Memory pc;
 Memory next_pc;
 
-void print_registers(void)
-{
-  unsigned int i;  
-  
-  printf("PC: 0x%08x SP: 0x%08x\n", pc, sp);
-  printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
-	 flags.zero, flags.parity, flags.carry, flags.overflow, flags.sign);
-  for(i = 0; i < 32; i++) {
-    printf("R%2d: 0x%08x (%11d) ", i, gr[i], gr[i]);
-    if(!((i + 1) % 2)) { printf("\n"); }
-  }
-}
-
 int exec(Memory entry_p)
 {
   Instruction *inst;
@@ -31,6 +18,9 @@ int exec(Memory entry_p)
   /* opcode table init */
   opcode_t = (OpcodeTable)opcode_table_init();
   
+  /* set stack pointer (bottom of memory) */
+  sp = (Memory)STACK_DEFAULT;
+
   if(DEBUG) {
     printf("Execution Start: entry = 0x%08x\n", pc);
     print_registers();
@@ -55,6 +45,7 @@ int exec(Memory entry_p)
     
     if(DEBUG) {
       print_registers();
+      print_stack(sp);
       getchar();
     }
 
@@ -64,9 +55,11 @@ int exec(Memory entry_p)
     else {
       pc += 4;
     }
-  } while(pc != 0);
+  } while(!(pc == 0 && gr[31] == 0));
 
   puts("Program Terminated");
+  print_registers();
+
   free(opcode_t);
   
   return 0;

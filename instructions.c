@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
 #include "instructions.h"
@@ -385,6 +386,7 @@ void i_ld8(Instruction *inst)
   
   ops_o2_ui11(inst, &dest, &src);
   *dest = *((unsigned char *)MEMP(src));
+  printf("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 }
 
 void i_ld16(Instruction *inst)
@@ -398,6 +400,7 @@ void i_ld16(Instruction *inst)
   }
   
   *dest = *((unsigned short *)MEMP(src));
+  printf("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
 
 void i_ld32(Instruction *inst)
@@ -411,6 +414,7 @@ void i_ld32(Instruction *inst)
   }
   
   *dest = *((unsigned int *)MEMP(src));
+  printf("[Load ] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 }
 
 void i_st8(Instruction *inst)
@@ -420,6 +424,7 @@ void i_st8(Instruction *inst)
   ops_o2_ui11(inst, &dest, &src);
 
   *((unsigned char *)MEMP(src)) = (unsigned char)*dest;
+  printf("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 }
 
 void i_st16(Instruction *inst)
@@ -433,6 +438,8 @@ void i_st16(Instruction *inst)
   }
   
   *((unsigned short *)MEMP(src)) = (unsigned short)*dest;
+  *dest = *((unsigned short *)MEMP(src));
+  printf("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
 
 void i_st32(Instruction *inst)
@@ -446,22 +453,26 @@ void i_st32(Instruction *inst)
   }
   
   *((unsigned int *)MEMP(src)) = *dest;
+  printf("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 }
 
 /* Stack */
 void i_push(Instruction *inst)
 {
-  *((int *)MEMP(sp -= 4)) = gr[inst->o1.operand1];
+  sp -= 4;
+  *((int *)MEMP(sp)) = gr[inst->o1.operand1];
 }
 
 void i_pushpc(Instruction *inst)
 {
-  *((int *)MEMP(sp -= 4)) = pc;
+  sp -= 4;
+  *((int *)MEMP(sp)) = pc;
 }
 
 void i_pop(Instruction *inst)
 {
-  gr[inst->o1.operand1] = *((int *)MEMP(sp += 4));
+  gr[inst->o1.operand1] = *((int *)MEMP(sp));
+  sp += 4;
 }
 
 /* Branch */
@@ -475,6 +486,7 @@ void i_bur(Instruction *inst)
 void i_br(Instruction *inst)
 {
   if(check_condition(inst)) {
+    printf("[Branch] relative \t0x%08x, pc 0x%08x\n", pc + src_jo1_ji16(inst), pc);
     next_pc = pc + src_jo1_ji16(inst);
   }
 }
@@ -482,6 +494,7 @@ void i_br(Instruction *inst)
 void i_b(Instruction *inst)
 {
   if(check_condition(inst)) {
+    printf("[Branch] direct \t0x%08x, pc 0x%08x\n", src_jo1_jui16(inst), pc);
     next_pc = src_jo1_jui16(inst);
   }
 }
@@ -495,6 +508,11 @@ void i_ib(Instruction *inst)
 void i_srspr(Instruction *inst)
 {
   gr[inst->o1.operand1] = sp;
+}
+
+void i_sriosr(Instruction *inst)
+{
+  gr[inst->o1.operand1] = 0xffec73fc;
 }
 
 void i_srspw(Instruction *inst)
@@ -523,5 +541,5 @@ void i_movepc(Instruction *inst)
 
   ops_o2_i11(inst, &dest, &src);
 
-  *dest = pc + src;
+  *dest = pc + (src << 2);
 }

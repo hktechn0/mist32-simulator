@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <limits.h>
 #include "common.h"
 
@@ -167,11 +168,11 @@ int check_condition(Instruction *inst)
     else { return 0; }
     break;
   case 0xE:
-    if(!flags.zero && (flags.sign == flags.overflow)) { return 1; }
+    if(!((flags.sign ^ flags.overflow) || flags.zero)) { return 1; }
     else { return 0; }
     break;
   case 0xF:
-    if(flags.zero && (!flags.sign == flags.overflow)) { return 1; }
+    if((flags.sign ^ flags.overflow) || flags.zero) { return 1; }
     else { return 0; }
     break;
   default:
@@ -197,23 +198,38 @@ void set_flags(int value)
 void set_flags_add(unsigned int result, unsigned int dest, unsigned int src)
 {
   clr_flags();
-  flags.overflow = msb(~(dest) & ~src & result);
+  flags.overflow = msb(~(dest ^ src) & (dest ^ result));
   flags.carry = msb((dest & src) | (~result & (dest | src)));
   set_flags(result);
+  /*printf("r:%d d:%d s:%d c:%d o:%d\n", (int)result, (int)dest, (int)src, flags.carry, flags.overflow);*/
 }
 
 void set_flags_sub(unsigned int result, unsigned int dest, unsigned int src)
 {
-  clr_flags();
-  flags.overflow = msb(dest & ~src & ~result);
-  flags.carry = (dest < src);
-  set_flags(result);
+  set_flags_add(result, dest, (unsigned int)(-((int)src)));
+}
+
+void print_registers(void)
+{
+  unsigned int i;  
+  
+  printf("PC: 0x%08x SP: 0x%08x\n", pc, sp);
+  printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
+	 flags.zero, flags.parity, flags.carry, flags.overflow, flags.sign);
+  for(i = 0; i < 32; i++) {
+    printf("R%2d: 0x%08x (%11d) ", i, gr[i], gr[i]);
+    if(!((i + 1) % 2)) { printf("\n"); }
+  }
 }
 
 void print_stack(Memory sp)
 {
-  unsigned int i;
-  for(i = 0; i < UINT_MAX; i++) {
-    
+  unsigned int i, data;
+
+  printf("---- Stack ----\n");
+  for(i = sp; i - sp < 40; i += 4) {
+    if(i == 0xffffffff) { break; }
+    data = *(unsigned int *)MEMP(i);
+    printf("0x%08x: 0x%08x (%11d)\n", i, data, data);
   }
 }
