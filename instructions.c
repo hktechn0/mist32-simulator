@@ -353,21 +353,28 @@ void i_set(Instruction *inst)
 void i_revb(Instruction *inst)
 {
   /* FIXME: not implement */
+  fprintf(stderr, "[Error] %s not implemented yet.\n", "revb");
   exit(EXIT_FAILURE);
 }
+
 void i_rev8(Instruction *inst)
 {
   /* FIXME: not implement */
+  fprintf(stderr, "[Error] %s not implemented yet.\n", "rev8");
   exit(EXIT_FAILURE);
 }
 void i_getb(Instruction *inst)
+
 {
   /* FIXME: not implement */
+  fprintf(stderr, "[Error] %s not implemented yet.\n", "getb");
   exit(EXIT_FAILURE);
 }
+
 void i_get8(Instruction *inst)
 {
   /* FIXME: not implement */
+  fprintf(stderr, "[Error] %s not implemented yet.\n", "get8");
   exit(EXIT_FAILURE);
 }
 
@@ -509,6 +516,7 @@ void i_b(Instruction *inst)
 void i_ib(Instruction *inst)
 {
   /* FIXME: not imeplement */
+  fprintf(stderr, "[Error] %s not implemented yet.\n", "ib");
   exit(EXIT_FAILURE);
 }
 
