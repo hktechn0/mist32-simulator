@@ -47,7 +47,7 @@ int exec(Memory entry_p)
     if(DEBUG) {
       print_registers();
       print_stack(sp);
-      getchar();
+      if(DEBUG_I) getchar();
     }
 
     if(next_pc != ~0) {

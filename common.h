@@ -13,6 +13,7 @@
 #define NOT(reg) (reg = ~reg)
 
 extern bool DEBUG;
+extern bool DEBUG_I;
 
 /* Vritual Memory */
 extern Memory vmem;

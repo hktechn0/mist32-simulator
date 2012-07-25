@@ -15,6 +15,7 @@
 #include "common.h"
 
 bool DEBUG = false;
+bool DEBUG_I = false;
 
 int main(int argc, char **argv)
 {
@@ -43,6 +44,11 @@ int main(int argc, char **argv)
     if(!strcmp(argv[1], "-d")) {
       /* debug mode */
       DEBUG = true;
+    }
+    else if(!strcmp(argv[1], "-di")) {
+      /* interactive debug mode */
+      DEBUG = true;
+      DEBUG_I = true;
     }
   }
   else {
