@@ -62,9 +62,12 @@ void i_b(Instruction *inst);
 void i_ib(Instruction *inst);
 
 void i_srspr(Instruction *inst);
+void i_srieir(Instruction *inst);
 void i_sriosr(Instruction *inst);
 void i_sridtr(Instruction *inst);
+
 void i_srspw(Instruction *inst);
+void i_srieiw(Instruction *inst);
 void i_sridtw(Instruction *inst);
 
 void i_nop(Instruction *inst);

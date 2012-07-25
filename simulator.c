@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include "common.h"
 
+/* Registers */
 int gr[32];
-struct FLAGS flags;
-
 Memory mem;
 Memory sp;
 Memory pc;
 Memory next_pc;
 Memory idtr;
+unsigned int sr1;
+struct FLAGS flags;
 
 int exec(Memory entry_p)
 {
@@ -21,6 +22,8 @@ int exec(Memory entry_p)
   
   /* set stack pointer (bottom of memory) */
   sp = (Memory)STACK_DEFAULT;
+
+  sr1 = 0;
 
   if(DEBUG) {
     printf("Execution Start: entry = 0x%08x\n", pc);

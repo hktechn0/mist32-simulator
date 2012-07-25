@@ -26,6 +26,7 @@ extern Memory sp;
 extern Memory pc;
 extern Memory next_pc;
 
+extern unsigned int sr1;
 extern Memory idtr;
 
 struct FLAGS {
