@@ -14,12 +14,18 @@
 
 extern bool DEBUG;
 
+/* Vritual Memory */
 extern Memory vmem;
 
+/* General Register */
 extern int gr[32];
+
+/* System Register */
 extern Memory sp;
 extern Memory pc;
 extern Memory next_pc;
+
+extern Memory idtr;
 
 struct FLAGS {
   unsigned int          : 27;

@@ -532,9 +532,21 @@ void i_sriosr(Instruction *inst)
   gr[inst->o1.operand1] = 0xffec73fc;
 }
 
+void i_sridtr(Instruction *inst)
+{
+  gr[inst->o1.operand1] = (int)idtr;
+  printf("[System] SRIDTR: idtr => 0x%08x\n", idtr);
+}
+
 void i_srspw(Instruction *inst)
 {
   sp = gr[inst->o1.operand1];
+}
+
+void i_sridtw(Instruction *inst)
+{
+  idtr = (Memory)gr[inst->o1.operand1];
+  printf("[System] SRIDTW: idtr <= 0x%08x\n", idtr);
 }
 
 void i_nop(Instruction *inst)

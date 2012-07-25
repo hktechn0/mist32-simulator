@@ -9,6 +9,7 @@ Memory mem;
 Memory sp;
 Memory pc;
 Memory next_pc;
+Memory idtr;
 
 int exec(Memory entry_p)
 {

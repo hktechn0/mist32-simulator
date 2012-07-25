@@ -76,12 +76,16 @@ OpcodeTable opcode_table_init(void)
 
   opcode_t[192] = i_srspr;
   opcode_t[203] = i_sriosr;
+  opcode_t[204] = i_sridtr;
   opcode_t[224] = i_srspw;
+  opcode_t[242] = i_sridtw;
 
   opcode_t[256] = i_nop;
   opcode_t[257] = i_halt;
   opcode_t[258] = i_move;
   opcode_t[259] = i_movepc;
+
+  opcode_t[290] = i_nop; /* idts */
   
   return opcode_t;
 }
