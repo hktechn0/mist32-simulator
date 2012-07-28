@@ -529,7 +529,7 @@ void i_srspr(Instruction *inst)
 
 void i_srieir(Instruction *inst)
 {
-  gr[inst->o1.operand1] = sr1 & 1;
+  gr[inst->o1.operand1] = (sr1 & 0x4) >> 2;
 }
 
 void i_sriosr(Instruction *inst)
@@ -550,8 +550,8 @@ void i_srspw(Instruction *inst)
 
 void i_srieiw(Instruction *inst)
 {
-  sr1 |= (gr[inst->o1.operand1] & 1);
-  printf("[System] SRIEIW: Interrupt %s\n", (sr1 & 1) ? "Enabled" : "Disabled");
+  sr1 |= ((gr[inst->o1.operand1] & 1) << 2);
+  printf("[System] SRIEIW: Interrupt %s\n", ((sr1 & 0x4) >> 2) ? "Enabled" : "Disabled");
 }
 
 void i_sridtw(Instruction *inst)
