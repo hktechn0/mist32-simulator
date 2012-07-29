@@ -27,7 +27,7 @@ void memory_free(void)
 
 void *memory_addr_get(Memory addr)
 {
-  return memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
+  return (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
 }
 
 void *memory_page_addr(Memory addr)
@@ -44,7 +44,7 @@ void *memory_page_addr(Memory addr)
     }
     entry->valid = true;
 
-    DPUTS("[Memory] alloc: Virt 0x%8p, Real 0x%08x on 0x%08x\n",
+    DPUTS("[Memory] alloc: Virt %p, Real 0x%08x on 0x%08x\n",
 	  entry->addr, addr & PAGE_INDEX_MASK, addr);
   }
 

@@ -401,6 +401,7 @@ void i_ld8(Instruction *inst)
   unsigned int *dest, src;
   
   ops_o2_ui11(inst, &dest, &src);
+
   *dest = *((unsigned char *)MEMP(src));
   printf("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 }
@@ -454,7 +455,6 @@ void i_st16(Instruction *inst)
   }
   
   *((unsigned short *)MEMP(src)) = (unsigned short)*dest;
-  *dest = *((unsigned short *)MEMP(src));
   printf("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
 
@@ -534,7 +534,7 @@ void i_srieir(Instruction *inst)
 
 void i_sriosr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = 0xffec73fc;
+  gr[inst->o1.operand1] = IO_START_ADDR;
 }
 
 void i_sridtr(Instruction *inst)

@@ -7,6 +7,7 @@
 
 #define DPUTS if(DEBUG) printf
 
+#define IO_START_ADDR 0xffec75fc
 #define STACK_DEFAULT 0x04000000
 
 #define msb(word) (!!((word) & 0x80000000))
