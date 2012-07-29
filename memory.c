@@ -7,12 +7,18 @@ PageEntry *page_table;
 
 void memory_init(void)
 {
+  unsigned int i;
+
   page_table = calloc(PAGE_ENTRY_NUM, sizeof(PageEntry));
+
+  for(i = 0; i < PAGE_ENTRY_NUM; i++) {
+    page_table[i].valid = false;
+  }
 }
 
 void memory_free(void)
 {
-  int i;
+  unsigned int i;
   PageEntry *entry;
   
   for(i = 0; i < PAGE_ENTRY_NUM; i++) {
@@ -27,7 +33,12 @@ void memory_free(void)
 
 void *memory_addr_get(Memory addr)
 {
-  return (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
+  void *p;
+
+  p = (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
+  /*printf("ref: %p\n", p);*/
+
+  return p;
 }
 
 void *memory_page_addr(Memory addr)
@@ -35,15 +46,15 @@ void *memory_page_addr(Memory addr)
   PageEntry *entry;
   unsigned int page_num;
 
-  page_num = (addr & PAGE_INDEX_MASK) >> PAGE_OFFSET_BIT_NUM;
-  
+  page_num = (addr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
   entry = &page_table[page_num];
+
   if(!entry->valid) {
     if((entry->addr = malloc(PAGE_SIZE)) == NULL) {
       err(EXIT_FAILURE, "page_alloc");
     }
-    entry->valid = true;
 
+    entry->valid = true;
     DPUTS("[Memory] alloc: Virt %p, Real 0x%08x on 0x%08x\n",
 	  entry->addr, addr & PAGE_INDEX_MASK, addr);
   }

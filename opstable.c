@@ -5,7 +5,8 @@
 OpcodeTable opcode_table_init(void)
 {
   OpcodeTable opcode_t;
-  opcode_t = (OpcodeTable)calloc(1024, sizeof(pOpcodeFunc));
+
+  opcode_t = calloc(OPCODE_MAX, sizeof(pOpcodeFunc));
   
   opcode_t[0] = i_add;
   opcode_t[1] = i_sub;

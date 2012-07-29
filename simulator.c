@@ -16,10 +16,10 @@ int exec(Memory entry_p)
 {
   Instruction *inst;
   OpcodeTable opcode_t;
-  
+
   /* opcode table init */
-  opcode_t = (OpcodeTable)opcode_table_init();
-  
+  opcode_t = opcode_table_init();
+
   /* set stack pointer (bottom of memory) */
   sp = (Memory)STACK_DEFAULT;
 
@@ -29,9 +29,9 @@ int exec(Memory entry_p)
     printf("Execution Start: entry = 0x%08x\n", pc);
     print_registers();
   }
-  
+
   pc = entry_p;
-  
+
   do {
     next_pc = ~0;
 

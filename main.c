@@ -19,7 +19,7 @@ bool DEBUG_I = false;
 
 int main(int argc, char **argv)
 {
-  unsigned int i, remaining;
+  unsigned int i, size, remaining;
 
   char *filename;
   int elf_fd;
@@ -83,18 +83,18 @@ int main(int argc, char **argv)
     /* Alloc section */
     if((section_header->sh_flags & SHF_ALLOC) && (section_header->sh_type != SHT_NOBITS)) {
       section_addr = section_header->sh_addr;
-      
-      printf("section load: 0x%08x %s\n", 
-	     section_addr,
-	     elf_strptr(elf, header->e_shstrndx, section_header->sh_name));
-      
+
+      printf("section: %s at 0x%08x\n", 
+	     elf_strptr(elf, header->e_shstrndx, section_header->sh_name), section_addr);
+
       /* Load section data */
       buffer_addr = section_addr;
       data = NULL;
       while((data = elf_getdata(section, data)) != NULL) {
-	printf("d_off: %8d 0x%08x, d_size: %8d 0x%08x\n",
-	       (int)data->d_off, (unsigned int)data->d_off,
-	       (int)data->d_size, (unsigned int)data->d_size);
+	printf("d_off: 0x%08x (%8d), d_size: 0x%08x (%8d)\n",
+	       (unsigned int)data->d_off, (int)data->d_off,
+	       (unsigned int)data->d_size, (int)data->d_size);
+
 	/*
 	for(i = 0; i < (data->d_size / 4); i++) {
 	  printf("%08x\n", *(((unsigned int *)data->d_buf) + i));
@@ -102,11 +102,18 @@ int main(int argc, char **argv)
 	*/
 
 	/* Copy to virtual memory */
-	for(i = 0; i < data->d_size; i += PAGE_SIZE) {
-	  allocp = MEMP(buffer_addr);
+	for(i = 0, size = 0; i < data->d_size; i += size) {
+	  /* data size of remaining */
 	  remaining = data->d_size - i;
-	  if(PAGE_SIZE <= remaining) {
-	    memcpy(allocp, (char *)data->d_buf + i, PAGE_SIZE);
+
+	  /* destination page size of remaining */
+	  size = PAGE_SIZE - (buffer_addr - (buffer_addr & PAGE_INDEX_MASK));
+
+	  /* get real destination from virtual address */
+	  allocp = MEMP(buffer_addr);
+
+	  if(size <= remaining) {
+	    memcpy(allocp, (char *)data->d_buf + i, size);
 	  }
 	  else {
 	    memcpy(allocp, (char *)data->d_buf + i, remaining);
