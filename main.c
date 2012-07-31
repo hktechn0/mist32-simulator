@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	*/
 
 	/* Copy to virtual memory */
-	for(i = 0, size = 0; i < data->d_size; i += size) {
+	for(i = 0, size = 0; i < data->d_size; i += size, buffer_addr += size) {
 	  /* data size of remaining */
 	  remaining = data->d_size - i;
 
