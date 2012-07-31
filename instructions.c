@@ -502,7 +502,7 @@ void i_bur(Instruction *inst)
 void i_br(Instruction *inst)
 {
   if(check_condition(inst)) {
-    printf("[Branch] relative \t0x%08x, pc 0x%08x\n", pc + src_jo1_ji16(inst), pc);
+    printf("[Branch]   R: 0x%08x,   PC: 0x%08x\n", pc + src_jo1_ji16(inst), pc);
     next_pc = pc + src_jo1_ji16(inst);
   }
 }
@@ -510,7 +510,7 @@ void i_br(Instruction *inst)
 void i_b(Instruction *inst)
 {
   if(check_condition(inst)) {
-    printf("[Branch] direct \t0x%08x, pc 0x%08x\n", src_jo1_jui16(inst), pc);
+    printf("[Branch]   D: 0x%08x,   PC: 0x%08x\n", src_jo1_jui16(inst), pc);
     next_pc = src_jo1_jui16(inst);
   }
 }
