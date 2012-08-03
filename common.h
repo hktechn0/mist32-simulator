@@ -5,6 +5,14 @@
 
 #define DPUTS if(DEBUG) printf
 
+#define DEBUG_LD 1
+#define DEBUG_ST 1
+#define DEBUG_JMP 1
+
+#define DEBUGLD if(DEBUG_LD) printf
+#define DEBUGST if(DEBUG_ST) printf
+#define DEBUGJMP if(DEBUG_JMP) printf
+
 #define EM_MIST32 0x1032
 #define IO_START_ADDR 0xffec75fc
 #define STACK_DEFAULT 0x04000000

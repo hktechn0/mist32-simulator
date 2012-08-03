@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "common.h"
 #include "instructions.h"
 
@@ -403,7 +404,7 @@ void i_ld8(Instruction *inst)
   ops_o2_ui11(inst, &dest, &src);
 
   *dest = *((unsigned char *)MEMP(src));
-  printf("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 }
 
 void i_ld16(Instruction *inst)
@@ -417,7 +418,7 @@ void i_ld16(Instruction *inst)
   }
   
   *dest = *((unsigned short *)MEMP(src));
-  printf("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
 
 void i_ld32(Instruction *inst)
@@ -431,7 +432,7 @@ void i_ld32(Instruction *inst)
   }
   
   *dest = *((unsigned int *)MEMP(src));
-  printf("[Load ] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 }
 
 void i_st8(Instruction *inst)
@@ -441,7 +442,7 @@ void i_st8(Instruction *inst)
   ops_o2_ui11(inst, &dest, &src);
 
   *((unsigned char *)MEMP(src)) = (unsigned char)*dest;
-  printf("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
+  DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 }
 
 void i_st16(Instruction *inst)
@@ -455,7 +456,7 @@ void i_st16(Instruction *inst)
   }
   
   *((unsigned short *)MEMP(src)) = (unsigned short)*dest;
-  printf("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
+  DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
 
 void i_st32(Instruction *inst)
@@ -469,7 +470,7 @@ void i_st32(Instruction *inst)
   }
   
   *((unsigned int *)MEMP(src)) = *dest;
-  printf("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
+  DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 }
 
 /* Stack */
@@ -502,7 +503,7 @@ void i_bur(Instruction *inst)
 void i_br(Instruction *inst)
 {
   if(check_condition(inst)) {
-    printf("[Branch]   R: 0x%08x,   PC: 0x%08x\n", pc + src_jo1_ji16(inst), pc);
+    DEBUGJMP("[Branch]   R: 0x%08x,   PC: 0x%08x\n", pc + src_jo1_ji16(inst), pc);
     next_pc = pc + src_jo1_ji16(inst);
   }
 }
@@ -510,7 +511,7 @@ void i_br(Instruction *inst)
 void i_b(Instruction *inst)
 {
   if(check_condition(inst)) {
-    printf("[Branch]   D: 0x%08x,   PC: 0x%08x\n", src_jo1_jui16(inst), pc);
+    DEBUGJMP("[Branch]   D: 0x%08x,   PC: 0x%08x\n", src_jo1_jui16(inst), pc);
     next_pc = src_jo1_jui16(inst);
   }
 }
