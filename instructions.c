@@ -543,6 +543,21 @@ void i_sridtr(Instruction *inst)
   printf("[System] SRIDTR: idtr => 0x%08x\n", idtr);
 }
 
+void i_srfrcr(Instruction *inst)
+{
+  frcr = (unsigned long long)clock();
+}
+
+void i_srfrclr(Instruction *inst)
+{
+  gr[inst->o1.operand1] = (unsigned int)(frcr & 0xffffffff);
+}
+
+void i_srfrchr(Instruction *inst)
+{
+  gr[inst->o1.operand1] = (unsigned int)(frcr >> 32);
+}
+
 void i_srspw(Instruction *inst)
 {
   sp = gr[inst->o1.operand1];

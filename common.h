@@ -29,6 +29,7 @@ extern Memory next_pc;
 
 extern unsigned int sr1;
 extern Memory idtr;
+extern unsigned long long frcr;
 
 struct FLAGS {
   unsigned int          : 27;

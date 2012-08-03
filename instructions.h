@@ -65,6 +65,9 @@ void i_srspr(Instruction *inst);
 void i_srieir(Instruction *inst);
 void i_sriosr(Instruction *inst);
 void i_sridtr(Instruction *inst);
+void i_srfrcr(Instruction *inst);
+void i_srfrclr(Instruction *inst);
+void i_srfrchr(Instruction *inst);
 
 void i_srspw(Instruction *inst);
 void i_srieiw(Instruction *inst);

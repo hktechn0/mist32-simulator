@@ -10,6 +10,7 @@ Memory pc;
 Memory next_pc;
 Memory idtr;
 unsigned int sr1;
+unsigned long long frcr;
 struct FLAGS flags;
 
 int exec(Memory entry_p)
