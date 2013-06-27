@@ -400,8 +400,10 @@ void i_ulil(Instruction *inst)
 void i_ld8(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   ops_o2_ui11(inst, &dest, &src);
+
+  if(src >= iosr) io_load(src);
 
   *dest = *((unsigned char *)MEMP(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
@@ -410,13 +412,15 @@ void i_ld8(Instruction *inst)
 void i_ld16(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   ops_o2_ui11(inst, &dest, &src);
 
   if(inst->i11.is_immediate) {
     src <<= 1;
   }
-  
+
+  if(src >= iosr) io_load(src);
+
   *dest = *((unsigned short *)MEMP(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
@@ -424,13 +428,15 @@ void i_ld16(Instruction *inst)
 void i_ld32(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   ops_o2_ui11(inst, &dest, &src);
 
   if(inst->i11.is_immediate) {
     src <<= 2;
   }
-  
+
+  if(src >= iosr) io_load(src);
+
   *dest = *((unsigned int *)MEMP(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 }
@@ -438,39 +444,45 @@ void i_ld32(Instruction *inst)
 void i_st8(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   ops_o2_ui11(inst, &dest, &src);
 
   *((unsigned char *)MEMP(src)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
+
+  if(src >= iosr) io_store(src);
 }
 
 void i_st16(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   ops_o2_ui11(inst, &dest, &src);
 
   if(inst->i11.is_immediate) {
     src <<= 1;
   }
-  
+
   *((unsigned short *)MEMP(src)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
+
+  if(src >= iosr) io_store(src);
 }
 
 void i_st32(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   ops_o2_ui11(inst, &dest, &src);
 
   if(inst->i11.is_immediate) {
     src <<= 2;
   }
-  
+
   *((unsigned int *)MEMP(src)) = *dest;
   DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
+
+  if(src >= iosr) io_store(src);
 }
 
 /* Stack */

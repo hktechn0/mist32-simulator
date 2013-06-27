@@ -131,7 +131,8 @@ int main(int argc, char **argv)
 
   /* Execute */
   exec((Memory)header->e_entry);
-  
+
+  io_close();  
   memory_free();
   elf_end(elf);
   close(elf_fd);

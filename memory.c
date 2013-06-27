@@ -37,7 +37,7 @@ void *memory_addr_get(Memory addr)
 
   if(addr >= iosr) {
     /* memory mapped IO area */
-    p = io_load(addr);
+    p = io_addr_get(addr);
   }
   else {
     /* virtual memory */
