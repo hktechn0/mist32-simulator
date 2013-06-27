@@ -73,6 +73,9 @@ int main(int argc, char **argv)
   /* page table initialize */
   memory_init();
 
+  /* io initialize */
+  io_init();
+
   /* set first section */
   section = 0;
 

@@ -1,6 +1,7 @@
 #include <stdbool.h>
 
 #include "memory.h"
+#include "io.h"
 #include "instruction_format.h"
 
 #define DPUTS if(DEBUG) printf
@@ -14,7 +15,6 @@
 #define DEBUGJMP if(DEBUG_JMP) printf
 
 #define EM_MIST32 0x1032
-#define IO_START_ADDR 0xffec75fc
 #define STACK_DEFAULT 0x04000000
 #define OPCODE_MAX 1024
 
@@ -38,6 +38,7 @@ extern Memory next_pc;
 extern unsigned int sr1;
 extern Memory idtr;
 extern unsigned long long frcr;
+extern Memory iosr;
 
 struct FLAGS {
   unsigned int          : 27;

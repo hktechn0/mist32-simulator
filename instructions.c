@@ -535,7 +535,7 @@ void i_srieir(Instruction *inst)
 
 void i_sriosr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = IO_START_ADDR;
+  gr[inst->o1.operand1] = iosr;
 }
 
 void i_sridtr(Instruction *inst)

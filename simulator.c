@@ -11,6 +11,7 @@ Memory next_pc;
 Memory idtr;
 unsigned int sr1;
 unsigned long long frcr;
+Memory iosr;
 struct FLAGS flags;
 
 int exec(Memory entry_p)
@@ -51,6 +52,7 @@ int exec(Memory entry_p)
     if(DEBUG) {
       print_registers();
       print_stack(sp);
+      io_info();
       if(DEBUG_I) getchar();
     }
 

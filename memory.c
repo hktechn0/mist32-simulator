@@ -35,8 +35,15 @@ void *memory_addr_get(Memory addr)
 {
   void *p;
 
-  p = (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
-  /*printf("ref: %p\n", p);*/
+  if(addr >= iosr) {
+    /* memory mapped IO area */
+    p = io_load(addr);
+  }
+  else {
+    /* virtual memory */
+    p = (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
+    /* printf("ref: %p\n", p); */
+  }
 
   return p;
 }

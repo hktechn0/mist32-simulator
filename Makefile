@@ -1,6 +1,6 @@
-CC= gcc
-CFLAGS = -g -Wall -O2
-OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o
+CC = gcc
+CFLAGS = -std=gnu99 -g -Wall -O2
+OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o io.o
 
 mist32_simulator: $(OBJS)
 	$(CC) $(CFLAGS) -lelf -o $@ $(OBJS)
