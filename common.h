@@ -14,6 +14,9 @@
 #define DEBUGST if(DEBUG_ST) printf
 #define DEBUGJMP if(DEBUG_JMP) printf
 
+/* Memory Size */
+#define MEMORY_MAX 0x80000000
+
 #define EM_MIST32 0x1032
 #define STACK_DEFAULT 0x04000000
 #define OPCODE_MAX 1024

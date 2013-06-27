@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <err.h>
+#include <sys/mman.h>
 #include "common.h"
 
 void *dps;
@@ -13,14 +14,22 @@ FILE *sci_rxd, *sci_txd;
 
 void dps_init(void)
 {
+  unsigned int *p;
+
   dps = calloc(1, DPS_SIZE);
 
   utim64a = (void *)((char *)dps + DPS_UTIM64A);
   utim64b = (void *)((char *)dps + DPS_UTIM64B);
-  sci = (void *)((char *)dps + DPS_SCI);
 
+  sci = (void *)((char *)dps + DPS_SCI);
   sci_txd = fopen(FIFO_SCI_TXD, "w");
   sci_rxd = fopen(FIFO_SCI_RXD, "r");
+
+  p = (void *)((char *)dps + DPS_MIMSR);
+  *p = MEMORY_MAX;
+  mprotect(p, sizeof(int), PROT_READ);
+
+  mprotect((char *)dps + DPS_LSFLAGS, sizeof(int), PROT_READ);
 
   iosr -= DPS_SIZE;
 }

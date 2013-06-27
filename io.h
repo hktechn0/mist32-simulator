@@ -3,6 +3,7 @@
 #define GCI_HUB_HEADER_SIZE 0x100
 #define GCI_NODE_SIZE 0x400
 
+/* DPS */
 #define DPS_UTIM64A 0x000
 #define DPS_UTIM64B 0x040
 
@@ -26,6 +27,7 @@
 
 #define UTIM64MCFG_ENA 0x1
 
+/* SCI FIFO file */
 #define FIFO_SCI_TXD "./sci_txd"
 #define FIFO_SCI_RXD "./sci_rxd"
 
