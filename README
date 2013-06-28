@@ -1,8 +1,8 @@
-* CPU simulator for MIST1032A
-- http://cpu-labs.com/?MIST1032A
+* CPU simulator for MIST32
+- http://open-arch.org/software/simulator
 
 * Licence
 - GNU General Public License v3
 
 * Contact
-- Hirotaka Kawata <info@techno-st.net>
+- Hirotaka Kawata <hirotaka@techno-st.net>
