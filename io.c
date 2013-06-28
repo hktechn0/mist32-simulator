@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <err.h>
+
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/mman.h>
+
 #include "common.h"
 
 void *dps;
@@ -10,7 +14,7 @@ gci_hub_info *gci_hub;
 dps_utim64 *utim64a, *utim64b;
 dps_sci *sci;
 
-FILE *sci_rxd, *sci_txd;
+int fd_scitxd, fd_scirxd;
 
 void dps_init(void)
 {
@@ -22,8 +26,8 @@ void dps_init(void)
   utim64b = (void *)((char *)dps + DPS_UTIM64B);
 
   sci = (void *)((char *)dps + DPS_SCI);
-  sci_txd = fopen(FIFO_SCI_TXD, "w");
-  sci_rxd = fopen(FIFO_SCI_RXD, "r");
+  fd_scitxd = open(FIFO_SCI_TXD, O_WRONLY);
+  fd_scirxd = open(FIFO_SCI_RXD, O_RDONLY | O_NONBLOCK);
 
   p = (void *)((char *)dps + DPS_MIMSR);
   *p = MEMORY_MAX;
@@ -36,8 +40,8 @@ void dps_init(void)
 
 void dps_close(void)
 {
-  fclose(sci_txd);
-  fclose(sci_rxd);
+  close(fd_scitxd);
+  close(fd_scirxd);
 
   free(dps);
 }
@@ -107,7 +111,7 @@ void io_load(Memory addr)
   addr &= ~0x03;
 
   if(addr == iosr + DPS_SCIRXD) {
-    if((sci->cfg & SCICFG_REN) && (c = fgetc(sci_rxd)) != EOF) {
+    if((sci->cfg & SCICFG_REN) && read(fd_scirxd, &c, 1) > 0) {
       sci->rxd = ((unsigned int)c & 0xff) | SCIRXD_VALID;
     }
     else {
@@ -118,12 +122,14 @@ void io_load(Memory addr)
 
 void io_store(Memory addr)
 {
+  char c;
+
   /* word align */
   addr &= ~0x03;
   
   if(addr == iosr + DPS_SCITXD && sci->cfg & SCICFG_TEN) {
-    fputc(sci->txd & 0xff, sci_txd);
-    fflush(sci_txd);
+    c = sci->txd & 0xff;
+    write(fd_scitxd, &c, 1);
   }
 }
 
@@ -133,12 +139,12 @@ void io_info(void)
   printf("[SCI] TXD: %02x '%c' RXD: %d_%02x '%c' CFG: %08x\n",
 	 sci->txd, sci->txd, sci->rxd & SCIRXD_VALID, sci->rxd, sci->rxd, sci->cfg);
   printf("[UTIM64] A: %d B: %d\n", utim64a->mcfg & UTIM64MCFG_ENA, utim64b->mcfg & UTIM64MCFG_ENA);
-  printf("  A CC0: %08x CC1 %08x CC2 %08x CC3 %08x\n",
+  printf("  A: CC0 %08x CC1 %08x CC2 %08x CC3 %08x\n",
 	 utim64a->cc0[1], utim64a->cc1[1], utim64a->cc2[1], utim64a->cc3[1]);
-  printf("       : %08x     %08x     %08x     %08x\n",
+  printf("CFG      %08x     %08x     %08x     %08x\n",
 	 utim64a->cc0cfg, utim64a->cc1cfg, utim64a->cc2cfg, utim64a->cc3cfg);
-  printf("  B CC0: %08x CC1 %08x CC2 %08x CC3 %08x\n",
+  printf("  B: CC0 %08x CC1 %08x CC2 %08x CC3 %08x\n",
 	 utim64b->cc0[1], utim64b->cc1[1], utim64b->cc2[1], utim64b->cc3[1]);
-  printf("       : %08x     %08x     %08x     %08x\n",
+  printf("CFG      %08x     %08x     %08x     %08x\n",
 	 utim64b->cc0cfg, utim64b->cc1cfg, utim64b->cc2cfg, utim64b->cc3cfg);
 }
