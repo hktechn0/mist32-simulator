@@ -364,8 +364,8 @@ void i_rev8(Instruction *inst)
   fprintf(stderr, "[Error] %s not implemented yet.\n", "rev8");
   exit(EXIT_FAILURE);
 }
-void i_getb(Instruction *inst)
 
+void i_getb(Instruction *inst)
 {
   /* FIXME: not implement */
   fprintf(stderr, "[Error] %s not implemented yet.\n", "getb");
@@ -515,7 +515,7 @@ void i_bur(Instruction *inst)
 void i_br(Instruction *inst)
 {
   if(check_condition(inst)) {
-    DEBUGJMP("[Branch]   R: 0x%08x,   PC: 0x%08x\n", pc + src_jo1_ji16(inst), pc);
+    DEBUGJMP("[Branch]   R: 0x%08x, Cond: %X, PC: 0x%08x\n", pc + src_jo1_ji16(inst), inst->ji16.condition, pc);
     next_pc = pc + src_jo1_ji16(inst);
   }
 }
@@ -523,7 +523,7 @@ void i_br(Instruction *inst)
 void i_b(Instruction *inst)
 {
   if(check_condition(inst)) {
-    DEBUGJMP("[Branch]   D: 0x%08x,   PC: 0x%08x\n", src_jo1_jui16(inst), pc);
+    DEBUGJMP("[Branch]   D: 0x%08x, Cond: %X, PC: 0x%08x\n", src_jo1_jui16(inst), inst->ji16.condition, pc);
     next_pc = src_jo1_jui16(inst);
   }
 }

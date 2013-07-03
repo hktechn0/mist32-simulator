@@ -3,6 +3,10 @@
 #define GCI_HUB_HEADER_SIZE 0x100
 #define GCI_NODE_SIZE 0x400
 
+#define GCI_NODE_MAX 4
+#define GCI_KMC_NUM 0
+#define GCI_DISPLAY_NUM 1
+
 /* DPS */
 #define DPS_UTIM64A 0x000
 #define DPS_UTIM64B 0x040
@@ -31,6 +35,23 @@
 #define FIFO_SCI_TXD "./sci_txd"
 #define FIFO_SCI_RXD "./sci_rxd"
 
+#define GCI_KMC_PRIORITY 0x08
+#define GCI_KMC_INT_PRIORITY 0xff
+#define GCI_DISPLAY_PRIORITY 0xff
+#define GCI_DISPLAY_INT_PRIORITY 0xff
+
+#define GCI_KMC_AREA_SIZE 0x0004
+#define GCI_DISPLAY_CHAR_SIZE 0xc000
+#define GCI_DISPLAY_BITMAP_SIZE 0x400000
+#define GCI_DISPLAY_AREA_SIZE (GCI_DISPLAY_CHAR_SIZE + GCI_DISPLAY_BITMAP_SIZE)
+
+/* Display */
+#define DISPLAY_CHAR_WIDTH 80
+#define DISPLAY_CHAR_HEIGHT 34
+#define DISPLAY_BITMAP_OFFSET 0xc000
+#define DISPLAY_WIDTH 640
+#define DISPLAY_HEIGHT 480
+
 typedef volatile struct _gci_hub_info {
   unsigned int total;
   unsigned int space_size;
@@ -43,6 +64,18 @@ typedef volatile struct _gci_hub_node {
   unsigned int _reserved2;
   unsigned int _reserved3;
 } gci_hub_node;
+
+typedef volatile struct _gci_node_info {
+  unsigned int area_size;
+  unsigned int int_priority;
+  volatile unsigned int int_factor;
+  unsigned int _reserved;
+} gci_node_info;
+
+typedef struct _gci_node {
+  gci_node_info *node_info;
+  void *device_area;
+} gci_node;
 
 typedef volatile struct _dps_utim64 {
   volatile unsigned int mcfg;
@@ -69,3 +102,7 @@ void *io_addr_get(Memory addr);
 void io_load(Memory addr);
 void io_store(Memory addr);
 void io_info(void);
+void gci_info(void);
+
+void gci_kmc_read(Memory addr, Memory offset, void *mem);
+void gci_display_write(Memory addr, Memory offset, void *mem);

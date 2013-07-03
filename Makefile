@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=gnu99 -g -Wall -O2
+CFLAGS = -std=gnu99 -g -Wall -O0
 OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o io.o
 FIFO = sci_txd sci_rxd
 

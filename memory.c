@@ -86,8 +86,10 @@ void page_convert_endian(unsigned int *page)
   unsigned int i;
   unsigned int *value;
 
+  value = page;
+
   for(i = 0; i < PAGE_SIZE_IN_WORD; i++) {
-    value = page + i;
     *value = (*value >> 24) | (*value << 24) | ((*value >> 8) & 0xff00) | ((*value << 8) & 0xff0000);
+    value++;
   }
 }
