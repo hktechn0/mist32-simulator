@@ -211,6 +211,10 @@ void set_flags_add(unsigned int result, unsigned int dest, unsigned int src)
 void set_flags_sub(unsigned int result, unsigned int dest, unsigned int src)
 {
   set_flags_add(result, dest, (unsigned int)(-((int)src)));
+
+  if(src == 0) {
+    flags.carry = 1;
+  }
 }
 
 void print_registers(void)
