@@ -405,7 +405,7 @@ void i_ld8(Instruction *inst)
 
   if(src >= iosr) io_load(src);
 
-  *dest = *((unsigned char *)MEMP(src));
+  *dest = *((unsigned char *)MEMP8(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 }
 
@@ -421,7 +421,7 @@ void i_ld16(Instruction *inst)
 
   if(src >= iosr) io_load(src);
 
-  *dest = *((unsigned short *)MEMP(src));
+  *dest = *((unsigned short *)MEMP16(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 }
 
@@ -447,7 +447,7 @@ void i_st8(Instruction *inst)
 
   ops_o2_ui11(inst, &dest, &src);
 
-  *((unsigned char *)MEMP(src)) = (unsigned char)*dest;
+  *((unsigned char *)MEMP8(src)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 
   if(src >= iosr) io_store(src);
@@ -463,7 +463,7 @@ void i_st16(Instruction *inst)
     src <<= 1;
   }
 
-  *((unsigned short *)MEMP(src)) = (unsigned short)*dest;
+  *((unsigned short *)MEMP16(src)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 
   if(src >= iosr) io_store(src);
