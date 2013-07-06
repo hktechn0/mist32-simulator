@@ -4,12 +4,11 @@
 #include "io.h"
 #include "instruction_format.h"
 
-#define DPUTS if(DEBUG) printf
-
 #define DEBUG_LD 1
 #define DEBUG_ST 1
 #define DEBUG_JMP 1
 
+#define DPUTS if(DEBUG) printf
 #define DEBUGLD if(DEBUG_LD) printf
 #define DEBUGST if(DEBUG_ST) printf
 #define DEBUGJMP if(DEBUG_JMP) printf

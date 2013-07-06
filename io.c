@@ -7,6 +7,7 @@
 #include <sys/mman.h>
 
 #include "common.h"
+#include "gci_device.h"
 
 void *dps;
 
@@ -17,7 +18,7 @@ gci_node gci_nodes[4];
 dps_utim64 *utim64a, *utim64b;
 dps_sci *sci;
 
-int fd_scitxd, fd_scirxd;
+int fd_scitxd, fd_scirxd, fd_dispchar;
 
 void dps_init(void)
 {
@@ -25,17 +26,21 @@ void dps_init(void)
 
   dps = calloc(1, DPS_SIZE);
 
+  /* UTIM 64 */
   utim64a = (void *)((char *)dps + DPS_UTIM64A);
   utim64b = (void *)((char *)dps + DPS_UTIM64B);
 
+  /* SCI */
   sci = (void *)((char *)dps + DPS_SCI);
   fd_scitxd = open(FIFO_SCI_TXD, O_WRONLY);
   fd_scirxd = open(FIFO_SCI_RXD, O_RDONLY | O_NONBLOCK);
 
+  /* MI */
   p = (void *)((char *)dps + DPS_MIMSR);
   *p = MEMORY_MAX_ADDR;
   mprotect(p, sizeof(int), PROT_READ);
 
+  /* LSFLAGS */
   mprotect((char *)dps + DPS_LSFLAGS, sizeof(int), PROT_READ);
 
   iosr -= DPS_SIZE;
@@ -77,6 +82,8 @@ void gci_init(void)
   gci_hub->space_size += gci_hub_nodes[GCI_KMC_NUM].size;
 
   /* STD-DISPLAY */
+  fd_dispchar = open(FIFO_DISPLAY_CHAR, O_WRONLY);
+
   gci_nodes[GCI_DISPLAY_NUM].node_info = calloc(1, GCI_NODE_SIZE);
   gci_nodes[GCI_DISPLAY_NUM].device_area = calloc(1, GCI_DISPLAY_AREA_SIZE);
 
@@ -111,6 +118,8 @@ void gci_close(void)
     free((void *)gci_nodes[i].node_info);
     free(gci_nodes[i].device_area);
   }
+
+  close(fd_dispchar);
 
   free((void *)gci_hub);
 }
@@ -158,7 +167,6 @@ void *io_addr_get(Memory addr)
   }
   else {
     p = DPS_SIZE + GCI_HUB_SIZE;
-    DPUTS("[I/O] GCI Node\n");
 
     for(i = 0; i < GCI_NODE_MAX; i++) {
       if(offset < p + GCI_NODE_SIZE) {
@@ -301,33 +309,5 @@ void gci_info(void)
 
   for(i = 0; i < gci_hub->total; i++) {
     printf("[GCI Node %d] Size: %08x, Priority: %u\n", i, gci_hub_nodes[i].size, gci_hub_nodes[i].priority);
-  }
-}
-
-
-/* GCI Device Emulation */
-
-void gci_kmc_read(Memory addr, Memory offset, void *mem)
-{
-}
-
-void gci_display_write(Memory addr, Memory offset, void *mem)
-{
-  unsigned int c, fg, bg;
-  char chr;
-
-  if(offset < GCI_DISPLAY_CHAR_SIZE) {
-    c = *(unsigned int *)((char *)mem + offset);
-
-    /* char code, char color, bg color */
-    chr = c & 0x7f;
-    fg = (c >> 8) & 0xfff;
-    bg = (c >> 20) & 0xfff;
-
-    DPUTS("[I/O] DISPLAY CHAR: '%c' (%02x) at %dx%d\n", chr, chr,
-	  offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
-  }
-  else {
-    DPUTS("[I/O] DISPLAY BITMAP\n");
   }
 }

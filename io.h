@@ -31,9 +31,10 @@
 
 #define UTIM64MCFG_ENA 0x1
 
-/* SCI FIFO file */
+/* FIFO files */
 #define FIFO_SCI_TXD "./sci_txd"
 #define FIFO_SCI_RXD "./sci_rxd"
+#define FIFO_DISPLAY_CHAR "./gci_display_char"
 
 #define GCI_KMC_PRIORITY 0x08
 #define GCI_KMC_INT_PRIORITY 0xff
@@ -103,6 +104,3 @@ void io_load(Memory addr);
 void io_store(Memory addr);
 void io_info(void);
 void gci_info(void);
-
-void gci_kmc_read(Memory addr, Memory offset, void *mem);
-void gci_display_write(Memory addr, Memory offset, void *mem);
