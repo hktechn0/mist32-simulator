@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <err.h>
 #include "common.h"
 #include "instructions.h"
 
@@ -403,7 +404,9 @@ void i_ld8(Instruction *inst)
 
   ops_o2_ui11(inst, &dest, &src);
 
-  if(src >= iosr) io_load(src);
+  if(src >= iosr) {
+    errx(EXIT_FAILURE, "ld8: only word access accepted in IO area.");
+  }
 
   *dest = *((unsigned char *)MEMP8(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
@@ -419,7 +422,12 @@ void i_ld16(Instruction *inst)
     src <<= 1;
   }
 
-  if(src >= iosr) io_load(src);
+  if(src & 0x1) {
+    errx(EXIT_FAILURE, "ld16: invalid alignment.");
+  }
+  else if(src >= iosr) {
+    errx(EXIT_FAILURE, "ld16: only word access accepted in IO area.");
+  }
 
   *dest = *((unsigned short *)MEMP16(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
@@ -435,7 +443,12 @@ void i_ld32(Instruction *inst)
     src <<= 2;
   }
 
-  if(src >= iosr) io_load(src);
+  if(src & 0x3) {
+    errx(EXIT_FAILURE, "ld32: invalid alignment.");
+  }
+  else if(src >= iosr) {
+    io_load(src);
+  }
 
   *dest = *((unsigned int *)MEMP(src));
   DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
@@ -450,7 +463,9 @@ void i_st8(Instruction *inst)
   *((unsigned char *)MEMP8(src)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 
-  if(src >= iosr) io_store(src);
+  if(src >= iosr) {
+    errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
+  }
 }
 
 void i_st16(Instruction *inst)
@@ -463,10 +478,16 @@ void i_st16(Instruction *inst)
     src <<= 1;
   }
 
+  if(src & 0x1) {
+    errx(EXIT_FAILURE, "st16: invalid alignment.");
+  }
+
   *((unsigned short *)MEMP16(src)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 
-  if(src >= iosr) io_store(src);
+  if(src >= iosr) {
+    errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
+  }
 }
 
 void i_st32(Instruction *inst)
@@ -479,10 +500,16 @@ void i_st32(Instruction *inst)
     src <<= 2;
   }
 
+  if(src & 0x3) {
+    errx(EXIT_FAILURE, "st32: invalid alignment.");
+  }
+
   *((unsigned int *)MEMP(src)) = *dest;
   DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 
-  if(src >= iosr) io_store(src);
+  if(src >= iosr) {
+    io_store(src);
+  }
 }
 
 /* Stack */
