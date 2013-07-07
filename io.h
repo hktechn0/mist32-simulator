@@ -3,10 +3,6 @@
 #define GCI_HUB_HEADER_SIZE 0x100
 #define GCI_NODE_SIZE 0x400
 
-#define GCI_NODE_MAX 4
-#define GCI_KMC_NUM 0
-#define GCI_DISPLAY_NUM 1
-
 /* DPS */
 #define DPS_UTIM64A 0x000
 #define DPS_UTIM64B 0x040
@@ -36,6 +32,17 @@
 #define FIFO_SCI_RXD "./sci_rxd"
 #define FIFO_DISPLAY_CHAR "./gci_display_char"
 
+/* GCI */
+#define GCI_NODE_MAX 4
+#define GCI_KMC_NUM 0
+#define GCI_DISPLAY_NUM 1
+
+/* Display */
+#define DISPLAY_CHAR_WIDTH 80
+#define DISPLAY_CHAR_HEIGHT 34
+#define DISPLAY_WIDTH 640
+#define DISPLAY_HEIGHT 480
+
 #define GCI_KMC_PRIORITY 0x08
 #define GCI_KMC_INT_PRIORITY 0xff
 #define GCI_DISPLAY_PRIORITY 0xff
@@ -45,13 +52,6 @@
 #define GCI_DISPLAY_CHAR_SIZE 0xc000
 #define GCI_DISPLAY_BITMAP_SIZE 0x400000
 #define GCI_DISPLAY_AREA_SIZE (GCI_DISPLAY_CHAR_SIZE + GCI_DISPLAY_BITMAP_SIZE)
-
-/* Display */
-#define DISPLAY_CHAR_WIDTH 80
-#define DISPLAY_CHAR_HEIGHT 34
-#define DISPLAY_BITMAP_OFFSET 0xc000
-#define DISPLAY_WIDTH 640
-#define DISPLAY_HEIGHT 480
 
 typedef volatile struct _gci_hub_info {
   unsigned int total;

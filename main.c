@@ -79,6 +79,8 @@ int main(int argc, char **argv)
   /* set first section */
   section = 0;
 
+  printf("---- Loading ELF ----\n");
+
   /* Load ELF object */
   while((section = elf_nextscn(elf, section)) != 0) {
     section_header = elf32_getshdr(section);
@@ -128,6 +130,8 @@ int main(int argc, char **argv)
 
   /* mist32 binary is big endian */
   memory_convert_endian();
+
+  printf("---- Start ----\n");
 
   /* Execute */
   exec((Memory)header->e_entry);

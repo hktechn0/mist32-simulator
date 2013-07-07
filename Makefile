@@ -1,20 +1,18 @@
 CC = gcc
-CFLAGS = -std=gnu99 -g -Wall -O0
-OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o io.o gci_device.o
+CFLAGS = -std=gnu99 -g -Wall -O2
+OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o io.o gci_device.o monitor_server.o
 FIFO = sci_txd sci_rxd gci_display_char
 
 mist32_simulator: $(OBJS) $(FIFO)
-	$(CC) $(CFLAGS) -lelf -o $@ $(OBJS)
+	$(CC) $(CFLAGS) -lelf -lmsgpack -o $@ $(OBJS)
 
 .c.o: common.h
 	$(CC) $(CFLAGS) -c $<
 
-instructions.o: instructions.h
-opstable.o: instructions.h
-gci_device.o: gci_device.h
-io.o: gci_device.h
-
 common.h: memory.h instruction_format.h io.h
+
+instructions.o opstable.o: instructions.h
+io.o gci_device.o monitor_server.o: gci_device.h monitor.h
 
 $(FIFO):
 	mkfifo $@

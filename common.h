@@ -4,14 +4,16 @@
 #include "io.h"
 #include "instruction_format.h"
 
-#define DEBUG_LD 1
-#define DEBUG_ST 1
-#define DEBUG_JMP 1
+#define DEBUG_LD (DEBUG && 1)
+#define DEBUG_ST (DEBUG && 1)
+#define DEBUG_JMP (DEBUG && 1)
+#define DEBUG_MON (DEBUG && 1)
 
 #define DPUTS if(DEBUG) printf
 #define DEBUGLD if(DEBUG_LD) printf
 #define DEBUGST if(DEBUG_ST) printf
 #define DEBUGJMP if(DEBUG_JMP) printf
+#define DEBUGMON if(DEBUG_MON) printf
 
 /* Memory Size */
 #define MEMORY_MAX_ADDR 0x04000000

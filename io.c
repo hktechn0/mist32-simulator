@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "gci_device.h"
+#include "monitor.h"
 
 void *dps;
 
@@ -126,13 +127,12 @@ void gci_close(void)
 
 void io_init(void)
 {
-  DPUTS("[I/O] Initialize... ");
+  monitor_init();
 
+  printf("[System] I/O Initialize... \n");
   iosr = 0;
   dps_init();
   gci_init();
-
-  DPUTS("OK.\n");
 
   gci_info();
 }
@@ -141,6 +141,8 @@ void io_close(void)
 {
   gci_close();
   dps_close();
+
+  monitor_close();
 }
 
 void *io_addr_get(Memory addr)
@@ -149,7 +151,10 @@ void *io_addr_get(Memory addr)
   int i;
 
   if(iosr > addr) {
-    err(EXIT_FAILURE, "io_load");
+    errx(EXIT_FAILURE, "io_load invalid IO address.");
+  }
+  else if(addr & 0x3) {
+    errx(EXIT_FAILURE, "io_load invalid IO alignment.");
   }
 
   offset = addr - iosr;
@@ -177,7 +182,7 @@ void *io_addr_get(Memory addr)
       else if(offset < p + gci_hub_nodes[i].size) {
 	/* GCI Device Area */
 	DPUTS("[I/O] GCI Device: %d, Addr: 0x%08x\n", i, offset - (p + GCI_NODE_SIZE));
-	return (char *)gci_nodes[i].device_area + offset - (p + GCI_NODE_SIZE);
+	return (char *)gci_nodes[i].device_area + (offset - (p + GCI_NODE_SIZE));
       }
       else {
 	/* next */
@@ -196,8 +201,11 @@ void io_load(Memory addr)
   int i;
 
   /* word align */
-  offset = addr & ~0x03;
-  offset -= iosr;
+  if(addr & 0x3) {
+    errx(EXIT_FAILURE, "io_load invalid IO alignment.");
+  }
+
+  offset = addr - iosr;
 
   if(offset == DPS_SCIRXD) {
     if((sci->cfg & SCICFG_REN) && read(fd_scirxd, &c, 1) > 0) {
@@ -244,8 +252,11 @@ void io_store(Memory addr)
   int i;
 
   /* word align */
-  offset = addr & ~0x03;
-  offset -= iosr;
+  if(addr & 0x3) {
+    errx(EXIT_FAILURE, "io_store invalid IO alignment.");
+  }
+
+  offset = addr - iosr;
 
   if(offset == DPS_SCITXD && sci->cfg & SCICFG_TEN) {
     /* SCI TXD */

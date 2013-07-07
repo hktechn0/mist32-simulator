@@ -8,6 +8,7 @@
 
 #include "common.h"
 #include "gci_device.h"
+#include "monitor.h"
 
 /* GCI Device Emulation */
 
@@ -28,16 +29,17 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
 
   esc_buf[0] = 0x1b;
 
+  vram = mem;
+
   if(offset < GCI_DISPLAY_CHAR_SIZE) {
+    /* character display mode */
     if(DEBUG) {
-      c = *(unsigned int *)((char *)mem + offset);
+      c = *(unsigned int *)((char *)vram + offset);
       chr = c & 0x7f;
 
       printf("[I/O] DISPLAY CHAR: '%c' (%02x) at %dx%d\n", chr, chr,
 	     offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
     }
-
-    vram = gci_nodes[GCI_DISPLAY_NUM].device_area;
 
     /* clear display */
     write(fd_dispchar, esc_clear, 2);
@@ -82,6 +84,15 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
     }
   }
   else {
-    DPUTS("[I/O] DISPLAY BITMAP\n");
+    /* bitmap display mode */
+    c = *(unsigned int *)((char *)vram + offset);
+
+    p = (offset - GCI_DISPLAY_CHAR_SIZE) / 4;
+    x = p % DISPLAY_WIDTH;
+    y = p / DISPLAY_WIDTH;
+    
+    DPUTS("[I/O] DISPLAY BITMAP %3dx%3d %x\n", x, y, c);
+
+    monitor_display_draw(x, y, c);    
   }
 }
