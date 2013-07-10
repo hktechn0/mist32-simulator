@@ -12,6 +12,7 @@
 #include <msgpack.h>
 
 #include "common.h"
+#include "gci_device.h"
 #include "monitor.h"
 
 int sock, sock_listen;
@@ -67,14 +68,15 @@ msgpack_packer *monitor_method_new(char *method)
 
 void monitor_method_send(void)
 {
-  DEBUGMON("send to %s size %d\n", inet_ntoa(addr_client.sin_addr), (int)sbuf->size);
-  /* fwrite(sbuf->data, sbuf->size, 1, stdout); */
-
   write(sock, sbuf->data, sbuf->size);
 }
 
 void monitor_method_recv(void)
 {
+  fd_set rfds;
+  struct timeval tv;
+  int retval;
+
   ssize_t size;
   char strname[100];
 
@@ -82,11 +84,26 @@ void monitor_method_recv(void)
   msgpack_unpacked result;
   msgpack_object *name, *data;
 
+  unsigned char scancode;
+
+  FD_ZERO(&rfds);
+  FD_SET(sock, &rfds);
+  tv.tv_sec = 0;
+  tv.tv_usec = 0;
+
+  retval = select(sock + 1, &rfds, NULL, NULL, &tv);
+
+  if(retval == -1) {
+    errx(EXIT_FAILURE, "select");
+  }
+  else if(!retval) {
+    return;
+  }
+
   up = msgpack_unpacker_new(MONITOR_BUF_SIZE);
 
   /* receive */
   size = read(sock, msgpack_unpacker_buffer(up), msgpack_unpacker_buffer_capacity(up));
-  DEBUGMON("[MONITOR] received from %s size %d\n", inet_ntoa(addr_client.sin_addr), (int)size);
 
   msgpack_unpacker_buffer_consumed(up, size);
   msgpack_unpacked_init(&result);
@@ -94,6 +111,7 @@ void monitor_method_recv(void)
   /* stream unpacker */
   while(msgpack_unpacker_next(up, &result)) {
     if(DEBUG_MON) {
+      printf("[Monitor] ");
       msgpack_object_print(stdout, result.data);
       puts("");
     }
@@ -125,6 +143,25 @@ void monitor_method_recv(void)
     /* call method */
     if(!strcmp(strname, "CONNECT")) {
     }
+    else if(!strcmp(strname, "KEYBOARD_SCANCODE")) {
+      if(data->via.array.ptr->type != MSGPACK_OBJECT_NIL) {
+	/* push FIFO */
+	scancode = data->via.array.ptr->via.i64 & 0xff;
+	fifo_scancode[fifo_scancode_end++] = scancode;
+
+	if(fifo_scancode_end >= KMC_FIFO_SCANCODE_SIZE) {
+	  fifo_scancode_end = 0;
+	}
+	if(fifo_scancode_start == fifo_scancode_end) {
+	  fifo_scancode_start++;
+	  if(fifo_scancode_start >= KMC_FIFO_SCANCODE_SIZE) {
+	    fifo_scancode_start = 0;
+	  }
+	}
+
+	DEBUGMON("[Monitor] KEYBOARD_SCANCODE %x\n", scancode);
+      }
+    }
     else {
       errx(EXIT_FAILURE, "unknown method '%s'", strname);
     }
@@ -137,7 +174,7 @@ void monitor_display_draw(unsigned int x, unsigned int y, unsigned int color)
 {
   msgpack_packer *pk;
 
-  pk = monitor_method_new("DRAW");
+  pk = monitor_method_new("DISPLAY_DRAW");
 
   msgpack_pack_array(pk, 3);
   msgpack_pack_int(pk, x);
@@ -148,17 +185,3 @@ void monitor_display_draw(unsigned int x, unsigned int y, unsigned int color)
 
   msgpack_packer_free(pk);
 }
-
-/*
-int main(void)
-{
-  monitor_init();
-
-  while(1) {
-    monitor_method_recv();
-    monitor_display_draw(10, 20, 0xffffff);
-  }
-
-  monitor_close();
-}
-*/

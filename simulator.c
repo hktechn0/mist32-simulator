@@ -1,18 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "common.h"
 
-/* Registers */
-int gr[32];
+#include "common.h"
+#include "interrupt.h"
+#include "monitor.h"
+
 Memory mem;
-Memory sp;
-Memory pc;
-Memory next_pc;
-Memory idtr;
-unsigned int sr1;
-unsigned long long frcr;
-Memory iosr;
-struct FLAGS flags;
+
+/* General Register */
+int GR[32];
+
+/* System Register */
+struct FLAGS FLAGR;
+Memory PCR, next_PCR;
+Memory SPR;
+unsigned int PSR;
+Memory IDTR;
+Memory IOSR;
+unsigned long long FRCR;
 
 int exec(Memory entry_p)
 {
@@ -23,22 +28,20 @@ int exec(Memory entry_p)
   opcode_t = opcode_table_init();
 
   /* set stack pointer (bottom of memory) */
-  sp = (Memory)STACK_DEFAULT;
-
-  sr1 = 0;
+  SPR = (Memory)STACK_DEFAULT;
+  PCR = entry_p;
+  PSR = 0;
 
   if(DEBUG) {
-    printf("Execution Start: entry = 0x%08x\n", pc);
+    printf("Execution Start: entry = 0x%08x\n", PCR);
     print_registers();
   }
 
-  pc = entry_p;
-
   do {
-    next_pc = ~0;
+    next_PCR = ~0;
 
     /* instruction fetch */
-    inst = (Instruction *)MEMP(pc);
+    inst = (Instruction *)MEMP(PCR);
     
     if(DEBUG) {
       puts("---");
@@ -51,18 +54,23 @@ int exec(Memory entry_p)
     
     if(DEBUG) {
       print_registers();
-      print_stack(sp);
+      print_stack(SPR);
       io_info();
       if(DEBUG_I) getchar();
     }
 
-    if(next_pc != ~0) {
-      pc = next_pc;
+    monitor_method_recv();
+
+    if(next_PCR != ~0) {
+      PCR = next_PCR;
     }
     else {
-      pc += 4;
+      PCR += 4;
     }
-  } while(!(pc == 0 && gr[31] == 0));
+
+    interrupt_dispatcher();
+
+  } while(!(PCR == 0 && GR[31] == 0));
   /* exit if b rret && rret == 0 */
 
   puts("Program Terminated");

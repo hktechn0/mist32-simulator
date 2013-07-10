@@ -42,6 +42,10 @@
 #define DISPLAY_CHAR_HEIGHT 34
 #define DISPLAY_WIDTH 640
 #define DISPLAY_HEIGHT 480
+#define DISPLAY_BITMAP_OFFSET 0xc000
+
+/* KMC */
+#define KMC_SCANCODE_VALID 0x100
 
 #define GCI_KMC_PRIORITY 0x08
 #define GCI_KMC_INT_PRIORITY 0xff
@@ -76,6 +80,7 @@ typedef volatile struct _gci_node_info {
 typedef struct _gci_node {
   gci_node_info *node_info;
   void *device_area;
+  unsigned int int_issued;
 } gci_node;
 
 typedef volatile struct _dps_utim64 {

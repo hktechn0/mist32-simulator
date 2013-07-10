@@ -7,13 +7,15 @@
 #define DEBUG_LD (DEBUG && 1)
 #define DEBUG_ST (DEBUG && 1)
 #define DEBUG_JMP (DEBUG && 1)
-#define DEBUG_MON (DEBUG && 1)
+#define DEBUG_MON 1
+#define DEBUG_INT 1
 
 #define DPUTS if(DEBUG) printf
 #define DEBUGLD if(DEBUG_LD) printf
 #define DEBUGST if(DEBUG_ST) printf
 #define DEBUGJMP if(DEBUG_JMP) printf
 #define DEBUGMON if(DEBUG_MON) printf
+#define DEBUGINT if(DEBUG_INT) printf
 
 /* Memory Size */
 #define MEMORY_MAX_ADDR 0x04000000
@@ -25,24 +27,13 @@
 #define msb(word) (!!((word) & 0x80000000))
 #define NOT(reg) (reg = ~reg)
 
-extern bool DEBUG;
-extern bool DEBUG_I;
-
-/* Vritual Memory */
-extern Memory vmem;
-
-/* General Register */
-extern int gr[32];
-
-/* System Register */
-extern Memory sp;
-extern Memory pc;
-extern Memory next_pc;
-
-extern unsigned int sr1;
-extern Memory idtr;
-extern unsigned long long frcr;
-extern Memory iosr;
+/* reg */
+#define PSR_MMUMOD_DIRECT 0x0
+#define PSR_MMUMOD_L1PAGE 0x1
+#define PSR_MMUMOD_L2PAGE 0x2
+#define PSR_IM_ENABLE 0x4
+#define PSR_CMOD_KERNEL 0x00
+#define PSR_CMOD_USER 0x60
 
 struct FLAGS {
   unsigned int          : 27;
@@ -52,11 +43,29 @@ struct FLAGS {
   unsigned int parity   : 1;
   unsigned int zero     : 1;
 };
-extern struct FLAGS flags;
 
 /* Function pointer void *pOpcodeFunc(Instruction *) */
 typedef void (*pOpcodeFunc) (Instruction *);
 typedef pOpcodeFunc* OpcodeTable;
+
+/* Debug flags */
+extern bool DEBUG;
+extern bool DEBUG_I;
+
+/* Vritual Memory */
+extern Memory vmem;
+
+/* General Register */
+extern int GR[32];
+
+/* System Register */
+extern struct FLAGS FLAGR;
+extern Memory PCR, next_PCR;
+extern Memory SPR;
+extern unsigned int PSR;
+extern Memory IDTR;
+extern Memory IOSR;
+extern unsigned long long FRCR;
 
 /* opcode */
 OpcodeTable opcode_table_init(void);

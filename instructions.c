@@ -3,6 +3,7 @@
 #include <time.h>
 #include <err.h>
 #include "common.h"
+#include "interrupt.h"
 #include "instructions.h"
 
 /* Arithmetic */
@@ -88,9 +89,9 @@ void i_cmp(Instruction *inst)
 {
   int dest;
   
-  dest = gr[inst->o2.operand1];
+  dest = GR[inst->o2.operand1];
   i_sub(inst);
-  gr[inst->o2.operand1] = dest;
+  GR[inst->o2.operand1] = dest;
 }
 
 void i_div(Instruction *inst)
@@ -121,9 +122,9 @@ void i_mod(Instruction *inst)
 
 void i_neg(Instruction *inst)
 {
-  gr[inst->o2.operand1] = -gr[inst->o2.operand2];
-  set_flags(gr[inst->o2.operand1]);
-  if(gr[inst->o2.operand1] == 0x80000000) { flags.overflow = 1; }
+  GR[inst->o2.operand1] = -GR[inst->o2.operand2];
+  set_flags(GR[inst->o2.operand1]);
+  if(GR[inst->o2.operand1] == 0x80000000) { FLAGR.overflow = 1; }
 }
 
 void i_addc(Instruction *inst)
@@ -135,7 +136,7 @@ void i_addc(Instruction *inst)
   
   result = (*dest) + src;
   set_flags_add(result, *dest, src);
-  *dest = flags.carry;
+  *dest = FLAGR.carry;
 }
 
 void i_inc(Instruction *inst)
@@ -143,8 +144,8 @@ void i_inc(Instruction *inst)
   int *dest;
   int src, result;
   
-  dest = &gr[inst->o2.operand1];
-  src = gr[inst->o2.operand2];
+  dest = &GR[inst->o2.operand1];
+  src = GR[inst->o2.operand2];
   
   result = src + 1;
   set_flags_add(result, src, 1);
@@ -156,8 +157,8 @@ void i_dec(Instruction *inst)
   int *dest;
   int src, result;
   
-  dest = &gr[inst->o2.operand1];
-  src = gr[inst->o2.operand2];
+  dest = &GR[inst->o2.operand1];
+  src = GR[inst->o2.operand2];
   
   result = src - 1;
   set_flags_sub(result, src, 1);
@@ -168,8 +169,8 @@ void i_sext8(Instruction *inst)
 {
   unsigned int *dest, src;
   
-  dest = (unsigned int *)&gr[inst->o2.operand1];
-  src = (unsigned int)gr[inst->o2.operand2];
+  dest = (unsigned int *)&GR[inst->o2.operand1];
+  src = (unsigned int)GR[inst->o2.operand2];
 
   if(src & 0x80) {
     *dest = src | 0xffffff00;
@@ -183,8 +184,8 @@ void i_sext16(Instruction *inst)
 {
   unsigned int *dest, src;
   
-  dest = (unsigned int *)&gr[inst->o2.operand1];
-  src = (unsigned int)gr[inst->o2.operand2];
+  dest = (unsigned int *)&GR[inst->o2.operand1];
+  src = (unsigned int)GR[inst->o2.operand2];
 
   if(src & 0x8000) {
     *dest = src | 0xffff0000;
@@ -202,7 +203,7 @@ void i_shl(Instruction *inst)
   ops_o2_ui11(inst, &dest, &n);
   
   clr_flags();
-  flags.carry = (*dest) >> (32 - n);
+  FLAGR.carry = (*dest) >> (32 - n);
   *dest = (*dest) << n;
   set_flags(*dest);
 }
@@ -214,7 +215,7 @@ void i_shr(Instruction *inst)
   ops_o2_ui11(inst, &dest, &n);
   
   clr_flags();
-  flags.carry = (*dest >> (n - 1)) & 0x00000001;
+  FLAGR.carry = (*dest >> (n - 1)) & 0x00000001;
   *dest = (*dest) >> n;
   set_flags(*dest);
 }
@@ -227,7 +228,7 @@ void i_sar(Instruction *inst)
   ops_o2_i11(inst, &dest, (int *)&n);
 
   clr_flags();
-  flags.carry = ((*dest) >> (n - 1)) & 0x00000001;
+  FLAGR.carry = ((*dest) >> (n - 1)) & 0x00000001;
   *dest = (*dest) >> n;
   set_flags(*dest);
 }
@@ -242,7 +243,7 @@ void i_rol(Instruction *inst)
   
   clr_flags();
   set_flags(*dest);
-  flags.carry = !!(*dest & 0x00000001);
+  FLAGR.carry = !!(*dest & 0x00000001);
 }
 
 void i_ror(Instruction *inst)
@@ -255,101 +256,101 @@ void i_ror(Instruction *inst)
   
   clr_flags();
   set_flags(*dest);
-  flags.carry = !!(*dest & 0x80000000);
+  FLAGR.carry = !!(*dest & 0x80000000);
 }
 
 /* Logic */
 void i_and(Instruction *inst)
 {
-  gr[inst->o2.operand1] &= gr[inst->o2.operand2];
+  GR[inst->o2.operand1] &= GR[inst->o2.operand2];
   clr_flags();
-  set_flags(gr[inst->o2.operand1]);
+  set_flags(GR[inst->o2.operand1]);
 }
 
 void i_or(Instruction *inst)
 {
-  gr[inst->o2.operand1] |= gr[inst->o2.operand2];
+  GR[inst->o2.operand1] |= GR[inst->o2.operand2];
   clr_flags();
-  set_flags(gr[inst->o2.operand1]);
+  set_flags(GR[inst->o2.operand1]);
 }
 
 void i_not(Instruction *inst)
 {
-  gr[inst->o2.operand1] = ~gr[inst->o2.operand2];
+  GR[inst->o2.operand1] = ~GR[inst->o2.operand2];
 }
 
 void i_xor(Instruction *inst)
 {
-  gr[inst->o2.operand1] ^= gr[inst->o2.operand2];
+  GR[inst->o2.operand1] ^= GR[inst->o2.operand2];
   clr_flags();
-  set_flags(gr[inst->o2.operand1]);
+  set_flags(GR[inst->o2.operand1]);
 }
 
 void i_nand(Instruction *inst)
 {
   i_and(inst);
-  NOT(gr[inst->o2.operand1]);
+  NOT(GR[inst->o2.operand1]);
 
   clr_flags();
-  set_flags(gr[inst->o2.operand1]);
+  set_flags(GR[inst->o2.operand1]);
 }
 
 void i_nor(Instruction *inst)
 {
   i_or(inst);
-  NOT(gr[inst->o2.operand1]);
+  NOT(GR[inst->o2.operand1]);
 
   clr_flags();
-  set_flags(gr[inst->o2.operand1]);
+  set_flags(GR[inst->o2.operand1]);
 }
 
 void i_xnor(Instruction *inst)
 {
   i_xor(inst);
-  NOT(gr[inst->o2.operand1]);
+  NOT(GR[inst->o2.operand1]);
 
   clr_flags();
-  set_flags(gr[inst->o2.operand1]);
+  set_flags(GR[inst->o2.operand1]);
 }
 
 void i_test(Instruction *inst)
 {
   int dest;
   
-  dest = gr[inst->o2.operand1];
+  dest = GR[inst->o2.operand1];
   i_and(inst);
-  gr[inst->o2.operand1] = dest;
+  GR[inst->o2.operand1] = dest;
 }
 
 /* Register operations */
 void i_wl16(Instruction *inst)
 {
-  gr[inst->i16.operand] = ((unsigned int)gr[inst->i16.operand] & 0xffff0000) | (immediate_i16(inst) & 0xffff);
+  GR[inst->i16.operand] = ((unsigned int)GR[inst->i16.operand] & 0xffff0000) | (immediate_i16(inst) & 0xffff);
 }
 
 void i_wh16(Instruction *inst)
 {
-  gr[inst->i16.operand] = ((unsigned int)gr[inst->i16.operand] & 0xffff) | ((immediate_i16(inst) & 0xffff) << 16);
+  GR[inst->i16.operand] = ((unsigned int)GR[inst->i16.operand] & 0xffff) | ((immediate_i16(inst) & 0xffff) << 16);
 }
 
 void i_clrb(Instruction *inst)
 {
-  gr[inst->i11.operand] &= ~((unsigned int)0x01 << immediate_i11(inst));
+  GR[inst->i11.operand] &= ~((unsigned int)0x01 << immediate_i11(inst));
 }
 
 void i_setb(Instruction *inst)
 {
-  gr[inst->i11.operand] |= (unsigned int)0x01 << immediate_i11(inst);
+  GR[inst->i11.operand] |= (unsigned int)0x01 << immediate_i11(inst);
 }
 
 void i_clr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = 0x00000000;
+  GR[inst->o1.operand1] = 0x00000000;
 }
 
 void i_set(Instruction *inst)
 {
-  gr[inst->o1.operand1] = (unsigned int)0xffffffff;
+  GR[inst->o1.operand1] = (unsigned int)0xffffffff;
 }
 
 void i_revb(Instruction *inst)
@@ -384,17 +385,17 @@ void i_get8(Instruction *inst)
 
 void i_lil(Instruction *inst)
 {
-  gr[inst->i16.operand] = immediate_i16(inst);
+  GR[inst->i16.operand] = immediate_i16(inst);
 }
 
 void i_lih(Instruction *inst)
 {
-  gr[inst->i16.operand] = (unsigned int)immediate_ui16(inst) << 16;
+  GR[inst->i16.operand] = (unsigned int)immediate_ui16(inst) << 16;
 }
 
 void i_ulil(Instruction *inst)
 {
-  gr[inst->i16.operand] = immediate_ui16(inst);
+  GR[inst->i16.operand] = immediate_ui16(inst);
 }
 
 /* Load, Store */
@@ -404,7 +405,7 @@ void i_ld8(Instruction *inst)
 
   ops_o2_ui11(inst, &dest, &src);
 
-  if(src >= iosr) {
+  if(src >= IOSR) {
     errx(EXIT_FAILURE, "ld8: only word access accepted in IO area.");
   }
 
@@ -425,7 +426,7 @@ void i_ld16(Instruction *inst)
   if(src & 0x1) {
     errx(EXIT_FAILURE, "ld16: invalid alignment.");
   }
-  else if(src >= iosr) {
+  else if(src >= IOSR) {
     errx(EXIT_FAILURE, "ld16: only word access accepted in IO area.");
   }
 
@@ -446,7 +447,7 @@ void i_ld32(Instruction *inst)
   if(src & 0x3) {
     errx(EXIT_FAILURE, "ld32: invalid alignment.");
   }
-  else if(src >= iosr) {
+  else if(src >= IOSR) {
     io_load(src);
   }
 
@@ -463,7 +464,7 @@ void i_st8(Instruction *inst)
   *((unsigned char *)MEMP8(src)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
 
-  if(src >= iosr) {
+  if(src >= IOSR) {
     errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
   }
 }
@@ -485,7 +486,7 @@ void i_st16(Instruction *inst)
   *((unsigned short *)MEMP16(src)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
 
-  if(src >= iosr) {
+  if(src >= IOSR) {
     errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
   }
 }
@@ -507,7 +508,7 @@ void i_st32(Instruction *inst)
   *((unsigned int *)MEMP(src)) = *dest;
   DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
 
-  if(src >= iosr) {
+  if(src >= IOSR) {
     io_store(src);
   }
 }
@@ -515,104 +516,108 @@ void i_st32(Instruction *inst)
 /* Stack */
 void i_push(Instruction *inst)
 {
-  sp -= 4;
-  *((int *)MEMP(sp)) = gr[inst->o1.operand1];
+  SPR -= 4;
+  *((int *)MEMP(SPR)) = GR[inst->o1.operand1];
 }
 
 void i_pushpc(Instruction *inst)
 {
-  sp -= 4;
-  *((int *)MEMP(sp)) = pc;
+  SPR -= 4;
+  *((int *)MEMP(SPR)) = PCR;
 }
 
 void i_pop(Instruction *inst)
 {
-  gr[inst->o1.operand1] = *((int *)MEMP(sp));
-  sp += 4;
+  GR[inst->o1.operand1] = *((int *)MEMP(SPR));
+  SPR += 4;
 }
 
 /* Branch */
 void i_bur(Instruction *inst)
 {
   if(check_condition(inst)) {
-    next_pc = pc + src_jo1_jui16(inst);
+    next_PCR = PCR + src_jo1_jui16(inst);
   }
 }
 
 void i_br(Instruction *inst)
 {
   if(check_condition(inst)) {
-    DEBUGJMP("[Branch]   R: 0x%08x, Cond: %X, PC: 0x%08x\n", pc + src_jo1_ji16(inst), inst->ji16.condition, pc);
-    next_pc = pc + src_jo1_ji16(inst);
+    DEBUGJMP("[Branch]   R: 0x%08x, Cond: %X, PCR: 0x%08x\n", PCR + src_jo1_ji16(inst), inst->ji16.condition, PCR);
+    next_PCR = PCR + src_jo1_ji16(inst);
   }
 }
 
 void i_b(Instruction *inst)
 {
   if(check_condition(inst)) {
-    DEBUGJMP("[Branch]   D: 0x%08x, Cond: %X, PC: 0x%08x\n", src_jo1_jui16(inst), inst->ji16.condition, pc);
-    next_pc = src_jo1_jui16(inst);
+    DEBUGJMP("[Branch]   D: 0x%08x, Cond: %X, PCR: 0x%08x\n", src_jo1_jui16(inst), inst->ji16.condition, PCR);
+    next_PCR = src_jo1_jui16(inst);
   }
 }
 
 void i_ib(Instruction *inst)
 {
-  /* FIXME: not imeplement */
-  fprintf(stderr, "[Error] %s not implemented yet.\n", "ib");
-  exit(EXIT_FAILURE);
+  interrupt_exit();
 }
 
 void i_srspr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = sp;
+  GR[inst->o1.operand1] = SPR;
 }
 
 void i_srieir(Instruction *inst)
 {
-  gr[inst->o1.operand1] = (sr1 & 0x4) >> 2;
+  GR[inst->o1.operand1] = (PSR & PSR_IM_ENABLE) >> 2;
 }
 
 void i_sriosr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = iosr;
+  GR[inst->o1.operand1] = IOSR;
 }
 
 void i_sridtr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = (int)idtr;
-  printf("[System] SRIDTR: idtr => 0x%08x\n", idtr);
+  GR[inst->o1.operand1] = (int)IDTR;
+  printf("[System] SRIDTR: idtr => 0x%08x\n", IDTR);
 }
 
 void i_srfrcr(Instruction *inst)
 {
-  frcr = (unsigned long long)clock();
+  FRCR = (unsigned long long)clock();
 }
 
 void i_srfrclr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = (unsigned int)(frcr & 0xffffffff);
+  GR[inst->o1.operand1] = (unsigned int)(FRCR & 0xffffffff);
 }
 
 void i_srfrchr(Instruction *inst)
 {
-  gr[inst->o1.operand1] = (unsigned int)(frcr >> 32);
+  GR[inst->o1.operand1] = (unsigned int)(FRCR >> 32);
 }
 
 void i_srspw(Instruction *inst)
 {
-  sp = gr[inst->o1.operand1];
+  SPR = GR[inst->o1.operand1];
 }
 
 void i_srieiw(Instruction *inst)
 {
-  sr1 |= ((gr[inst->o1.operand1] & 1) << 2);
-  printf("[System] SRIEIW: Interrupt %s\n", ((sr1 & 0x4) >> 2) ? "Enabled" : "Disabled");
+  if(src_o1_i11(inst) & 1) {
+    PSR |= PSR_IM_ENABLE;
+  }
+  else {
+    PSR &= ~PSR_IM_ENABLE;
+  }
+
+  printf("[System] SRIEIW: Interrupt %s\n", (PSR & PSR_IM_ENABLE) ? "Enabled" : "Disabled");
 }
 
 void i_sridtw(Instruction *inst)
 {
-  idtr = (Memory)gr[inst->o1.operand1];
-  printf("[System] SRIDTW: idtr <= 0x%08x\n", idtr);
+  IDTR = (Memory)GR[inst->o1.operand1];
+  printf("[System] SRIDTW: idtr <= 0x%08x\n", IDTR);
 }
 
 void i_nop(Instruction *inst)
@@ -627,7 +632,7 @@ void i_halt(Instruction *inst)
 
 void i_move(Instruction *inst)
 {
-  gr[inst->o2.operand1] = gr[inst->o2.operand2];
+  GR[inst->o2.operand1] = GR[inst->o2.operand2];
 }
 
 void i_movepc(Instruction *inst)
@@ -636,5 +641,5 @@ void i_movepc(Instruction *inst)
 
   ops_o2_i11(inst, &dest, &src);
 
-  *dest = pc + (src << 2);
+  *dest = PCR + (src << 2);
 }

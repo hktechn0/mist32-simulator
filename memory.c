@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <err.h>
+
 #include "common.h"
 
 PageEntry *page_table;
@@ -35,7 +36,7 @@ void *memory_addr_get(Memory addr)
 {
   void *p;
 
-  if(addr >= iosr) {
+  if(addr >= IOSR) {
     /* memory mapped IO area */
     p = io_addr_get(addr);
   }

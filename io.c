@@ -44,7 +44,7 @@ void dps_init(void)
   /* LSFLAGS */
   mprotect((char *)dps + DPS_LSFLAGS, sizeof(int), PROT_READ);
 
-  iosr -= DPS_SIZE;
+  IOSR -= DPS_SIZE;
 }
 
 void dps_close(void)
@@ -67,6 +67,9 @@ void gci_init(void)
   gci_hub->space_size = GCI_HUB_SIZE;
 
   /* STD-KMC */
+  fifo_scancode_start = 0;
+  fifo_scancode_end = 0;
+
   gci_nodes[GCI_KMC_NUM].node_info = calloc(1, GCI_NODE_SIZE);
   gci_nodes[GCI_KMC_NUM].device_area = calloc(1, GCI_KMC_AREA_SIZE);
 
@@ -108,7 +111,7 @@ void gci_init(void)
     }
   }
 
-  iosr -= gci_hub->space_size;
+  IOSR -= gci_hub->space_size;
 }
 
 void gci_close(void)
@@ -130,7 +133,7 @@ void io_init(void)
   monitor_init();
 
   printf("[System] I/O Initialize... \n");
-  iosr = 0;
+  IOSR = 0;
   dps_init();
   gci_init();
 
@@ -150,14 +153,14 @@ void *io_addr_get(Memory addr)
   Memory offset, p;
   int i;
 
-  if(iosr > addr) {
+  if(IOSR > addr) {
     errx(EXIT_FAILURE, "io_load invalid IO address.");
   }
   else if(addr & 0x3) {
     errx(EXIT_FAILURE, "io_load invalid IO alignment.");
   }
 
-  offset = addr - iosr;
+  offset = addr - IOSR;
   
   if(offset < DPS_SIZE) {
     /* DPS */
@@ -205,7 +208,7 @@ void io_load(Memory addr)
     errx(EXIT_FAILURE, "io_load invalid IO alignment.");
   }
 
-  offset = addr - iosr;
+  offset = addr - IOSR;
 
   if(offset == DPS_SCIRXD) {
     if((sci->cfg & SCICFG_REN) && read(fd_scirxd, &c, 1) > 0) {
@@ -221,7 +224,11 @@ void io_load(Memory addr)
 
     for(i = 0; i < GCI_NODE_MAX; i++) {
       if(offset < p + GCI_NODE_SIZE) {
-	/* Nothing to do if GCI Node Info */
+	/* GCI Node Info */
+	if(offset < p + GCI_NODE_SIZE + 8) {
+	  /* GCND_IRF (interrupt factor) */
+	  gci_nodes[i].int_issued = 0;
+	}
 	break;
       }
       else if(offset < p + gci_hub_nodes[i].size) {
@@ -256,7 +263,7 @@ void io_store(Memory addr)
     errx(EXIT_FAILURE, "io_store invalid IO alignment.");
   }
 
-  offset = addr - iosr;
+  offset = addr - IOSR;
 
   if(offset == DPS_SCITXD && sci->cfg & SCICFG_TEN) {
     /* SCI TXD */
@@ -315,7 +322,7 @@ void gci_info(void)
   int i;
 
   printf("---- GCI ----\n");
-  printf("[IOSR      ] 0x%08x\n", iosr);
+  printf("[IOSR      ] 0x%08x\n", IOSR);
   printf("[GCI Hub   ] Size: %08x, Total: %d\n", gci_hub->space_size, gci_hub->total);
 
   for(i = 0; i < gci_hub->total; i++) {
