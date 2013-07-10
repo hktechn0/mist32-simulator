@@ -8,6 +8,7 @@ import msgpack
 
 # PyGI for GTK+ 3
 from gi.repository import Gtk, GLib, Gdk, GdkPixbuf
+from scancode import scancode
 
 class Monitor(object):
     width = 640
@@ -15,6 +16,8 @@ class Monitor(object):
 
     def __init__(self, host, port):
         self.window = Gtk.Window()
+        self.window.connect("key_press_event", self.on_key_press)
+        self.window.connect("key_release_event", self.on_key_release)
         self.window.connect("destroy", self.destroy)
 
         # drawing area
@@ -40,7 +43,7 @@ class Monitor(object):
 
     def on_draw(self, widget, cr):
         for name, data in self.unpacker:
-            if name == "DRAW":
+            if name == "DISPLAY_DRAW":
                 x, y, color = data
                 self.canvas[(x, y)] = color
             else:
@@ -55,6 +58,20 @@ class Monitor(object):
             cr.set_source_rgb(r, g, b)
             cr.rectangle(x, y, 1, 1)
             cr.fill()
+
+    def on_key_press(self, widget, event):
+        print hex(event.hardware_keycode), event.string
+        self.method_send("KEYBOARD_SCANCODE", scancode[event.hardware_keycode])
+
+    def on_key_release(self, widget, event):
+        print hex(event.hardware_keycode), event.string
+        self.method_send("KEYBOARD_SCANCODE", 0xf0)
+        self.method_send("KEYBOARD_SCANCODE", scancode[event.hardware_keycode])
+
+    def method_send(self, name, *data):
+        print "SEND:", name, data
+        msg = self.packer.pack([name, data])
+        self.sock.send(msg)
 
     def method_recv(self, source, condition):
         self.unpacker.feed(self.sock.recv(1024 * 1024))
@@ -71,9 +88,6 @@ class Monitor(object):
         hup = GLib.io_add_watch(self.fsock, GLib.IO_HUP, self.method_hup)
         self.watchtag.append(recv)
         self.watchtag.append(hup)
-
-        msg = self.packer.pack(["CONNECT"])
-        self.sock.send(msg)
 
         Gtk.main()
 
