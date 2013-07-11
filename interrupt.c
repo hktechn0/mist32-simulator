@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "common.h"
-#include "gci_device.h"
 #include "interrupt.h"
 
 /* Previous system registers */

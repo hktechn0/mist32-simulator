@@ -57,6 +57,8 @@
 #define GCI_DISPLAY_BITMAP_SIZE 0x400000
 #define GCI_DISPLAY_AREA_SIZE (GCI_DISPLAY_CHAR_SIZE + GCI_DISPLAY_BITMAP_SIZE)
 
+#define KMC_FIFO_SCANCODE_SIZE 128
+
 typedef volatile struct _gci_hub_info {
   unsigned int total;
   unsigned int space_size;
@@ -102,10 +104,32 @@ typedef volatile struct _dps_sci {
   volatile unsigned int cfg;
 } dps_sci;
 
+
+extern void *dps;
+
+
+extern gci_hub_info *gci_hub;
+extern gci_hub_node *gci_hub_nodes;
+extern gci_node gci_nodes[4];
+
+extern char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
+extern unsigned int fifo_scancode_start, fifo_scancode_end;
+
 void io_init(void);
 void io_close(void);
 void *io_addr_get(Memory addr);
 void io_load(Memory addr);
 void io_store(Memory addr);
-void io_info(void);
+
+void dps_init(void);
+void dps_close(void);
+void dps_info(void);
+void dps_sci_rxd_read(Memory addr, Memory offset);
+void dps_sci_txd_write(Memory addr, Memory offset);
+
+void gci_init(void);
+void gci_close(void);
 void gci_info(void);
+void gci_kmc_read(Memory addr, Memory offset, void *mem);
+bool gci_kmc_interrupt(void);
+void gci_display_write(Memory addr, Memory offset, void *mem);

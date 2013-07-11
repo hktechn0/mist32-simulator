@@ -55,7 +55,7 @@ int exec(Memory entry_p)
     if(DEBUG) {
       print_registers();
       print_stack(SPR);
-      io_info();
+      dps_info();
       if(DEBUG_I) getchar();
     }
 

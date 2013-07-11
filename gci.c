@@ -5,13 +5,105 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/mman.h>
 
 #include "common.h"
-#include "gci_device.h"
 #include "monitor.h"
+
+gci_hub_info *gci_hub;
+gci_hub_node *gci_hub_nodes;
+gci_node gci_nodes[4];
 
 char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 unsigned int fifo_scancode_start, fifo_scancode_end;
+
+int fd_dispchar;
+
+void gci_init(void)
+{
+  int i;
+
+  gci_hub = calloc(1, GCI_HUB_SIZE);
+  gci_hub_nodes = (void *)((char *)gci_hub + GCI_HUB_HEADER_SIZE);
+
+  /* initialize */
+  gci_hub->total = 0;
+  gci_hub->space_size = GCI_HUB_SIZE;
+
+  /* STD-KMC */
+  fifo_scancode_start = 0;
+  fifo_scancode_end = 0;
+
+  gci_nodes[GCI_KMC_NUM].node_info = calloc(1, GCI_NODE_SIZE);
+  gci_nodes[GCI_KMC_NUM].device_area = calloc(1, GCI_KMC_AREA_SIZE);
+
+  if(gci_nodes[GCI_KMC_NUM].node_info == NULL ||
+     gci_nodes[GCI_KMC_NUM].device_area == NULL) {
+    err(EXIT_FAILURE, "malloc STD-KMC");
+  }
+
+  gci_nodes[GCI_KMC_NUM].node_info->area_size = GCI_KMC_AREA_SIZE;
+  gci_nodes[GCI_KMC_NUM].node_info->int_priority = GCI_KMC_INT_PRIORITY;
+  gci_hub_nodes[GCI_KMC_NUM].size = GCI_NODE_SIZE + GCI_KMC_AREA_SIZE;
+  gci_hub_nodes[GCI_KMC_NUM].priority = GCI_KMC_PRIORITY;
+
+  gci_hub->space_size += gci_hub_nodes[GCI_KMC_NUM].size;
+
+  /* STD-DISPLAY */
+  fd_dispchar = open(FIFO_DISPLAY_CHAR, O_WRONLY);
+
+  gci_nodes[GCI_DISPLAY_NUM].node_info = calloc(1, GCI_NODE_SIZE);
+  gci_nodes[GCI_DISPLAY_NUM].device_area = calloc(1, GCI_DISPLAY_AREA_SIZE);
+
+  if(gci_nodes[GCI_DISPLAY_NUM].node_info == NULL ||
+     gci_nodes[GCI_DISPLAY_NUM].device_area == NULL) {
+    err(EXIT_FAILURE, "malloc STD-DISPLAY");
+  }
+
+  gci_nodes[GCI_DISPLAY_NUM].node_info->area_size = GCI_DISPLAY_AREA_SIZE;
+  gci_nodes[GCI_DISPLAY_NUM].node_info->int_priority = GCI_DISPLAY_INT_PRIORITY;
+  gci_hub_nodes[GCI_DISPLAY_NUM].size = GCI_NODE_SIZE + GCI_DISPLAY_AREA_SIZE;
+  gci_hub_nodes[GCI_DISPLAY_NUM].priority = GCI_DISPLAY_PRIORITY;
+
+  gci_hub->space_size += gci_hub_nodes[GCI_DISPLAY_NUM].size;
+
+  /* mprotect GCI Node Info */
+  for(i = 0; i < GCI_NODE_MAX; i++) {
+    if(gci_hub_nodes[i].size > 0) {
+      gci_hub->total++;
+      mprotect((void *)gci_nodes[i].node_info, GCI_NODE_SIZE, PROT_READ);
+    }
+  }
+
+  IOSR -= gci_hub->space_size;
+}
+
+void gci_close(void)
+{
+  int i;
+
+  for(i = 0; i < GCI_NODE_MAX; i++) {
+    free((void *)gci_nodes[i].node_info);
+    free(gci_nodes[i].device_area);
+  }
+
+  close(fd_dispchar);
+
+  free((void *)gci_hub);
+}
+
+void gci_info(void)
+{
+  int i;
+
+  printf("---- GCI ----\n");
+  printf("[IOSR      ] 0x%08x\n", IOSR);
+  printf("[GCI Hub   ] Size: %08x, Total: %d\n", gci_hub->space_size, gci_hub->total);
+
+  for(i = 0; i < gci_hub->total; i++) {
+    printf("[GCI Node %d] Size: %08x, Priority: %u\n", i, gci_hub_nodes[i].size, gci_hub_nodes[i].priority);
+  }
+}
 
 /* GCI Device Emulation */
 

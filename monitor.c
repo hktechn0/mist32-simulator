@@ -12,7 +12,6 @@
 #include <msgpack.h>
 
 #include "common.h"
-#include "gci_device.h"
 #include "monitor.h"
 
 int sock, sock_listen;
