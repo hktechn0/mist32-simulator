@@ -158,6 +158,8 @@ void monitor_method_recv(void)
 	  }
 	}
 
+	gci_nodes[GCI_KMC_NUM].int_dispatch = true;
+
 	DEBUGMON("[Monitor] KEYBOARD_SCANCODE %x\n", scancode);
       }
     }

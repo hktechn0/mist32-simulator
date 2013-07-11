@@ -22,7 +22,9 @@
 #define SCICFG_TCLR 0x1000
 #define SCICFG_RCLR 0x2000
 #define SCICFG_BDR_OFFSET 2
+#define SCICFG_TIRE_MASK 0x1c0
 #define SCICFG_TIRE_OFFSET 6
+#define SCICFG_RIRE_MASK 0xe00
 #define SCICFG_RIRE_OFFSET 9
 
 #define UTIM64MCFG_ENA 0x1
@@ -57,6 +59,10 @@
 #define GCI_DISPLAY_BITMAP_SIZE 0x400000
 #define GCI_DISPLAY_AREA_SIZE (GCI_DISPLAY_CHAR_SIZE + GCI_DISPLAY_BITMAP_SIZE)
 
+/* I/O FIFO Buffer */
+#define FIFO_USED(start, end, size) (((end + size) - start) % size)
+#define SCI_FIFO_RX_SIZE 16 + 1
+#define SCI_FIFO_TX_SIZE 16 + 1
 #define KMC_FIFO_SCANCODE_SIZE 128
 
 typedef volatile struct _gci_hub_info {
@@ -82,7 +88,8 @@ typedef volatile struct _gci_node_info {
 typedef struct _gci_node {
   gci_node_info *node_info;
   void *device_area;
-  unsigned int int_issued;
+  bool int_dispatch;
+  bool int_issued;
 } gci_node;
 
 typedef volatile struct _dps_utim64 {
@@ -107,7 +114,6 @@ typedef volatile struct _dps_sci {
 
 extern void *dps;
 
-
 extern gci_hub_info *gci_hub;
 extern gci_hub_node *gci_hub_nodes;
 extern gci_node gci_nodes[4];
@@ -115,18 +121,24 @@ extern gci_node gci_nodes[4];
 extern char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 extern unsigned int fifo_scancode_start, fifo_scancode_end;
 
+/* io.c */
 void io_init(void);
 void io_close(void);
 void *io_addr_get(Memory addr);
 void io_load(Memory addr);
 void io_store(Memory addr);
 
+/* dps.c */
 void dps_init(void);
 void dps_close(void);
 void dps_info(void);
 void dps_sci_rxd_read(Memory addr, Memory offset);
 void dps_sci_txd_write(Memory addr, Memory offset);
+void dps_sci_cfg_write(Memory addr, Memory offset);
+bool dps_sci_interrupt(void);
+void dps_lsflags_read(Memory addr, Memory offset);
 
+/* gci.c */
 void gci_init(void);
 void gci_close(void);
 void gci_info(void);

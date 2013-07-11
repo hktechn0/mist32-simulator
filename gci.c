@@ -125,14 +125,15 @@ void gci_kmc_read(Memory addr, Memory offset, void *mem)
       fifo_scancode_start = 0;
     }
 
-    DPUTS("[I/O] KMC SCANCODE %x\n", *p & 0xff);
+    DEBUGIO("[I/O] KMC SCANCODE %x\n", *p & 0xff);
   }
 }
 
 bool gci_kmc_interrupt(void)
 {
-  if(fifo_scancode_start != fifo_scancode_end && !gci_nodes[GCI_KMC_NUM].int_issued) {
-    gci_nodes[GCI_KMC_NUM].int_issued = 1;
+  if(gci_nodes[GCI_KMC_NUM].int_dispatch && !gci_nodes[GCI_KMC_NUM].int_issued) {
+    gci_nodes[GCI_KMC_NUM].int_dispatch = false;
+    gci_nodes[GCI_KMC_NUM].int_issued = true;
     return true;
   }
 
@@ -157,7 +158,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
 
   if(offset < GCI_DISPLAY_CHAR_SIZE) {
     /* character display mode */
-    if(DEBUG) {
+    if(DEBUG_IO) {
       c = *(unsigned int *)((char *)vram + offset);
       chr = c & 0x7f;
 

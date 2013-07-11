@@ -90,6 +90,10 @@ void io_load(Memory addr)
     /* SCI RXD */
     dps_sci_rxd_read(addr, offset);
   }
+  else if(offset == DPS_LSFLAGS) {
+    /* LSFLAGS */
+    dps_lsflags_read(addr, offset);
+  }
   else if(offset > DPS_SIZE + GCI_HUB_SIZE) {
     /* GCI Area */
     p = DPS_SIZE + GCI_HUB_SIZE;
@@ -99,7 +103,8 @@ void io_load(Memory addr)
 	/* GCI Node Info */
 	if(offset < p + GCI_NODE_SIZE + 8) {
 	  /* GCND_IRF (interrupt factor) */
-	  gci_nodes[i].int_issued = 0;
+	  gci_nodes[i].int_issued = false;
+	  printf("[I/O] GCI Interrupt ACK %d\n", i);
 	}
 	break;
       }
@@ -139,6 +144,10 @@ void io_store(Memory addr)
   if(offset == DPS_SCITXD) {
     /* SCI TXD */
     dps_sci_txd_write(addr, offset);
+  }
+  else if(offset == DPS_SCICFG) {
+    /* SCI CFG */
+    dps_sci_cfg_write(addr, offset);
   }
   else if(offset > DPS_SIZE + GCI_HUB_SIZE) {
     /* GCI Area */

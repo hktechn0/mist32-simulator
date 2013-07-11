@@ -9,6 +9,7 @@
 #define DEBUG_JMP (DEBUG && 1)
 #define DEBUG_MON 1
 #define DEBUG_INT 1
+#define DEBUG_IO 1
 
 #define DPUTS if(DEBUG) printf
 #define DEBUGLD if(DEBUG_LD) printf
@@ -16,6 +17,7 @@
 #define DEBUGJMP if(DEBUG_JMP) printf
 #define DEBUGMON if(DEBUG_MON) printf
 #define DEBUGINT if(DEBUG_INT) printf
+#define DEBUGIO if(DEBUG_IO) printf
 
 /* Memory Size */
 #define MEMORY_MAX_ADDR 0x04000000

@@ -19,7 +19,12 @@ void interrupt_dispatcher(void)
   }
 
   if(gci_kmc_interrupt()) {
+    /* GCI KMC */
     interrupt_entry(IDT_GCI_KMC_NUM);
+  }
+  else if(dps_sci_interrupt()) {
+    /* DPS LS */
+    interrupt_entry(IDT_DPSLS_NUM);
   }
 }
 
