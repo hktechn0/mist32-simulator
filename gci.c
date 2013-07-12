@@ -205,6 +205,10 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
 	sprintf(esc_buf + 1, "[48;5;%dm", bg);
 	write(fd_dispchar, esc_buf, strlen(esc_buf));
 
+	if(chr < 0x20 || 0x7e < chr) {
+	  chr = ' ';
+	}
+
 	/* output char */
 	write(fd_dispchar, &chr, 1);
       }
