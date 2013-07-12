@@ -410,7 +410,8 @@ void i_ld8(Instruction *inst)
   }
 
   *dest = *((unsigned char *)MEMP8(src));
-  DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
 }
 
 void i_ld16(Instruction *inst)
@@ -431,7 +432,8 @@ void i_ld16(Instruction *inst)
   }
 
   *dest = *((unsigned short *)MEMP16(src));
-  DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
 }
 
 void i_ld32(Instruction *inst)
@@ -452,7 +454,8 @@ void i_ld32(Instruction *inst)
   }
 
   *dest = *((unsigned int *)MEMP(src));
-  DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 }
 
 void i_st8(Instruction *inst)
@@ -462,7 +465,8 @@ void i_st8(Instruction *inst)
   ops_o2_ui11(inst, &dest, &src);
 
   *((unsigned char *)MEMP8(src)) = (unsigned char)*dest;
-  DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x\n", src, (unsigned char)*dest);
+  DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
 
   if(src >= IOSR) {
     errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
@@ -484,7 +488,8 @@ void i_st16(Instruction *inst)
   }
 
   *((unsigned short *)MEMP16(src)) = (unsigned short)*dest;
-  DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x\n", src, (unsigned short)*dest);
+  DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
 
   if(src >= IOSR) {
     errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
@@ -506,7 +511,8 @@ void i_st32(Instruction *inst)
   }
 
   *((unsigned int *)MEMP(src)) = *dest;
-  DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x\n", src, *dest);
+  DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 
   if(src >= IOSR) {
     io_store(src);
@@ -518,6 +524,9 @@ void i_push(Instruction *inst)
 {
   SPR -= 4;
   *((int *)MEMP(SPR)) = GR[inst->o1.operand1];
+
+  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, GR[inst->o1.operand1], PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, GR[inst->o1.operand1]);
 }
 
 void i_pushpc(Instruction *inst)
@@ -530,6 +539,9 @@ void i_pop(Instruction *inst)
 {
   GR[inst->o1.operand1] = *((int *)MEMP(SPR));
   SPR += 4;
+
+  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR - 4, GR[inst->o1.operand1], PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR - 4, GR[inst->o1.operand1]);
 }
 
 /* Branch */

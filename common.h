@@ -10,10 +10,13 @@
 #define DEBUG_MON 1
 #define DEBUG_INT 1
 #define DEBUG_IO 1
+#define DEBUG_HW 0
 
 #define DPUTS if(DEBUG) printf
 #define DEBUGLD if(DEBUG_LD) printf
 #define DEBUGST if(DEBUG_ST) printf
+#define DEBUGLDHW if(DEBUG_HW) printf
+#define DEBUGSTHW if(DEBUG_HW) printf
 #define DEBUGJMP if(DEBUG_JMP) printf
 #define DEBUGMON if(DEBUG_MON) printf
 #define DEBUGINT if(DEBUG_INT) printf
