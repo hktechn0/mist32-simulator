@@ -94,14 +94,19 @@ void gci_close(void)
 
 void gci_info(void)
 {
-  int i;
+  int i, addr;
+
+  addr = IOSR + DPS_SIZE;
 
   printf("---- GCI ----\n");
   printf("[IOSR      ] 0x%08x\n", IOSR);
-  printf("[GCI Hub   ] Size: %08x, Total: %d\n", gci_hub->space_size, gci_hub->total);
+  printf("[GCI Hub   ] 0x%08x Size: %08x, Total: %d\n", addr, gci_hub->space_size, gci_hub->total);
+
+  addr += GCI_HUB_SIZE;
 
   for(i = 0; i < gci_hub->total; i++) {
-    printf("[GCI Node %d] Size: %08x, Priority: %u\n", i, gci_hub_nodes[i].size, gci_hub_nodes[i].priority);
+    printf("[GCI Node %d] 0x%08x Size: %08x, Priority: %u\n", i, addr, gci_hub_nodes[i].size, gci_hub_nodes[i].priority);
+    addr += gci_hub_nodes[i].size;
   }
 }
 
