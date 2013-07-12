@@ -1,3 +1,5 @@
+#include <signal.h>
+
 #define DPS_SIZE 0x200
 #define GCI_HUB_SIZE 0x400
 #define GCI_HUB_HEADER_SIZE 0x100
@@ -6,6 +8,35 @@
 /* DPS */
 #define DPS_UTIM64A 0x000
 #define DPS_UTIM64B 0x040
+#define DPS_UTIM64_SIZE 0x7f
+#define DPS_UTIM64_TIMER_SIZE 0x3c
+
+#define DPS_UTIM64_MCFGR 0x000
+#define DPS_UTIM64_MCR 0x004
+#define DPS_UTIM64_CC0R 0x00c
+#define DPS_UTIM64_CC1R 0x014
+#define DPS_UTIM64_CC2R 0x01c
+#define DPS_UTIM64_CC3R 0x024
+#define DPS_UTIM64_CC0CFGR 0x02c
+#define DPS_UTIM64_CC1CFGR 0x030
+#define DPS_UTIM64_CC2CFGR 0x034
+#define DPS_UTIM64_CC3CFGR 0x038
+
+#define DPS_UTIM64FLAGS 0x07c
+
+#define UTIM64MCFG_ENA 0x1
+#define UTIM64CFG_ENA 0x1
+#define UTIM64CFG_IE 0x2
+#define UTIM64CFG_BIT 0x4
+#define UTIM64CFG_MODE 0x8
+#define UTIM64FLAGS_A0 0x01
+#define UTIM64FLAGS_A1 0x02
+#define UTIM64FLAGS_A2 0x04
+#define UTIM64FLAGS_A3 0x08
+#define UTIM64FLAGS_B0 0x10
+#define UTIM64FLAGS_B1 0x20
+#define UTIM64FLAGS_B2 0x40
+#define UTIM64FLAGS_B3 0x80
 
 #define DPS_SCI 0x100
 #define DPS_SCITXD 0x100
@@ -95,14 +126,8 @@ typedef struct _gci_node {
 typedef volatile struct _dps_utim64 {
   volatile unsigned int mcfg;
   volatile unsigned int mc[2];
-  volatile unsigned int cc0[2];
-  volatile unsigned int cc1[2];
-  volatile unsigned int cc2[2];
-  volatile unsigned int cc3[2];
-  volatile unsigned int cc0cfg;
-  volatile unsigned int cc1cfg;
-  volatile unsigned int cc2cfg;
-  volatile unsigned int cc3cfg;
+  volatile unsigned int cc[4][2];
+  volatile unsigned int cccfg[4];
 } dps_utim64;
 
 typedef volatile struct _dps_sci {
@@ -132,6 +157,10 @@ void io_store(Memory addr);
 void dps_init(void);
 void dps_close(void);
 void dps_info(void);
+void dps_utim64_read(Memory addr, Memory offset);
+void dps_utim64_write(Memory addr, Memory offset);
+bool dps_utim64_interrupt(void);
+void dps_utim64_timer_sigalrm(int sig, siginfo_t *si, void *uc);
 void dps_sci_rxd_read(Memory addr, Memory offset);
 void dps_sci_txd_write(Memory addr, Memory offset);
 void dps_sci_cfg_write(Memory addr, Memory offset);

@@ -3,12 +3,12 @@
 #include <string.h>
 #include <err.h>
 
+#include <unistd.h>
 #include <sys/types.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include <unistd.h>
-#include <fcntl.h>
 #include <msgpack.h>
 
 #include "common.h"
@@ -73,8 +73,9 @@ void monitor_method_send(void)
 void monitor_method_recv(void)
 {
   fd_set rfds;
-  struct timeval tv;
   int retval;
+  sigset_t mask;
+  static const struct timespec tv = {0, 0};
 
   ssize_t size;
   char strname[100];
@@ -87,13 +88,13 @@ void monitor_method_recv(void)
 
   FD_ZERO(&rfds);
   FD_SET(sock, &rfds);
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
 
-  retval = select(sock + 1, &rfds, NULL, NULL, &tv);
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGALRM);
+  retval = pselect(sock + 1, &rfds, NULL, NULL, &tv, &mask);
 
   if(retval == -1) {
-    errx(EXIT_FAILURE, "select");
+    errx(EXIT_FAILURE, "method_receive select");
   }
   else if(!retval) {
     return;

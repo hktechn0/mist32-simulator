@@ -18,13 +18,17 @@ void interrupt_dispatcher(void)
     return;
   }
 
-  if(gci_kmc_interrupt()) {
+  if(dps_utim64_interrupt()) {
+    /* DPS UTIM64 */
+    interrupt_entry(IDT_DPS_UTIM64_NUM);
+  }
+  else if(gci_kmc_interrupt()) {
     /* GCI KMC */
     interrupt_entry(IDT_GCI_KMC_NUM);
   }
   else if(dps_sci_interrupt()) {
     /* DPS LS */
-    interrupt_entry(IDT_DPSLS_NUM);
+    interrupt_entry(IDT_DPS_LS_NUM);
   }
 }
 

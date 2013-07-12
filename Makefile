@@ -4,7 +4,7 @@ OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o interrupt.o
 FIFO = sci_txd sci_rxd gci_display_char
 
 mist32_simulator: $(OBJS) $(FIFO)
-	$(CC) $(CFLAGS) -lelf -lmsgpack -o $@ $(OBJS)
+	$(CC) $(CFLAGS) -lrt -lelf -lmsgpack -o $@ $(OBJS)
 
 .c.o: common.h
 	$(CC) $(CFLAGS) -c $<

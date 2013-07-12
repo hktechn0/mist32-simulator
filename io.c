@@ -86,7 +86,11 @@ void io_load(Memory addr)
 
   offset = addr - IOSR;
 
-  if(offset == DPS_SCIRXD) {
+  if(offset < DPS_UTIM64_SIZE) {
+    /* UTIM64 */
+    dps_utim64_read(addr, offset);
+  }
+  else if(offset == DPS_SCIRXD) {
     /* SCI RXD */
     dps_sci_rxd_read(addr, offset);
   }
@@ -104,7 +108,7 @@ void io_load(Memory addr)
 	if(offset < p + GCI_NODE_SIZE + 8) {
 	  /* GCND_IRF (interrupt factor) */
 	  gci_nodes[i].int_issued = false;
-	  printf("[I/O] GCI Interrupt ACK %d\n", i);
+	  DEBUGIO("[I/O] GCI Interrupt ACK %d\n", i);
 	}
 	break;
       }
@@ -141,7 +145,11 @@ void io_store(Memory addr)
 
   offset = addr - IOSR;
 
-  if(offset == DPS_SCITXD) {
+  if(offset < DPS_UTIM64_SIZE) {
+    /* UTIM64 */
+    dps_utim64_write(addr, offset);
+  }
+  else if(offset == DPS_SCITXD) {
     /* SCI TXD */
     dps_sci_txd_write(addr, offset);
   }
