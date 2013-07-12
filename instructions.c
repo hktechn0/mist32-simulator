@@ -579,7 +579,7 @@ void i_sriosr(Instruction *inst)
 void i_sridtr(Instruction *inst)
 {
   GR[inst->o1.operand1] = (int)IDTR;
-  printf("[System] SRIDTR: idtr => 0x%08x\n", IDTR);
+  DEBUGINT("[INTERRUPT] SRIDTR: idtr => 0x%08x\n", IDTR);
 }
 
 void i_srfrcr(Instruction *inst)
@@ -611,13 +611,13 @@ void i_srieiw(Instruction *inst)
     PSR &= ~PSR_IM_ENABLE;
   }
 
-  printf("[System] SRIEIW: Interrupt %s\n", (PSR & PSR_IM_ENABLE) ? "Enabled" : "Disabled");
+  DEBUGINT("[INTERRUPT] SRIEIW: Interrupt %s\n", (PSR & PSR_IM_ENABLE) ? "Enabled" : "Disabled");
 }
 
 void i_sridtw(Instruction *inst)
 {
   IDTR = (Memory)GR[inst->o1.operand1];
-  printf("[System] SRIDTW: idtr <= 0x%08x\n", IDTR);
+  DEBUGINT("[INTERRUPT] SRIDTW: idtr <= 0x%08x\n", IDTR);
 }
 
 void i_nop(Instruction *inst)
@@ -642,4 +642,9 @@ void i_movepc(Instruction *inst)
   ops_o2_i11(inst, &dest, &src);
 
   *dest = PCR + (src << 2);
+}
+
+void i_idts(Instruction *inst)
+{
+  interrupt_idt_store();
 }

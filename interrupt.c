@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "interrupt.h"
+
+idt_entry idt_cache[IDT_ENTRY_MAX];
 
 /* Previous system registers */
 struct FLAGS PFLAGR;
@@ -32,22 +35,9 @@ void interrupt_dispatcher(void)
   }
 }
 
-idt_entry *interrupt_vector_get(unsigned int num)
-{
-  idt_entry *p;
-
-  p = (void *)MEMP(IDTR);
-
-  return p + num;
-}
-
 void interrupt_entry(unsigned int num)
 {
-  idt_entry *idt;
-
-  idt = interrupt_vector_get(num);
-
-  if(!(idt->flags & IDT_FLAGS_VALID)) {
+  if(!(idt_cache[num].flags & IDT_FLAGS_VALID)) {
     return;
   }
 
@@ -59,7 +49,7 @@ void interrupt_entry(unsigned int num)
   PSR &= ~PSR_IM_ENABLE;
 
   /* entry interrupt */
-  PCR = idt->handler;
+  PCR = idt_cache[num].handler;
 
   DEBUGINT("[INTERRUPT] IRQ %x\n", num);
 }
@@ -72,4 +62,11 @@ void interrupt_exit(void)
   next_PCR = PPCR;
 
   DEBUGINT("[INTERRUPT] IRQ Exit\n");
+}
+
+void interrupt_idt_store(void)
+{
+  memcpy((void *)idt_cache, MEMP(IDTR), IDT_ENTRY_MAX * sizeof(idt_entry));
+
+  DEBUGINT("[INTERRUPT] IDT Store\n");
 }

@@ -29,3 +29,4 @@ typedef volatile struct _idt_entry {
 void interrupt_dispatcher(void);
 void interrupt_entry(unsigned int num);
 void interrupt_exit(void);
+void interrupt_idt_store(void);
