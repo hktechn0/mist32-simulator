@@ -42,22 +42,20 @@ int exec(Memory entry_p)
 
     /* instruction fetch */
     inst = (Instruction *)MEMP(PCR);
-    
+
     if(DEBUG) {
       puts("---");
       printf("Op: 0x%03x(%4d) Insn: 0x%08x\n",
 	     inst->base.opcode, inst->base.opcode, inst->value);
     }
-    
+
     /* execute operation */
     (*(opcode_t[inst->base.opcode]))(inst);
-    
-    if(DEBUG) {
-      print_registers();
-      print_stack(SPR);
-      dps_info();
-      if(DEBUG_I) getchar();
-    }
+
+    if(DEBUG_REG) { print_registers(); }
+    if(DEBUG_STACK) { print_stack(SPR); }
+    if(DEBUG_DPS) { dps_info(); }
+    if(DEBUG_I) { getchar(); }
 
     monitor_method_recv();
 
@@ -77,6 +75,6 @@ int exec(Memory entry_p)
   print_registers();
 
   free(opcode_t);
-  
+
   return 0;
 }

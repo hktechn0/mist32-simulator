@@ -4,12 +4,15 @@
 #include "io.h"
 #include "instruction_format.h"
 
-#define DEBUG_LD (DEBUG && 1)
-#define DEBUG_ST (DEBUG && 1)
-#define DEBUG_JMP (DEBUG && 1)
+#define DEBUG_REG 0
+#define DEBUG_STACK 0
+#define DEBUG_LD (DEBUG)
+#define DEBUG_ST (DEBUG)
+#define DEBUG_JMP (DEBUG)
 #define DEBUG_MON 1
 #define DEBUG_INT 1
 #define DEBUG_IO 1
+#define DEBUG_DPS 0
 #define DEBUG_HW 0
 
 #define DPUTS if(DEBUG) printf

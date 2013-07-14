@@ -287,7 +287,7 @@ void gci_mmcc_write(Memory addr, Memory offset, void *mem)
       errx(EXIT_FAILURE, "MMCC READ read");
     }
 
-    printf("[I/O] MMCC READ Sector: %d\n", mmcc->sector_read);
+    DEBUGIO("[I/O] MMCC READ Sector: %d\n", mmcc->sector_read);
   }
   else if(offset == GCI_MMCC_SECTOR_WRITE) {
     if(lseek(fd_mmcc, mmcc->sector_write * MMCC_SECTOR_SIZE, SEEK_SET) == -1) {
@@ -297,6 +297,6 @@ void gci_mmcc_write(Memory addr, Memory offset, void *mem)
       errx(EXIT_FAILURE, "MMCC WRITE write");
     }
 
-    printf("[I/O] MMCC WRITE Sector: %d\n", mmcc->sector_write);
+    DEBUGIO("[I/O] MMCC WRITE Sector: %d\n", mmcc->sector_write);
   }
 }
