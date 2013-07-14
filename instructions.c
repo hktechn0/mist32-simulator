@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <err.h>
+
+#include <time.h>
+#include <endian.h>
+
 #include "common.h"
 #include "interrupt.h"
 #include "instructions.h"
@@ -362,9 +365,11 @@ void i_revb(Instruction *inst)
 
 void i_rev8(Instruction *inst)
 {
-  /* FIXME: not implement */
-  fprintf(stderr, "[Error] %s not implemented yet.\n", "rev8");
-  exit(EXIT_FAILURE);
+  unsigned int *dest, src;
+
+  ops_o2_ui11(inst, &dest, &src);
+
+  *dest = htobe32(src);
 }
 
 void i_getb(Instruction *inst)
