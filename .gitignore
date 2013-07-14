@@ -1,0 +1,6 @@
+mist32_simulator
+*.o
+mmc.img
+sci_txd
+sci_rxd
+gci_display_char
