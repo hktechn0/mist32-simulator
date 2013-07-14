@@ -42,6 +42,9 @@ void *memory_addr_get(Memory addr)
     /* memory mapped IO area */
     p = io_addr_get(addr);
   }
+  else if(addr >= MEMORY_MAX_ADDR) {
+    errx(EXIT_FAILURE, "no memory at %08x", addr);
+  }
   else {
     /* virtual memory */
     p = (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
