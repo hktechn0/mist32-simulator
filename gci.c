@@ -14,10 +14,12 @@ gci_hub_info *gci_hub;
 gci_hub_node *gci_hub_nodes;
 gci_node gci_nodes[4];
 
+gci_mmcc *mmcc;
+
 char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 unsigned int fifo_scancode_start, fifo_scancode_end;
 
-int fd_dispchar;
+int fd_dispchar, fd_mmcc;
 
 void gci_init(void)
 {
@@ -67,6 +69,30 @@ void gci_init(void)
 
   gci_hub->space_size += gci_hub_nodes[GCI_DISPLAY_NUM].size;
 
+  /* STD-MMCC */
+  fd_mmcc = open(GCI_MMCC_IMAGE_FILE, O_RDWR);
+
+  if(fd_mmcc == -1) {
+    DEBUGIO("[I/O] No MMC Image File\n");
+  }
+
+  gci_nodes[GCI_MMCC_NUM].node_info = calloc(1, GCI_NODE_SIZE);
+  gci_nodes[GCI_MMCC_NUM].device_area = calloc(1, GCI_MMCC_AREA_SIZE);
+
+  if(gci_nodes[GCI_MMCC_NUM].node_info == NULL ||
+     gci_nodes[GCI_MMCC_NUM].device_area == NULL) {
+    err(EXIT_FAILURE, "malloc STD-MMCC");
+  }
+
+  mmcc = gci_nodes[GCI_MMCC_NUM].device_area;
+
+  gci_nodes[GCI_MMCC_NUM].node_info->area_size = GCI_MMCC_AREA_SIZE;
+  gci_nodes[GCI_MMCC_NUM].node_info->int_priority = GCI_MMCC_INT_PRIORITY;
+  gci_hub_nodes[GCI_MMCC_NUM].size = GCI_NODE_SIZE + GCI_MMCC_AREA_SIZE;
+  gci_hub_nodes[GCI_MMCC_NUM].priority = GCI_MMCC_PRIORITY;
+
+  gci_hub->space_size += gci_hub_nodes[GCI_MMCC_NUM].size;
+
   /* mprotect GCI Node Info */
   for(i = 0; i < GCI_NODE_MAX; i++) {
     if(gci_hub_nodes[i].size > 0) {
@@ -88,6 +114,7 @@ void gci_close(void)
   }
 
   close(fd_dispchar);
+  close(fd_mmcc);
 
   free((void *)gci_hub);
 }
@@ -192,7 +219,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
 	g = (fg >> 4 & 0xf) / 2.7;
 	b = (fg & 0xf) / 2.7;
 	fg = (r * 36) + (g * 6) + (b * 1) + 16;
-	
+
 	r = (bg >> 8 & 0xf) / 2.7;
 	g = (bg >> 4 & 0xf) / 2.7;
 	b = (bg & 0xf) / 2.7;
@@ -228,5 +255,48 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
     DPUTS("[I/O] DISPLAY BITMAP %3dx%3d %x\n", x, y, c);
 
     monitor_display_draw(x, y, c);
+  }
+}
+
+/* MMCC */
+void gci_mmcc_read(Memory addr, Memory offset, void *mem)
+{
+  if(offset == GCI_MMCC_INIT_COMMAND) {
+    errx(EXIT_FAILURE, "MMCC INIT_COMMAND not writable.");
+  }
+}
+
+void gci_mmcc_write(Memory addr, Memory offset, void *mem)
+{
+  void *buf;
+
+  if(fd_mmcc == -1) {
+    errx(EXIT_FAILURE, "no MMC image");
+  }
+
+  buf = ((char *)mmcc + MMCC_BUFFER_OFFSET);
+
+  if(offset == GCI_MMCC_INIT_COMMAND) {
+    DEBUGIO("[I/O] MMCC INIT_COMMAND\n");
+  }
+  else if(offset == GCI_MMCC_SECTOR_READ) {
+    if(lseek(fd_mmcc, mmcc->sector_read * MMCC_SECTOR_SIZE, SEEK_SET) == -1) {
+      errx(EXIT_FAILURE, "MMCC READ lseek");
+    }
+    if(read(fd_mmcc, buf, MMCC_SECTOR_SIZE) == -1) {
+      errx(EXIT_FAILURE, "MMCC READ read");
+    }
+
+    printf("[I/O] MMCC READ Sector: %d\n", mmcc->sector_read);
+  }
+  else if(offset == GCI_MMCC_SECTOR_WRITE) {
+    if(lseek(fd_mmcc, mmcc->sector_write * MMCC_SECTOR_SIZE, SEEK_SET) == -1) {
+      errx(EXIT_FAILURE, "MMCC WRITE lseek");
+    }
+    if(write(fd_mmcc, buf, MMCC_SECTOR_SIZE) == -1) {
+      errx(EXIT_FAILURE, "MMCC WRITE write");
+    }
+
+    printf("[I/O] MMCC WRITE Sector: %d\n", mmcc->sector_write);
   }
 }

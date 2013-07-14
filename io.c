@@ -119,6 +119,9 @@ void io_load(Memory addr)
 	case GCI_KMC_NUM:
 	  gci_kmc_read(addr, offset - p, gci_nodes[i].device_area);
 	  break;
+	case GCI_MMCC_NUM:
+	  gci_mmcc_read(addr, offset - p, gci_nodes[i].device_area);
+	  break;
 	default:
 	  break;
 	}
@@ -173,6 +176,9 @@ void io_store(Memory addr)
 	case GCI_DISPLAY_NUM:
 	  /* DISPLAY */
 	  gci_display_write(addr, offset - p, gci_nodes[i].device_area);
+	  break;
+	case GCI_MMCC_NUM:
+	  gci_mmcc_write(addr, offset - p, gci_nodes[i].device_area);
 	  break;
 	default:
 	  break;

@@ -60,15 +60,11 @@
 
 #define UTIM64MCFG_ENA 0x1
 
-/* FIFO files */
-#define FIFO_SCI_TXD "./sci_txd"
-#define FIFO_SCI_RXD "./sci_rxd"
-#define FIFO_DISPLAY_CHAR "./gci_display_char"
-
 /* GCI */
 #define GCI_NODE_MAX 4
 #define GCI_KMC_NUM 0
 #define GCI_DISPLAY_NUM 1
+#define GCI_MMCC_NUM 2
 
 /* Display */
 #define DISPLAY_CHAR_WIDTH 80
@@ -80,21 +76,43 @@
 /* KMC */
 #define KMC_SCANCODE_VALID 0x100
 
+/* MMCC */
+#define MMCC_BUFFER_OFFSET 0x040
+#define MMCC_BUFFER_SIZE 0x200
+#define MMCC_SECTOR_SIZE 512
+
+#define GCI_MMCC_INIT_COMMAND 0x000
+#define GCI_MMCC_SECTOR_READ 0x004
+#define GCI_MMCC_SECTOR_WRITE 0x008
+
+/* Priority */
 #define GCI_KMC_PRIORITY 0x08
 #define GCI_KMC_INT_PRIORITY 0xff
 #define GCI_DISPLAY_PRIORITY 0xff
 #define GCI_DISPLAY_INT_PRIORITY 0xff
+#define GCI_MMCC_PRIORITY 0xff
+#define GCI_MMCC_INT_PRIORITY 0xff
 
+/* Area Size */
 #define GCI_KMC_AREA_SIZE 0x0004
-#define GCI_DISPLAY_CHAR_SIZE 0xc000
-#define GCI_DISPLAY_BITMAP_SIZE 0x400000
+#define GCI_DISPLAY_CHAR_SIZE 0x0000c000
+#define GCI_DISPLAY_BITMAP_SIZE 0x00400000
 #define GCI_DISPLAY_AREA_SIZE (GCI_DISPLAY_CHAR_SIZE + GCI_DISPLAY_BITMAP_SIZE)
+#define GCI_MMCC_AREA_SIZE 0x0240
 
 /* I/O FIFO Buffer */
 #define FIFO_USED(start, end, size) (((end + size) - start) % size)
 #define SCI_FIFO_RX_SIZE 16 + 1
 #define SCI_FIFO_TX_SIZE 16 + 1
 #define KMC_FIFO_SCANCODE_SIZE 128
+
+/* FIFO files */
+#define FIFO_SCI_TXD "./sci_txd"
+#define FIFO_SCI_RXD "./sci_rxd"
+#define FIFO_DISPLAY_CHAR "./gci_display_char"
+
+/* MMC image */
+#define GCI_MMCC_IMAGE_FILE "./mmc.img"
 
 typedef volatile struct _gci_hub_info {
   unsigned int total;
@@ -136,6 +154,12 @@ typedef volatile struct _dps_sci {
   volatile unsigned int cfg;
 } dps_sci;
 
+/* MMCC */
+typedef volatile struct _gci_mmcc {
+  volatile unsigned int init_command;
+  volatile unsigned int sector_read;
+  volatile unsigned int sector_write;
+} gci_mmcc;
 
 extern void *dps;
 
@@ -174,3 +198,5 @@ void gci_info(void);
 void gci_kmc_read(Memory addr, Memory offset, void *mem);
 bool gci_kmc_interrupt(void);
 void gci_display_write(Memory addr, Memory offset, void *mem);
+void gci_mmcc_read(Memory addr, Memory offset, void *mem);
+void gci_mmcc_write(Memory addr, Memory offset, void *mem);
