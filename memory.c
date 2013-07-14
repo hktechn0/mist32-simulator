@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <err.h>
 
+#include <endian.h>
+
 #include "common.h"
 
 PageEntry *page_table;
@@ -70,19 +72,8 @@ void *memory_page_addr(Memory addr)
   return entry->addr;
 }
 
-void memory_convert_endian(void)
-{
-  unsigned int i;
-    
-  for(i = 0; i < PAGE_ENTRY_NUM; i++) {
-    if(page_table[i].valid) {
-      page_convert_endian(page_table[i].addr);
-    }
-  }
-}
-
 /* convert endian. must pass real address */
-void page_convert_endian(unsigned int *page)
+void memory_page_convert_endian(unsigned int *page)
 {
   unsigned int i;
   unsigned int *value;
@@ -90,7 +81,23 @@ void page_convert_endian(unsigned int *page)
   value = page;
 
   for(i = 0; i < PAGE_SIZE_IN_WORD; i++) {
-    *value = (*value >> 24) | (*value << 24) | ((*value >> 8) & 0xff00) | ((*value << 8) & 0xff0000);
+    /*
+     *value = (*value >> 24) | (*value << 24) | ((*value >> 8) & 0xff00) | ((*value << 8) & 0xff0000);
+     value++;
+    */
+
+    *value = htobe32(*value);
     value++;
+  }
+}
+
+void memory_convert_endian(void)
+{
+  unsigned int i;
+    
+  for(i = 0; i < PAGE_ENTRY_NUM; i++) {
+    if(page_table[i].valid) {
+      memory_page_convert_endian(page_table[i].addr);
+    }
   }
 }

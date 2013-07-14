@@ -28,4 +28,3 @@ void memory_free(void);
 void *memory_addr_get(Memory addr);
 void *memory_page_addr(Memory addr);
 void memory_convert_endian(void);
-void page_convert_endian(unsigned int *page);
