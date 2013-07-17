@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <err.h>
 
 #include "common.h"
 #include "interrupt.h"
@@ -19,10 +20,24 @@ Memory IDTR;
 Memory IOSR;
 unsigned long long FRCR;
 
+bool exec_finish = false;
+
+void signal_on_sigint(int signo)
+{
+  /* EXIT */
+  exec_finish = true;
+
+  fprintf(stderr, "[System] Keyboard Interrupt.\n");
+}
+
 int exec(Memory entry_p)
 {
   Instruction *inst;
   OpcodeTable opcode_t;
+
+  if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
+    err(EXIT_FAILURE, "signal SIGINT");
+  }
 
   /* opcode table init */
   opcode_t = opcode_table_init();
@@ -67,10 +82,10 @@ int exec(Memory entry_p)
 
     interrupt_dispatcher();
 
-  } while(!(PCR == 0 && GR[31] == 0));
+  } while(!(PCR == 0 && GR[31] == 0) && !exec_finish);
   /* exit if b rret && rret == 0 */
 
-  puts("Program Terminated");
+  puts("---- Program Terminated ----");
   print_registers();
 
   free(opcode_t);
