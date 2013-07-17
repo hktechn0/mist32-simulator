@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <err.h>
 
 #define PAGE_SIZE (16384)        /* 2 ^ 14 */
 #define PAGE_ENTRY_NUM (262144)  /* 2 ^ 18 */
@@ -25,6 +26,33 @@ extern PageEntry *page_table;
 
 void memory_init(void);
 void memory_free(void);
-void *memory_addr_get(Memory addr);
-void *memory_page_addr(Memory addr);
+
+void *memory_addr_get_nonmemory(Memory addr);
+void memory_page_alloc(Memory addr, PageEntry *entry);
 void memory_convert_endian(void);
+
+static inline void *memory_page_addr(Memory addr)
+{
+  PageEntry *entry;
+  unsigned int page_num;
+
+  page_num = (addr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
+  entry = &page_table[page_num];
+
+  if(!entry->valid) {
+    /* page fault */
+    memory_page_alloc(addr, entry);
+  }
+
+  return entry->addr;
+}
+
+static inline void *memory_addr_get(Memory addr)
+{
+  if(addr < MEMORY_MAX_ADDR) {
+    /* virtual memory */
+    return (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
+  }
+
+  return memory_addr_get_nonmemory(addr);
+}

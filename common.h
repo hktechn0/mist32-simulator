@@ -1,9 +1,5 @@
 #include <stdbool.h>
 
-#include "memory.h"
-#include "io.h"
-#include "instruction_format.h"
-
 #define DEBUG_REG 0
 #define DEBUG_STACK 0
 #define DEBUG_LD (DEBUG)
@@ -42,6 +38,11 @@
 #define PSR_IM_ENABLE 0x4
 #define PSR_CMOD_KERNEL 0x00
 #define PSR_CMOD_USER 0x60
+
+/* FIXME: include */
+#include "memory.h"
+#include "io.h"
+#include "instruction_format.h"
 
 struct FLAGS {
   unsigned int          : 27;
