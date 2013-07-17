@@ -3,12 +3,9 @@
 #include <err.h>
 
 #include "common.h"
-#include "monitor.h"
 
 void io_init(void)
 {
-  monitor_init();
-
   printf("[System] I/O Initialize... \n");
   IOSR = 0;
   dps_init();
@@ -21,8 +18,6 @@ void io_close(void)
 {
   gci_close();
   dps_close();
-
-  monitor_close();
 }
 
 void *io_addr_get(Memory addr)

@@ -13,13 +13,16 @@
 #include <gelf.h>
 
 #include "common.h"
+#include "monitor.h"
 
 bool DEBUG = false;
 bool DEBUG_I = false;
+bool MONITOR = false;
 
 int main(int argc, char **argv)
 {
   unsigned int i, size, remaining;
+  int opt;
 
   char *filename;
   int elf_fd;
@@ -33,28 +36,37 @@ int main(int argc, char **argv)
 
   void *allocp;
 
-  if(argc <= 1) {
-    puts("error: no input file");
-    return 0;
-  }
-
-  if(argc == 3) {
-    filename = argv[2];
-
-    if(!strcmp(argv[1], "-d")) {
+  while ((opt = getopt(argc, argv, "dim")) != -1) {
+    switch (opt) {
+    case 'd':
       /* debug mode */
       DEBUG = true;
-    }
-    else if(!strcmp(argv[1], "-di")) {
+      break;
+    case 'i':
       /* interactive debug mode */
       DEBUG = true;
       DEBUG_I = true;
+      break;
+    case 'm':
+      /* use monitor client */
+      MONITOR = true;
+      break;
+    default: /* '?' */
+      fprintf(stderr, "Usage: %s [-d] [-i] [-m] file\n",
+	      argv[0]);
+      exit(EXIT_FAILURE);
     }
   }
-  else {
-    filename = argv[1];
+
+  if (optind >= argc) {
+    fprintf(stderr, "error: no input file\n");
+    exit(EXIT_FAILURE);
   }
-  
+  else {
+    /* ELF file */
+    filename = argv[optind];
+  }
+
   elf_version(EV_CURRENT);
 
   /* open ELF object file to exec */
@@ -72,6 +84,11 @@ int main(int argc, char **argv)
 
   /* page table initialize */
   memory_init();
+
+  if(MONITOR) {
+    /* monitor initialize */
+    monitor_init();
+  }
 
   /* io initialize */
   io_init();
@@ -136,8 +153,14 @@ int main(int argc, char **argv)
   /* Execute */
   exec((Memory)header->e_entry);
 
-  io_close();  
+  /* clean up */
+  if(MONITOR) {
+    monitor_close();
+  }
+
+  io_close();
   memory_free();
+
   elf_end(elf);
   close(elf_fd);
 

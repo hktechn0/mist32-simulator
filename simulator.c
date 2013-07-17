@@ -54,7 +54,9 @@ int exec(Memory entry_p)
     if(DEBUG_DPS) { dps_info(); }
     if(DEBUG_I) { getchar(); }
 
-    monitor_method_recv();
+    if(MONITOR) {
+      monitor_method_recv();
+    }
 
     if(next_PCR != ~0) {
       PCR = next_PCR;
