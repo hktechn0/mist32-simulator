@@ -8,6 +8,8 @@
 #include "common.h"
 #include "interrupt.h"
 #include "instructions.h"
+#include "operands.h"
+#include "flags.h"
 
 /* Arithmetic */
 void i_add(Instruction *inst)
