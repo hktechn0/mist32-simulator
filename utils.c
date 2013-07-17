@@ -221,7 +221,6 @@ void print_registers(void)
 {
   unsigned int i;  
   
-  printf("PC: 0x%08x SP: 0x%08x\n", PCR, SPR);
   printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
 	 FLAGR.zero, FLAGR.parity, FLAGR.carry, FLAGR.overflow, FLAGR.sign);
   for(i = 0; i < 32; i++) {

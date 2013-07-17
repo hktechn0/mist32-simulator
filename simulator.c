@@ -32,10 +32,7 @@ int exec(Memory entry_p)
   PCR = entry_p;
   PSR = 0;
 
-  if(DEBUG) {
-    printf("Execution Start: entry = 0x%08x\n", PCR);
-    print_registers();
-  }
+  printf("Execution Start: entry = 0x%08x\n", PCR);
 
   do {
     next_PCR = ~0;
@@ -45,8 +42,8 @@ int exec(Memory entry_p)
 
     if(DEBUG) {
       puts("---");
-      printf("Op: 0x%03x(%4d) Insn: 0x%08x\n",
-	     inst->base.opcode, inst->base.opcode, inst->value);
+      printf("PC: 0x%08x Op: 0x%03x(%4d) Insn: 0x%08x SP: 0x%08x\n",
+	     PCR, inst->base.opcode, inst->base.opcode, inst->value, SPR);
     }
 
     /* execute operation */
