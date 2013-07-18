@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
+#include <errno.h>
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -17,6 +18,7 @@
 int sock, sock_listen;
 struct sockaddr_in addr_client;
 
+msgpack_unpacker *up;
 msgpack_sbuffer *sbuf;
 
 void monitor_init(void)
@@ -25,6 +27,7 @@ void monitor_init(void)
   socklen_t len;
 
   sbuf = msgpack_sbuffer_new();
+  up = msgpack_unpacker_new(MONITOR_BUF_SIZE);
 
   /* TCP socket */
   sock_listen = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
@@ -45,10 +48,11 @@ void monitor_init(void)
 
 void monitor_close(void)
 {
-  msgpack_sbuffer_free(sbuf);
-
   close(sock);
   close(sock_listen);
+
+  msgpack_sbuffer_free(sbuf);
+  msgpack_unpacker_free(up);
 }
 
 msgpack_packer *monitor_method_new(char *method)
@@ -74,33 +78,28 @@ void monitor_method_recv(void)
 {
   fd_set rfds;
   int retval;
-  sigset_t mask;
   static const struct timespec tv = {0, 0};
 
   ssize_t size;
   char strname[100];
 
-  msgpack_unpacker *up;
   msgpack_unpacked result;
   msgpack_object *name, *data;
 
-  unsigned char scancode;
-
   FD_ZERO(&rfds);
   FD_SET(sock, &rfds);
+  retval = pselect(sock + 1, &rfds, NULL, NULL, &tv, NULL);
 
-  sigemptyset(&mask);
-  sigaddset(&mask, SIGALRM);
-  retval = pselect(sock + 1, &rfds, NULL, NULL, &tv, &mask);
-
-  if(retval == -1) {
-    errx(EXIT_FAILURE, "method_receive select");
-  }
-  else if(!retval) {
+  if(retval == 0) {
+    /* no data */
     return;
   }
-
-  up = msgpack_unpacker_new(MONITOR_BUF_SIZE);
+  else if(retval == -1) {
+    if(errno != EINTR) {
+      err(EXIT_FAILURE, "method_receive pselect");
+    }
+    return;
+  }
 
   /* receive */
   size = read(sock, msgpack_unpacker_buffer(up), msgpack_unpacker_buffer_capacity(up));
@@ -132,7 +131,7 @@ void monitor_method_recv(void)
       data = NULL;
     }
 
-    if(name->type != MSGPACK_OBJECT_RAW || (data && data->type != MSGPACK_OBJECT_ARRAY)) {
+    if(name->type != MSGPACK_OBJECT_RAW) {
       errx(EXIT_FAILURE, "invalid method");      
     }
 
@@ -143,10 +142,30 @@ void monitor_method_recv(void)
     /* call method */
     if(!strcmp(strname, "CONNECT")) {
     }
+    else if(data == NULL) {
+      errx(EXIT_FAILURE, "invalid method (no data?)");
+    }
     else if(!strcmp(strname, "KEYBOARD_SCANCODE")) {
-      if(data->via.array.ptr->type != MSGPACK_OBJECT_NIL) {
+      msgpack_object *obj;
+      unsigned int i, n;
+
+      unsigned char scancode;
+
+      if(data->type == MSGPACK_OBJECT_ARRAY) {
+	obj = data->via.array.ptr;
+	n = data->via.array.size;
+      }
+      else if(data->via.array.ptr->type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
+	obj = data;
+	n = 1;
+      }
+      else {
+	n = 0;
+      }
+
+      for(i = 0; i < n; i++, obj++) {
 	/* push FIFO */
-	scancode = data->via.array.ptr->via.i64 & 0xff;
+	scancode = obj->via.i64 & 0xff;
 	fifo_scancode[fifo_scancode_end++] = scancode;
 
 	if(fifo_scancode_end >= KMC_FIFO_SCANCODE_SIZE) {
@@ -168,8 +187,6 @@ void monitor_method_recv(void)
       errx(EXIT_FAILURE, "unknown method '%s'", strname);
     }
   }
-
-  msgpack_unpacker_free(up);
 }
 
 void monitor_display_draw(unsigned int x, unsigned int y, unsigned int color)
