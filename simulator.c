@@ -35,6 +35,7 @@ int exec(Memory entry_p)
 {
   Instruction *inst;
   OpcodeTable opcode_t;
+  unsigned long clock;
 
   if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
     err(EXIT_FAILURE, "signal SIGINT");
@@ -70,7 +71,7 @@ int exec(Memory entry_p)
     if(DEBUG_DPS) { dps_info(); }
     if(DEBUG_I) { getchar(); }
 
-    if(MONITOR) {
+    if(MONITOR && clock & 0x200) {
       monitor_method_recv();
     }
 
@@ -82,6 +83,7 @@ int exec(Memory entry_p)
     }
 
     interrupt_dispatcher();
+    clock++;
 
   } while(!(PCR == 0 && GR[31] == 0) && !exec_finish);
   /* exit if b rret && rret == 0 */
