@@ -24,7 +24,7 @@ void i_add(Instruction *inst)
   *dest = result;
 }
 
-void i_sub(Instruction *inst)
+inline void i_sub(Instruction *inst)
 {
   int *dest;
   int src, result;
@@ -265,14 +265,14 @@ void i_ror(Instruction *inst)
 }
 
 /* Logic */
-void i_and(Instruction *inst)
+inline void i_and(Instruction *inst)
 {
   GR[inst->o2.operand1] &= GR[inst->o2.operand2];
   clr_flags();
   set_flags(GR[inst->o2.operand1]);
 }
 
-void i_or(Instruction *inst)
+inline void i_or(Instruction *inst)
 {
   GR[inst->o2.operand1] |= GR[inst->o2.operand2];
   clr_flags();
@@ -284,7 +284,7 @@ void i_not(Instruction *inst)
   GR[inst->o2.operand1] = ~GR[inst->o2.operand2];
 }
 
-void i_xor(Instruction *inst)
+inline void i_xor(Instruction *inst)
 {
   GR[inst->o2.operand1] ^= GR[inst->o2.operand2];
   clr_flags();
