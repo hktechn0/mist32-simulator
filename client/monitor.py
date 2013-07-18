@@ -18,7 +18,7 @@ class Monitor(object):
         self.window = Gtk.Window()
         self.window.connect("key_press_event", self.on_key_press)
         self.window.connect("key_release_event", self.on_key_release)
-        self.window.connect("destroy", self.destroy)
+        self.window.connect("destroy", self.on_destroy)
 
         # drawing area
         self.drawing = Gtk.DrawingArea()
@@ -42,13 +42,6 @@ class Monitor(object):
         self.window.show_all()
 
     def on_draw(self, widget, cr):
-        for name, data in self.unpacker:
-            if name == "DISPLAY_DRAW":
-                x, y, color = data
-                self.canvas[(x, y)] = color
-            else:
-                print "[Error] unknown method:", name
-
         for position, color in self.canvas.iteritems():
             x, y = position
             r = ((color >> 11) & 0x1f) / float(0x1f)
@@ -82,12 +75,23 @@ class Monitor(object):
 
     def method_recv(self, source, condition):
         self.unpacker.feed(self.sock.recv(1024 * 1024))
-        self.drawing.queue_draw()
+
+        for name, data in self.unpacker:
+            if name == "DISPLAY_DRAW":
+                x, y, color = data
+                self.canvas[(x, y)] = color
+                self.drawing.queue_draw()
+            elif name == "DISCONNECT":
+                self.destroy()
+                break
+            else:
+                print "[Error] unknown method:", name
+
         return True
 
     def method_hup(self, source, condition):
         print "HUP"
-        self.window.destroy()
+        self.destroy()
 
     def main(self):
         # watch socket
@@ -98,9 +102,15 @@ class Monitor(object):
 
         Gtk.main()
 
-    def destroy(self, window):
+    def on_destroy(self, window):
+        self.method_send("DISCONNECT", None)
+        self.destroy()
+
+    def destroy(self):
         for i in self.watchtag:
             GLib.source_remove(i)
+
+        self.sock.shutdown(socket.SHUT_RDWR)
 
         self.fsock.close()
         self.sock.close()
