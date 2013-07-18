@@ -96,7 +96,7 @@
 /* Area Size */
 #define GCI_KMC_AREA_SIZE 0x0004
 #define GCI_DISPLAY_CHAR_SIZE 0x0000c000
-#define GCI_DISPLAY_BITMAP_SIZE 0x00400000
+#define GCI_DISPLAY_BITMAP_SIZE (DISPLAY_WIDTH * DISPLAY_HEIGHT * 4)
 #define GCI_DISPLAY_AREA_SIZE (GCI_DISPLAY_CHAR_SIZE + GCI_DISPLAY_BITMAP_SIZE)
 #define GCI_MMCC_AREA_SIZE 0x0240
 
@@ -125,6 +125,9 @@ typedef volatile struct _gci_hub_node {
   unsigned int _reserved1;
   unsigned int _reserved2;
   unsigned int _reserved3;
+  unsigned int _reserved4;
+  unsigned int _reserved5;
+  unsigned int _reserved6;
 } gci_hub_node;
 
 typedef volatile struct _gci_node_info {
