@@ -101,9 +101,9 @@
 #define GCI_MMCC_AREA_SIZE 0x0240
 
 /* I/O FIFO Buffer */
-#define FIFO_USED(start, end, size) (((end + size) - start) % size)
-#define SCI_FIFO_RX_SIZE 16 + 1
-#define SCI_FIFO_TX_SIZE 16 + 1
+#define FIFO_USED(start, end, size) ((end + size - start) % size)
+#define SCI_FIFO_RX_SIZE (16 + 1)
+#define SCI_FIFO_TX_SIZE (16 + 1)
 #define KMC_FIFO_SCANCODE_SIZE 128
 
 /* FIFO files */

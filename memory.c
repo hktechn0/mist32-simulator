@@ -36,8 +36,6 @@ void memory_free(void)
 
 void *memory_addr_get_nonmemory(Memory addr)
 {
-  extern Memory IOSR;
-
   if(addr >= IOSR) {
     /* memory mapped IO area */
     return io_addr_get(addr);
@@ -51,7 +49,10 @@ void *memory_addr_get_nonmemory(Memory addr)
 
 void memory_page_alloc(Memory addr, PageEntry *entry)
 {
-  if((entry->addr = malloc(PAGE_SIZE)) == NULL) {
+  if(!entry || entry->valid) {
+    errx(EXIT_FAILURE, "page_alloc invalid entry");
+  }
+  else if((entry->addr = malloc(PAGE_SIZE)) == NULL) {
     err(EXIT_FAILURE, "page_alloc");
   }
 
