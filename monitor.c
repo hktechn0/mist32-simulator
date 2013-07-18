@@ -48,6 +48,9 @@ void monitor_init(void)
 
 void monitor_close(void)
 {
+  shutdown(sock, SHUT_RDWR);
+  shutdown(sock_listen, SHUT_RDWR);
+
   close(sock);
   close(sock_listen);
 
@@ -55,7 +58,7 @@ void monitor_close(void)
   msgpack_unpacker_free(up);
 }
 
-msgpack_packer *monitor_method_new(char *method)
+static inline msgpack_packer *monitor_method_new(char *method)
 {
   msgpack_packer *pk;
 
@@ -69,7 +72,7 @@ msgpack_packer *monitor_method_new(char *method)
   return pk;
 }
 
-void monitor_method_send(void)
+static inline void monitor_method_send(void)
 {
   write(sock, sbuf->data, sbuf->size);
 }
@@ -142,6 +145,9 @@ void monitor_method_recv(void)
     /* call method */
     if(!strcmp(strname, "CONNECT")) {
     }
+    else if(!strcmp(strname, "DISCONNECT")) {
+      exec_finish = true;
+    }
     else if(data == NULL) {
       errx(EXIT_FAILURE, "invalid method (no data?)");
     }
@@ -187,6 +193,16 @@ void monitor_method_recv(void)
       errx(EXIT_FAILURE, "unknown method '%s'", strname);
     }
   }
+}
+
+void monitor_disconnect(void)
+{
+  msgpack_packer *pk;
+
+  pk = monitor_method_new("DISCONNECT");
+  msgpack_pack_nil(pk);
+  monitor_method_send();
+  msgpack_packer_free(pk);
 }
 
 void monitor_display_draw(unsigned int x, unsigned int y, unsigned int color)

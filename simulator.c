@@ -26,6 +26,7 @@ void signal_on_sigint(int signo)
 {
   /* EXIT */
   exec_finish = true;
+  monitor_disconnect();
 
   fprintf(stderr, "[System] Keyboard Interrupt.\n");
 }

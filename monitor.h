@@ -3,7 +3,8 @@
 
 void monitor_init(void);
 void monitor_close(void);
-
-void monitor_method_send(void);
 void monitor_method_recv(void);
+
+/* method call */
+void monitor_disconnect(void);
 void monitor_display_draw(unsigned int x, unsigned int y, unsigned int color);

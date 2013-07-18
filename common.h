@@ -59,6 +59,7 @@ typedef pOpcodeFunc* OpcodeTable;
 
 /* Debug flags */
 extern bool DEBUG, DEBUG_I, MONITOR;
+extern bool exec_finish;
 
 /* Vritual Memory */
 extern Memory vmem;
