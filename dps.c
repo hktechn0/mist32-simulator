@@ -379,13 +379,15 @@ bool dps_sci_interrupt(void)
       DEBUGIO("[I/O] DPS SCI FIFO RXD %02x\n", buf[i]);
     }
   }
-  else if(received == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-    /* error */
-    err(EXIT_FAILURE, "sci_rxd");
-  }
-  else {
-    /* no data received */
-    return false;
+  else if(received == -1) {
+    if(errno != EAGAIN && errno != EWOULDBLOCK) {
+      /* error */
+      err(EXIT_FAILURE, "sci_rxd");
+    }
+    else {
+      /* no data received */
+      received = 0;
+    }
   }
 
   length += received;
