@@ -61,14 +61,21 @@ class Monitor(object):
 
     def on_key_press(self, widget, event):
         print hex(event.hardware_keycode), event.string
-        self.method_send("KEYBOARD_SCANCODE", scancode[event.hardware_keycode])
+
+        code = scancode[event.hardware_keycode]
+        if code != None:
+            # make code
+            self.method_send("KEYBOARD_SCANCODE", code)
 
     def on_key_release(self, widget, event):
         print hex(event.hardware_keycode), event.string
-        self.method_send("KEYBOARD_SCANCODE", 0xf0)
-        self.method_send("KEYBOARD_SCANCODE", scancode[event.hardware_keycode])
 
-    def method_send(self, name, *data):
+        code = scancode[event.hardware_keycode]
+        if code != None:
+            # break code
+            self.method_send("KEYBOARD_SCANCODE", (0xf0, code))
+
+    def method_send(self, name, data):
         print "SEND:", name, data
         msg = self.packer.pack([name, data])
         self.sock.send(msg)
@@ -80,7 +87,7 @@ class Monitor(object):
 
     def method_hup(self, source, condition):
         print "HUP"
-        exit()
+        self.window.destroy()
 
     def main(self):
         # watch socket
