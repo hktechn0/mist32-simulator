@@ -1,8 +1,9 @@
-* CPU simulator for MIST32
+* Software CPU simulator for mist32
 - http://open-arch.org/software/simulator
 
 * Licence
-- GNU General Public License v3
+- BSD 2-Clause License
+- See ./LICENSE
 
 * Contact
 - Hirotaka Kawata <hirotaka@techno-st.net>
