@@ -28,10 +28,10 @@ scancode = [
 
     # 0x6x
     None, None, None, None, None, None, None, None,
-    None, None, None, None, None, None, None, None,
+    None, None, None, None, None, None, None, [0xe0, 0x75],
 
     # 0x7x
-    None, (0xe0, 0x6b), None, None, None, None, None, None,
+    None, [0xe0, 0x6b], [0xe0, 0x74], None, [0xe0, 0x72], None, None, None,
     None, None, None, None, None, None, None, None,
 
     # 0x8x
@@ -66,3 +66,15 @@ scancode = [
     None, None, None, None, None, None, None, None,
     None, None, None, None, None, None, None, None,
 ]
+
+def breakcode(hardware_keycode):
+    code = scancode[hardware_keycode]
+
+    if isinstance(code, int):
+        return (0xf0, code)
+    elif code == None:
+        return None
+    elif code[0] == 0xe0:
+        return [0xe0, 0xf0] + code[1:]
+    else:
+        return [0xf0] + code

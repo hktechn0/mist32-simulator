@@ -8,7 +8,7 @@ import msgpack
 
 # PyGI for GTK+ 3
 from gi.repository import Gtk, GLib, Gdk, GdkPixbuf
-from scancode import scancode
+from scancode import scancode, breakcode
 
 class Monitor(object):
     width = 640
@@ -63,10 +63,10 @@ class Monitor(object):
     def on_key_release(self, widget, event):
         print hex(event.hardware_keycode), event.string
 
-        code = scancode[event.hardware_keycode]
+        code = breakcode(event.hardware_keycode)
         if code != None:
             # break code
-            self.method_send("KEYBOARD_SCANCODE", (0xf0, code))
+            self.method_send("KEYBOARD_SCANCODE", code)
 
     def method_send(self, name, data):
         print "SEND:", name, data
