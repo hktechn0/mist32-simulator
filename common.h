@@ -80,6 +80,7 @@ extern unsigned long long FRCR;
 OpcodeTable opcode_table_init(void);
 
 /* utils */
+void print_instruction(Instruction *inst);
 void print_registers(void);
 void print_stack(Memory sp);
 

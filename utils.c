@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "common.h"
 
+void print_instruction(Instruction *inst)
+{
+  printf("PC: 0x%08x Op: 0x%03x(%4d) Insn: 0x%08x SP: 0x%08x\n",
+	 PCR, inst->base.opcode, inst->base.opcode, inst->value, SPR);
+}
+
 void print_registers(void)
 {
   unsigned int i;  

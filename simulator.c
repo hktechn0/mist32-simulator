@@ -35,7 +35,7 @@ int exec(Memory entry_p)
 {
   Instruction *inst;
   OpcodeTable opcode_t;
-  unsigned long clock;
+  unsigned long clock = 0;
 
   if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
     err(EXIT_FAILURE, "signal SIGINT");
@@ -59,8 +59,7 @@ int exec(Memory entry_p)
 
     if(DEBUG) {
       puts("---");
-      printf("PC: 0x%08x Op: 0x%03x(%4d) Insn: 0x%08x SP: 0x%08x\n",
-	     PCR, inst->base.opcode, inst->base.opcode, inst->value, SPR);
+      print_instruction(inst);
     }
 
     /* execute operation */
@@ -89,6 +88,7 @@ int exec(Memory entry_p)
   /* exit if b rret && rret == 0 */
 
   puts("---- Program Terminated ----");
+  print_instruction(inst);
   print_registers();
 
   free(opcode_t);
