@@ -24,7 +24,7 @@ timer_t utim64a_timer[4], utim64b_timer[4];
 bool utim64a_enable[4], utim64b_enable[4];
 struct itimerspec utim64a_its[4], utim64b_its[4];
 
-char fifo_sci_rx[SCI_FIFO_RX_SIZE];
+unsigned char fifo_sci_rx[SCI_FIFO_RX_SIZE];
 unsigned int fifo_sci_rx_start, fifo_sci_rx_end;
 int fd_scitxd, fd_scirxd;
 

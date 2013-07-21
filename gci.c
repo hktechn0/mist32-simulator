@@ -16,7 +16,7 @@ gci_node gci_nodes[4];
 
 gci_mmcc *mmcc;
 
-char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
+unsigned char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 unsigned int fifo_scancode_start, fifo_scancode_end;
 
 int fd_dispchar, fd_mmcc;

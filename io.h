@@ -170,7 +170,7 @@ extern gci_hub_info *gci_hub;
 extern gci_hub_node *gci_hub_nodes;
 extern gci_node gci_nodes[4];
 
-extern char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
+extern unsigned char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 extern unsigned int fifo_scancode_start, fifo_scancode_end;
 
 /* io.c */
