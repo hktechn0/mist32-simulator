@@ -62,6 +62,10 @@ int exec(Memory entry_p)
       print_instruction(inst);
     }
 
+    if(opcode_t[inst->base.opcode] == NULL) {
+      errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, inst->base.opcode);
+    }
+
     /* execute operation */
     (*(opcode_t[inst->base.opcode]))(inst);
 
