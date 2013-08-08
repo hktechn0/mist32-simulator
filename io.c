@@ -25,11 +25,11 @@ void *io_addr_get(Memory addr)
   Memory offset, p;
   int i;
 
-  if(IOSR > addr) {
-    errx(EXIT_FAILURE, "io_load invalid IO address.");
+  if(addr < IOSR) {
+    errx(EXIT_FAILURE, "io_load invalid IO address at %08x", addr);
   }
   else if(addr & 0x3) {
-    errx(EXIT_FAILURE, "io_load invalid IO alignment.");
+    errx(EXIT_FAILURE, "io_load invalid IO alignment at %08x", addr);
   }
 
   offset = addr - IOSR;
