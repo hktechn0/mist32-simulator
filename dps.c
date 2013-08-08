@@ -354,13 +354,6 @@ bool dps_sci_interrupt(void)
     return false;
   }
 
-  rire = (sci->cfg & SCICFG_RIRE_MASK) >> SCICFG_RIRE_OFFSET;
-
-  if(!rire && rire > 0x4) {
-    /* interrupt disabled or invalid */
-    return false;
-  }
-
   /* set fifo length and remaining */
   length = FIFO_USED(fifo_sci_rx_start, fifo_sci_rx_end, SCI_FIFO_RX_SIZE);
   request = SCI_FIFO_RX_SIZE - length - 1;
@@ -388,6 +381,13 @@ bool dps_sci_interrupt(void)
       /* no data received */
       received = 0;
     }
+  }
+
+  rire = (sci->cfg & SCICFG_RIRE_MASK) >> SCICFG_RIRE_OFFSET;
+
+  if(!rire && rire > 0x4) {
+    /* interrupt disabled or invalid */
+    return false;
   }
 
   length += received;

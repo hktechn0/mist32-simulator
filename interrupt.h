@@ -39,6 +39,10 @@ void interrupt_idt_store(void);
 /* check interrupt coming in */
 static inline void interrupt_dispatcher(void)
 {
+  int sci_int;
+
+  sci_int = dps_sci_interrupt();
+
   if(!(PSR & PSR_IM_ENABLE)) {
     /* interrupt disabled */
     return;
@@ -52,7 +56,7 @@ static inline void interrupt_dispatcher(void)
     /* GCI KMC */
     interrupt_entry(IDT_GCI_KMC_NUM);
   }
-  else if(IDT_ISENABLE(IDT_DPS_LS_NUM) && dps_sci_interrupt()) {
+  else if(IDT_ISENABLE(IDT_DPS_LS_NUM) && sci_int) {
     /* DPS LS */
     interrupt_entry(IDT_DPS_LS_NUM);
   }
