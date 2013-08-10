@@ -664,6 +664,20 @@ void i_movepc(Instruction *inst)
   *dest = PCR + (src << 2);
 }
 
+void i_swi(Instruction *inst)
+{
+  unsigned int num;
+
+  num = immediate_i11(inst);
+
+  if(num < IDT_SWIRQ_START_NUM) {
+    /* software irq number should be 64 or above */
+    errx(EXIT_FAILURE, "swi: invalid swi (%d)", num);
+  }
+
+  interrupt_dispatch_nonmask(num);
+}
+
 void i_idts(Instruction *inst)
 {
   interrupt_idt_store();

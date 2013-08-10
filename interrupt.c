@@ -14,8 +14,27 @@ unsigned int PPSR;
 /* unsigned int PPDTR; */
 /* unsigned int PTIDR; */
 
+int interrupt_nmi = -1;
+
 void interrupt_entry(unsigned int num)
 {
+  /* interrupt vector is valid? */
+  if(!IDT_ISVALID(num)) {
+    DEBUGINT("[INTERRUPT] IRQ %x: invalid vector.\n", num);
+
+    if(num == IDT_DOUBLEFAULT_NUM) {
+      errx(EXIT_FAILURE, "Invalid double fault vector.");
+    }
+    else if(num == IDT_INVALID_IDT_NUM) {
+      interrupt_entry(IDT_DOUBLEFAULT_NUM);
+    }
+    else {
+      interrupt_entry(IDT_INVALID_IDT_NUM);
+    }
+
+    return;
+  }
+
   PFLAGR = FLAGR;
   PPCR = PCR;
   PPSR = PSR;
@@ -37,6 +56,25 @@ void interrupt_exit(void)
   next_PCR = PPCR;
 
   DEBUGINT("[INTERRUPT] IRQ Exit\n");
+}
+
+void interrupt_dispatch_nonmask(unsigned int num)
+{
+  if(!IDT_ISVALID(num)) {
+    /* invalid idt */
+    interrupt_nmi = IDT_INVALID_IDT_NUM;
+    DEBUGINT("[INTERRUPT] NMI %x invalid verctor.\n", num);
+    return;
+  }
+
+  interrupt_nmi = num;
+
+  if(!IDT_ISENABLE(num)) {
+    DEBUGINT("[INTERRUPT] NMI %x [WARN] valid vector, but not enable.\n", num);
+  }
+  else {
+    DEBUGINT("[INTERRUPT] NMI %x\n", num);
+  }
 }
 
 void interrupt_idt_store(void)

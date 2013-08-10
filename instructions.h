@@ -78,4 +78,5 @@ void i_halt(Instruction *inst);
 void i_move(Instruction *inst);
 void i_movepc(Instruction *inst);
 
+void i_swi(Instruction *inst);
 void i_idts(Instruction *inst);
