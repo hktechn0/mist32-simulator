@@ -20,6 +20,7 @@ Memory IDTR;
 Memory IOSR;
 unsigned long long FRCR;
 
+bool step_by_step = false;
 bool exec_finish = false;
 
 void signal_on_sigint(int signo)
@@ -40,9 +41,18 @@ int exec(Memory entry_p)
   OpcodeTable opcode_t;
   unsigned long clk = 0;
 
+  unsigned int i;
+  char c;
+
   if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
     err(EXIT_FAILURE, "signal SIGINT");
   }
+
+  /*
+  for(i = 0; i < breakp_next; i++) {
+    printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
+  }
+  */
 
   /* opcode table init */
   opcode_t = opcode_table_init();
@@ -57,30 +67,56 @@ int exec(Memory entry_p)
   do {
     next_PCR = ~0;
 
+    /* break point check */
+    for(i = 0; i < breakp_next; i++) {
+      if(PCR == breakp[i]) {
+	step_by_step = true;
+	break;
+      }
+    }
+
     /* instruction fetch */
     inst = (Instruction *)MEMP(PCR);
 
-    if(DEBUG) {
+    if(DEBUG || step_by_step) {
       puts("---");
       print_instruction(inst);
     }
 
+    /* decode */
     if(opcode_t[inst->base.opcode] == NULL) {
       errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, inst->base.opcode);
     }
 
-    /* execute operation */
+    /* execution */
     (*(opcode_t[inst->base.opcode]))(inst);
 
-    if(DEBUG_REG) { print_registers(); }
-    if(DEBUG_STACK) { print_stack(SPR); }
-    if(DEBUG_DPS) { dps_info(); }
-    if(DEBUG_I) { getchar(); }
+    if(step_by_step) {
+      print_registers();
+      print_stack(SPR);
+      dps_info();
+
+      printf("> ");
+      c = getchar();
+
+      if(c == 'c') {
+	step_by_step = false;
+      }
+      else if(c == 'q') {
+	exec_finish = true;
+      }
+    }
+    else {
+      if(DEBUG_REG) { print_registers(); }
+      if(DEBUG_STACK) { print_stack(SPR); }
+      if(DEBUG_DPS) { dps_info(); }
+    }
 
     if(MONITOR && (clk & MONITOR_RECV_INTERVAL)) {
       monitor_method_recv();
     }
 
+    /* next */
     if(next_PCR != ~0) {
       PCR = next_PCR;
     }

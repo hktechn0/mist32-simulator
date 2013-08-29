@@ -63,14 +63,14 @@ void interrupt_dispatch_nonmask(unsigned int num)
   if(!IDT_ISVALID(num)) {
     /* invalid idt */
     interrupt_nmi = IDT_INVALID_IDT_NUM;
-    DEBUGINT("[INTERRUPT] NMI %x invalid verctor.\n", num);
+    DEBUGINT("[INTERRUPT] NMI %x: invalid verctor.\n", num);
     return;
   }
 
   interrupt_nmi = num;
 
   if(!IDT_ISENABLE(num)) {
-    DEBUGINT("[INTERRUPT] NMI %x [WARN] valid vector, but not enable.\n", num);
+    DEBUGINT("[INTERRUPT] NMI %x: [WARN] valid vector, but not enable.\n", num);
   }
   else {
     DEBUGINT("[INTERRUPT] NMI %x\n", num);

@@ -16,8 +16,12 @@
 #include "monitor.h"
 
 bool DEBUG = false;
-bool DEBUG_I = false;
 bool MONITOR = false;
+bool DEBUG_LD = false, DEBUG_ST = false, DEBUG_JMP = false;
+bool DEBUG_HW = false;
+
+unsigned int breakp[100];
+unsigned int breakp_next = 0;
 
 int main(int argc, char **argv)
 {
@@ -36,20 +40,28 @@ int main(int argc, char **argv)
 
   void *allocp;
 
-  while ((opt = getopt(argc, argv, "dim")) != -1) {
+  while ((opt = getopt(argc, argv, "dvhmb:")) != -1) {
     switch (opt) {
     case 'd':
       /* debug mode */
       DEBUG = true;
+    case 'v':
+      /* verbose output */
+      DEBUG_LD = true;
+      DEBUG_ST = true;
+      DEBUG_JMP = true;
       break;
-    case 'i':
-      /* interactive debug mode */
-      DEBUG = true;
-      DEBUG_I = true;
+    case 'h':
+      /* print load / store to compare RTL simulation */
+      DEBUG_HW = true;
       break;
     case 'm':
       /* use monitor client */
       MONITOR = true;
+      break;
+    case 'b':
+      /* break point */
+      breakp[breakp_next++] = strtol(optarg, NULL, 0);
       break;
     default: /* '?' */
       fprintf(stderr, "Usage: %s [-d] [-i] [-m] file\n",

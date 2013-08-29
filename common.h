@@ -2,24 +2,20 @@
 
 #define DEBUG_REG 0
 #define DEBUG_STACK 0
-#define DEBUG_LD (DEBUG)
-#define DEBUG_ST (DEBUG)
-#define DEBUG_JMP (DEBUG)
 #define DEBUG_MON 1
 #define DEBUG_INT 1
 #define DEBUG_IO 1
 #define DEBUG_DPS 0
-#define DEBUG_HW 0
 
-#define DPUTS if(DEBUG) printf
-#define DEBUGLD if(DEBUG_LD) printf
-#define DEBUGST if(DEBUG_ST) printf
+#define DPUTS if(DEBUG || step_by_step) printf
+#define DEBUGLD if(DEBUG_LD || step_by_step) printf
+#define DEBUGST if(DEBUG_ST || step_by_step) printf
 #define DEBUGLDHW if(DEBUG_HW) printf
 #define DEBUGSTHW if(DEBUG_HW) printf
-#define DEBUGJMP if(DEBUG_JMP) printf
-#define DEBUGMON if(DEBUG_MON) printf
-#define DEBUGINT if(DEBUG_INT) printf
-#define DEBUGIO if(DEBUG_IO) printf
+#define DEBUGJMP if(DEBUG_JMP || step_by_step) printf
+#define DEBUGMON if(DEBUG_MON || step_by_step) printf
+#define DEBUGINT if(DEBUG_INT || step_by_step) printf
+#define DEBUGIO if(DEBUG_IO || step_by_step) printf
 
 #define MONITOR_RECV_INTERVAL 0x200
 
@@ -60,8 +56,13 @@ typedef void (*pOpcodeFunc) (Instruction *);
 typedef pOpcodeFunc* OpcodeTable;
 
 /* Debug flags */
-extern bool DEBUG, DEBUG_I, MONITOR;
-extern bool exec_finish;
+extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW;
+extern bool MONITOR;
+extern bool step_by_step, exec_finish;
+
+/* Break points */
+extern unsigned int breakp[100];
+extern unsigned int breakp_next;
 
 /* Vritual Memory */
 extern Memory vmem;
