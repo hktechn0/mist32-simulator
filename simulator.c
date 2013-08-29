@@ -112,8 +112,14 @@ int exec(Memory entry_p)
       if(DEBUG_DPS) { dps_info(); }
     }
 
-    if(MONITOR && (clk & MONITOR_RECV_INTERVAL)) {
-      monitor_method_recv();
+    if(!(clk & MONITOR_RECV_INTERVAL_MASK)) {
+      if((PSR & PSR_IM_ENABLE) && IDT_ISENABLE(IDT_DPS_LS_NUM)) {
+	dps_sci_recv();
+      }
+
+      if(MONITOR) {
+	monitor_method_recv();
+      }
     }
 
     /* next */

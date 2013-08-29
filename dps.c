@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 
 #include "common.h"
+#include "interrupt.h"
 
 #define UTIM64_NAME(t) ((t == utim64a) ? 'A' : 'B')
 
@@ -298,7 +299,18 @@ void dps_sci_rxd_read(Memory addr, Memory offset)
 {
   char c;
 
-  if((sci->cfg & SCICFG_REN) && (fifo_sci_rx_start != fifo_sci_rx_end)) {
+  if(!(sci->cfg & SCICFG_REN)) {
+    sci->rxd = 0;
+    return;
+  }
+
+  /* FIFO empty && interrupt disabled */
+  if(fifo_sci_rx_start == fifo_sci_rx_end &&
+     !((PSR & PSR_IM_ENABLE) && IDT_ISENABLE(IDT_DPS_LS_NUM))) {
+    dps_sci_recv();
+  }
+
+  if(fifo_sci_rx_start != fifo_sci_rx_end) {
     c = fifo_sci_rx[fifo_sci_rx_start++];
 
     if(fifo_sci_rx_start >= SCI_FIFO_RX_SIZE) {
@@ -310,7 +322,7 @@ void dps_sci_rxd_read(Memory addr, Memory offset)
     DEBUGIO("[I/O] DPS SCI RXD 0x%02x\n", c);
   }
   else {
-    /* FIFO Empty or Disabled receive */
+    /* FIFO Empty */
     sci->rxd = 0;
   }
 }
@@ -340,17 +352,11 @@ void dps_sci_cfg_write(Memory addr, Memory offset)
   sci->cfg &= (~SCICFG_TCLR & ~SCICFG_RCLR);
 }
 
-bool dps_sci_interrupt(void)
+bool dps_sci_recv(void)
 {
   char buf[SCI_FIFO_RX_SIZE];
   int length, request, received;
-  unsigned int rire;
   unsigned int i;
-
-  if(dps_lsflags_clear) {
-    *dps_lsflags = 0;
-    dps_lsflags_clear = false;
-  }
 
   if(!(sci->cfg & SCICFG_REN)) {
     /* receive module disabled */
@@ -374,6 +380,8 @@ bool dps_sci_interrupt(void)
 
       DEBUGIO("[I/O] DPS SCI FIFO RXD %02x\n", buf[i]);
     }
+
+    return true;
   }
   else if(received == -1) {
     if(errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -386,6 +394,24 @@ bool dps_sci_interrupt(void)
     }
   }
 
+  return false;
+}
+
+bool dps_sci_interrupt(void)
+{
+  int length, request;
+  unsigned int rire;
+
+  if(dps_lsflags_clear) {
+    *dps_lsflags = 0;
+    dps_lsflags_clear = false;
+  }
+
+  if(!(sci->cfg & SCICFG_REN)) {
+    /* receive module disabled */
+    return false;
+  }
+
   rire = (sci->cfg & SCICFG_RIRE_MASK) >> SCICFG_RIRE_OFFSET;
 
   if(!rire && rire > 0x4) {
@@ -393,7 +419,7 @@ bool dps_sci_interrupt(void)
     return false;
   }
 
-  length += received;
+  length = FIFO_USED(fifo_sci_rx_start, fifo_sci_rx_end, SCI_FIFO_RX_SIZE);
   request = 1 << (rire - 1);
 
   if(length >= request && !(*dps_lsflags & DPS_LSFLAGS_SCIR)) {

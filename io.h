@@ -191,6 +191,7 @@ void dps_utim64_timer_sigalrm(int sig, siginfo_t *si, void *uc);
 void dps_sci_rxd_read(Memory addr, Memory offset);
 void dps_sci_txd_write(Memory addr, Memory offset);
 void dps_sci_cfg_write(Memory addr, Memory offset);
+bool dps_sci_recv(void);
 bool dps_sci_interrupt(void);
 void dps_lsflags_read(Memory addr, Memory offset);
 

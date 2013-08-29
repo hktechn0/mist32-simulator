@@ -17,7 +17,7 @@
 #define DEBUGINT if(DEBUG_INT || step_by_step) printf
 #define DEBUGIO if(DEBUG_IO || step_by_step) printf
 
-#define MONITOR_RECV_INTERVAL 0x200
+#define MONITOR_RECV_INTERVAL_MASK (0x1000 - 1)
 
 /* Memory Size */
 #define MEMORY_MAX_ADDR 0x04000000

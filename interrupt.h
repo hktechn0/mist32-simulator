@@ -44,10 +44,6 @@ void interrupt_idt_store(void);
 /* check interrupt coming in */
 static inline void interrupt_dispatcher(void)
 {
-  int sci_int;
-
-  sci_int = dps_sci_interrupt();
-
   if(interrupt_nmi != -1) {
     /* Non-maskable interrupt */
     interrupt_entry(interrupt_nmi);
@@ -67,7 +63,7 @@ static inline void interrupt_dispatcher(void)
     /* GCI KMC */
     interrupt_entry(IDT_GCI_KMC_NUM);
   }
-  else if(IDT_ISENABLE(IDT_DPS_LS_NUM) && sci_int) {
+  else if(IDT_ISENABLE(IDT_DPS_LS_NUM) && dps_sci_interrupt()) {
     /* DPS LS */
     interrupt_entry(IDT_DPS_LS_NUM);
   }
