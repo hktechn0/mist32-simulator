@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <err.h>
 #include <errno.h>
 
@@ -95,7 +96,9 @@ void dps_info(void)
 {
   DEBUGIO("---- DPS ----\n");
   DEBUGIO("[SCI] TXD: %02x '%c' RXD: %d_%02x '%c' CFG: %08x\n",
-	  sci->txd, sci->txd, sci->rxd & SCIRXD_VALID, sci->rxd, sci->rxd, sci->cfg);
+	  sci->txd, isprint(sci->txd) ? sci->txd : ' ',
+	  !!(sci->rxd & SCIRXD_VALID), sci->rxd & 0xff, isprint(sci->rxd) ? sci->rxd : ' ',
+	  sci->cfg);
   DEBUGIO("[UTIM64] A: %d B: %d\n", utim64a->mcfg & UTIM64MCFG_ENA, utim64b->mcfg & UTIM64MCFG_ENA);
   DEBUGIO("  A: CC0 %08x CC1 %08x CC2 %08x CC3 %08x\n",
 	  utim64a->cc[0][1], utim64a->cc[1][1], utim64a->cc[2][1], utim64a->cc[3][1]);
