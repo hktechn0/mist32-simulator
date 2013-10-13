@@ -422,8 +422,8 @@ bool dps_sci_interrupt(void)
   length = FIFO_USED(fifo_sci_rx_start, fifo_sci_rx_end, SCI_FIFO_RX_SIZE);
   request = 1 << (rire - 1);
 
-  if(length >= request && !(*dps_lsflags & DPS_LSFLAGS_SCIR)) {
-    *dps_lsflags |= DPS_LSFLAGS_SCIR;
+  if(length >= request && !(*dps_lsflags & DPS_LSFLAGS_SCIRIE)) {
+    *dps_lsflags |= DPS_LSFLAGS_SCIRIE;
     return true;
   }
 
