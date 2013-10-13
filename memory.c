@@ -47,6 +47,40 @@ void *memory_addr_get_nonmemory(Memory addr)
   return NULL;
 }
 
+void *memory_addr_get_L2page(Memory addr)
+{
+  if(PSR_MMUPS != PSR_MMUPS_4KB) {
+    errx(EXIT_FAILURE, "MMU page size (%d) not supported.", PSR_MMUPS);
+  }
+
+  /* Level 1 */
+  pdt = memory_addr_get_from_physical(PDTR);
+  index_l1 = (addr & MMU_PAGE_INDEX_L1) >> 22;
+
+  if(!(pdt[index_l1] & MMU_PTE_VALID)) {
+    /* Page Fault */
+    errx(EXIT_FAILURE, "PAGE FAULT L1 at 0x%08x (%08x)", addr, pdt[index_l1]);
+  }
+
+  if(pdt[index_l1] & MMU_PTE_PE) {
+    /* Page Size Extension */
+    offset = addr & MMU_PAGE_OFFSET_PSE;
+    return memory_addr_get_from_physical((pdt[index_l1] & MMU_PAGE_INDEX_L1) + offset);
+  }
+
+  /* Level 2 */
+  pt = memory_addr_get_from_physical(pdt[index_l1] & MMU_PAGE_NUM);
+  index_l2 = (addr & MMU_PAGE_INDEX_L2) >> 12;
+
+  if(!(pt[index_l2] & MMU_PTE_VALID)) {
+    /* Page Fault */
+    errx(EXIT_FAILURE, "PAGE FAULT L2 at 0x%08x (%08x)", addr, pdt[index_l2]);
+  }
+
+  offset = addr & MMU_PAGE_OFFSET;
+  return memory_addr_get_from_physical((pt[index_l2] & MMU_PAGE_NUM) + offset);
+}
+
 void memory_page_alloc(Memory addr, PageEntry *entry)
 {
   if(!entry || entry->valid) {

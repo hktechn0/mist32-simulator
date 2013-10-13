@@ -16,8 +16,9 @@ struct FLAGS FLAGR;
 Memory PCR, next_PCR;
 Memory SPR;
 unsigned int PSR;
-Memory IDTR;
 Memory IOSR;
+Memory PDTR;
+Memory IDTR;
 unsigned long long FRCR;
 
 bool step_by_step = false;

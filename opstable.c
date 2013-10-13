@@ -76,16 +76,21 @@ OpcodeTable opcode_table_init(void)
   opcode_t[178] = i_b;   /* bn   */
 
   opcode_t[192] = i_srspr;
+  opcode_t[193] = i_srpdtr;
   opcode_t[197] = i_srieir;
+  opcode_t[202] = i_srmmur;
   opcode_t[203] = i_sriosr;
-  opcode_t[204] = i_sridtr;
+  opcode_t[211] = i_srpsr;
   opcode_t[212] = i_srfrcr;
   opcode_t[213] = i_srfrclr;
   opcode_t[214] = i_srfrchr;
 
   opcode_t[224] = i_srspw;
+  opcode_t[225] = i_srpdtw;
   opcode_t[229] = i_srieiw;
+  opcode_t[234] = i_srmmuw;
   opcode_t[242] = i_sridtw;
+  opcode_t[243] = i_srpsw;
 
   opcode_t[256] = i_nop;
   opcode_t[257] = i_halt;

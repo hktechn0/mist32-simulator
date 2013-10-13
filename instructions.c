@@ -586,9 +586,19 @@ void i_srspr(Instruction *inst)
   GR[inst->o1.operand1] = SPR;
 }
 
+void i_srpdtr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = PDTR;
+}
+
 void i_srieir(Instruction *inst)
 {
   GR[inst->o1.operand1] = (PSR & PSR_IM_ENABLE) >> 2;
+}
+
+void i_srmmur(Instruction *inst)
+{
+  GR[inst->o1.operand1] = (PSR & PSR_MMUMOD_MASK);
 }
 
 void i_sriosr(Instruction *inst)
@@ -596,10 +606,9 @@ void i_sriosr(Instruction *inst)
   GR[inst->o1.operand1] = IOSR;
 }
 
-void i_sridtr(Instruction *inst)
+void i_srpsr(Instruction *inst)
 {
-  GR[inst->o1.operand1] = (int)IDTR;
-  DEBUGINT("[INTERRUPT] SRIDTR: idtr => 0x%08x\n", IDTR);
+  GR[inst->o1.operand1] = PSR;
 }
 
 void i_srfrcr(Instruction *inst)
@@ -622,6 +631,12 @@ void i_srspw(Instruction *inst)
   SPR = GR[inst->o1.operand1];
 }
 
+void i_srpdtw(Instruction *inst)
+{
+  PDTR = GR[inst->o1.operand1];
+  DEBUGMMU("[MMU] SRPDTW: 0x%08x\n", PDTR);
+}
+
 void i_srieiw(Instruction *inst)
 {
   if(src_o1_i11(inst) & 1) {
@@ -634,10 +649,22 @@ void i_srieiw(Instruction *inst)
   DEBUGINT("[INTERRUPT] SRIEIW: Interrupt %s\n", (PSR & PSR_IM_ENABLE) ? "Enabled" : "Disabled");
 }
 
+void i_srmmuw(Instruction *inst)
+{
+  PSR = (PSR & ~PSR_MMUMOD_MASK) | (src_o1_i11(inst) & PSR_MMUMOD_MASK);
+  DEBUGMMU("[MMU] SRMMUW: MMUMOD %d\n", PSR & PSR_MMUMOD_MASK);
+}
+
 void i_sridtw(Instruction *inst)
 {
   IDTR = (Memory)GR[inst->o1.operand1];
   DEBUGINT("[INTERRUPT] SRIDTW: idtr <= 0x%08x\n", IDTR);
+}
+
+void i_srpsw(Instruction *inst)
+{
+  PSR = GR[inst->o1.operand1];
+  DEBUGMMU("[MMU] SRPSW: MMUMOD %d MMUPS %d\n", PSR_MMUMOD, PSR_MMUPS);
 }
 
 void i_nop(Instruction *inst)
