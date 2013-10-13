@@ -49,6 +49,9 @@ void *memory_addr_get_nonmemory(Memory addr)
 
 void *memory_addr_get_L2page(Memory addr)
 {
+  unsigned int *pdt, *pt;
+  unsigned int index_l1, index_l2, offset;
+
   if(PSR_MMUPS != PSR_MMUPS_4KB) {
     errx(EXIT_FAILURE, "MMU page size (%d) not supported.", PSR_MMUPS);
   }

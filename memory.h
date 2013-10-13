@@ -79,9 +79,6 @@ static inline void *memory_addr_get_from_physical(Memory addr)
 /* Virtual or Physical addr to VM memory addr */
 static inline void *memory_addr_get(Memory addr)
 {
-  unsigned int *pdt, *pt;
-  unsigned int index_l1, index_l2, offset;
-
   if(PSR_MMUMOD == PSR_MMUMOD_DIRECT) {
     /* Direct mode */
     return memory_addr_get_from_physical(addr);
