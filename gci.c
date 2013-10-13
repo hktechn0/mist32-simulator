@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <err.h>
 
 #include <unistd.h>
@@ -194,8 +195,14 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
       c = *(unsigned int *)((char *)vram + offset);
       chr = c & 0x7f;
 
-      printf("[I/O] DISPLAY CHAR: '%c' (%02x) at %dx%d\n", chr, chr,
-	     offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
+      if(isprint(chr)) {
+	printf("[I/O] DISPLAY CHAR: '%c' (%02x) at %dx%d\n", chr, chr,
+	       offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
+      }
+      else {
+	printf("[I/O] DISPLAY CHAR: ??? (%02x) at %dx%d\n", chr,
+	       offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
+      }
     }
 
     /* clear display */
