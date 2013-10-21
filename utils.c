@@ -30,3 +30,13 @@ void print_stack(Memory sp)
     printf("0x%08x: 0x%08x (%11d)\n", i, data, data);
   }
 }
+
+void print_traceback(void)
+{
+  int i, n = 0;
+
+  printf("---- Traceback ----\n");
+  for(i = traceback_next - 1; i >= 0; i--) {
+    printf("#%d\t0x%08x\n", n++, traceback[i]);
+  }
+}

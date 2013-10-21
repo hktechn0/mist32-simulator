@@ -21,6 +21,9 @@ Memory PDTR;
 Memory IDTR;
 unsigned long long FRCR;
 
+Memory traceback[1024];
+unsigned int traceback_next = 0;
+
 bool step_by_step = false;
 bool exec_finish = false;
 
@@ -94,6 +97,7 @@ int exec(Memory entry_p)
 
     if(step_by_step) {
       print_registers();
+      print_traceback();
       print_stack(SPR);
       dps_info();
 

@@ -32,6 +32,11 @@
 #define NOT(reg) (reg = ~reg)
 
 /* reg */
+#define GR_TMP 7
+#define GR_GLOBL 29
+#define GR_BASE 30
+#define GR_RET 31
+
 #define PSR_MMUMOD_MASK 0x3
 #define PSR_MMUMOD (PSR & PSR_MMUMOD_MASK)
 #define PSR_MMUMOD_DIRECT 0x0
@@ -71,6 +76,10 @@ extern bool step_by_step, exec_finish;
 extern unsigned int breakp[100];
 extern unsigned int breakp_next;
 
+/* Traceback */
+extern Memory traceback[1024];
+extern unsigned int traceback_next;
+
 /* Vritual Memory */
 extern Memory vmem;
 
@@ -94,6 +103,7 @@ OpcodeTable opcode_table_init(void);
 void print_instruction(Instruction *inst);
 void print_registers(void);
 void print_stack(Memory sp);
+void print_traceback(void);
 
 /* simulator */
 int exec(Memory entry);

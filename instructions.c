@@ -574,6 +574,11 @@ void i_b(Instruction *inst)
     DEBUGJMP("[Branch]  D : 0x%08x, Cond: %X, PCR: 0x%08x\n", src_jo1_jui16(inst), inst->ji16.condition, PCR);
     next_PCR = src_jo1_jui16(inst);
   }
+
+  /* for traceback */
+  if(!inst->jo1.is_immediate && inst->jo1.operand1 == GR_RET) {
+    traceback_next--;
+  }
 }
 
 void i_ib(Instruction *inst)
@@ -687,8 +692,12 @@ void i_movepc(Instruction *inst)
   int *dest, src;
 
   ops_o2_i11(inst, &dest, &src);
-
   *dest = PCR + (src << 2);
+
+  /* for traceback */
+  if(inst->o2.operand1 == GR_RET) {
+    traceback[traceback_next++] = PCR + 4;
+  }
 }
 
 void i_swi(Instruction *inst)
