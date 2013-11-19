@@ -113,6 +113,7 @@ int exec(Memory entry_p)
     }
     else {
       if(DEBUG_REG) { print_registers(); }
+      if(DEBUG_TRACE) { print_traceback(); }
       if(DEBUG_STACK) { print_stack(SPR); }
       if(DEBUG_DPS) { dps_info(); }
     }

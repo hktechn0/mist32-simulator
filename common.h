@@ -1,6 +1,7 @@
 #include <stdbool.h>
 
 #define DEBUG_REG 0
+#define DEBUG_TRACE 0
 #define DEBUG_STACK 0
 #define DEBUG_MON 1
 #define DEBUG_INT 1
