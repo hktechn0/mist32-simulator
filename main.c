@@ -38,6 +38,10 @@ int main(int argc, char **argv)
   Elf_Data *data;
   Elf32_Addr section_addr, buffer_addr;
 
+  GElf_Phdr phdr;
+  Elf32_Addr paddr, vaddr;
+  size_t phnum;
+
   void *allocp;
 
   while ((opt = getopt(argc, argv, "dvhmb:")) != -1) {
@@ -79,21 +83,6 @@ int main(int argc, char **argv)
     filename = argv[optind];
   }
 
-  elf_version(EV_CURRENT);
-
-  /* open ELF object file to exec */
-  elf_fd = open(filename, O_RDONLY);
-  elf = elf_begin(elf_fd, ELF_C_READ, NULL);
-
-  if(elf_kind(elf) != ELF_K_ELF) {
-    errx(EXIT_FAILURE, "'%s' is not an ELF object.", filename);
-  }
-
-  header = elf32_getehdr(elf);
-  if(header->e_machine != EM_MIST32) {
-    errx(EXIT_FAILURE, "'%s' is not for mist32.", filename);
-  }
-
   /* page table initialize */
   memory_init();
 
@@ -110,6 +99,42 @@ int main(int argc, char **argv)
 
   printf("---- Loading ELF ----\n");
 
+  elf_version(EV_CURRENT);
+
+  /* open ELF object file to exec */
+  elf_fd = open(filename, O_RDONLY);
+  elf = elf_begin(elf_fd, ELF_C_READ, NULL);
+
+  if(elf_kind(elf) != ELF_K_ELF) {
+    errx(EXIT_FAILURE, "'%s' is not an ELF object.", filename);
+  }
+
+  /* get ELF header */
+  header = elf32_getehdr(elf);
+  if(header->e_machine != EM_MIST32) {
+    errx(EXIT_FAILURE, "'%s' is not for mist32.", filename);
+  }
+
+  /* check program header */
+  if(elf_getphdrnum(elf, &phnum)) {
+    errx(EXIT_FAILURE, "elf_getphdrnum() failed: %s.", elf_errmsg(-1));
+  }
+
+  paddr = 0;
+  vaddr = 0;
+
+  for (i = 0; i < phnum; i++) {
+    gelf_getphdr(elf, i, &phdr);
+    if(phdr.p_type == PT_LOAD) {
+      if(phdr.p_vaddr != phdr.p_paddr) {
+	vaddr = phdr.p_vaddr;
+	paddr = phdr.p_paddr;
+	printf("virtual:  0x%08x\n", vaddr);
+	printf("physical: 0x%08x\n", paddr);
+      }
+    }
+  }
+
   /* Load ELF object */
   while((section = elf_nextscn(elf, section)) != 0) {
     section_header = elf32_getshdr(section);
@@ -117,12 +142,12 @@ int main(int argc, char **argv)
     /* Alloc section */
     if((section_header->sh_flags & SHF_ALLOC) && (section_header->sh_type != SHT_NOBITS)) {
       section_addr = section_header->sh_addr;
+      buffer_addr = paddr + (section_addr - vaddr);
 
-      printf("section: %s at 0x%08x\n", 
-	     elf_strptr(elf, header->e_shstrndx, section_header->sh_name), section_addr);
+      printf("section: %s at 0x%08x on 0x%08x\n", 
+	     elf_strptr(elf, header->e_shstrndx, section_header->sh_name), section_addr, buffer_addr);
 
       /* Load section data */
-      buffer_addr = section_addr;
       data = NULL;
       while((data = elf_getdata(section, data)) != NULL) {
 	printf("d_off: 0x%08x (%8d), d_size: 0x%08x (%8d)\n",
