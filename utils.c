@@ -40,3 +40,12 @@ void print_traceback(void)
     printf("#%d\t0x%08x\n", n++, traceback[i]);
   }
 }
+
+void abort_sim(void)
+{
+  printf("---- !!!! ABORT !!!! ----\n");
+  print_instruction((Instruction *)MEMP(PCR));
+  print_registers();
+  print_stack(SPR);
+  print_traceback();
+}

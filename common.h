@@ -105,6 +105,7 @@ void print_instruction(Instruction *inst);
 void print_registers(void);
 void print_stack(Memory sp);
 void print_traceback(void);
+void abort_sim(void);
 
 /* simulator */
 int exec(Memory entry);

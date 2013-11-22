@@ -62,7 +62,8 @@ void *memory_addr_get_L2page(Memory addr)
 
   if(!(pdt[index_l1] & MMU_PTE_VALID)) {
     /* Page Fault */
-    errx(EXIT_FAILURE, "PAGE FAULT L1 at 0x%08x (%08x)", addr, pdt[index_l1]);
+    abort_sim();
+    errx(EXIT_FAILURE, "PAGE FAULT L1 at 0x%08x (%08x) PC: %08x", addr, pdt[index_l1], PCR);
   }
 
   if(pdt[index_l1] & MMU_PTE_PE) {
@@ -77,7 +78,8 @@ void *memory_addr_get_L2page(Memory addr)
 
   if(!(pt[index_l2] & MMU_PTE_VALID)) {
     /* Page Fault */
-    errx(EXIT_FAILURE, "PAGE FAULT L2 at 0x%08x (%08x)", addr, pdt[index_l2]);
+    abort_sim();
+    errx(EXIT_FAILURE, "PAGE FAULT L2 at 0x%08x (%08x) PC: %08x", addr, pdt[index_l2], PCR);
   }
 
   offset = addr & MMU_PAGE_OFFSET;
