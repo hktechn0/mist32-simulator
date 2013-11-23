@@ -71,6 +71,12 @@ void i_udiv(Instruction *inst)
 
   ops_o2_ui11(inst, &dest, &src);
 
+  if(src == 0) {
+    DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
+    interrupt_dispatch_nonmask(IDT_DIVERROR_NUM);
+    return;
+  }
+
   *dest = *dest / src;
   
   clr_flags();
@@ -83,6 +89,12 @@ void i_umod(Instruction *inst)
   unsigned int src;
 
   ops_o2_ui11(inst, &dest, &src);
+
+  if(src == 0) {
+    DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
+    interrupt_dispatch_nonmask(IDT_DIVERROR_NUM);
+    return;
+  }
 
   *dest = *dest % src;
   
@@ -106,6 +118,12 @@ void i_div(Instruction *inst)
 
   ops_o2_i11(inst, &dest, &src);
 
+  if(src == 0) {
+    DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
+    interrupt_dispatch_nonmask(IDT_DIVERROR_NUM);
+    return;
+  }
+
   *dest = *dest / src;
 
   clr_flags();
@@ -118,6 +136,12 @@ void i_mod(Instruction *inst)
   int src;
 
   ops_o2_i11(inst, &dest, &src);
+
+  if(src == 0) {
+    DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
+    interrupt_dispatch_nonmask(IDT_DIVERROR_NUM);
+    return;
+  }
 
   *dest = *dest % src;
   
