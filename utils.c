@@ -44,8 +44,7 @@ void print_traceback(void)
 void abort_sim(void)
 {
   printf("---- !!!! ABORT !!!! ----\n");
-  print_instruction((Instruction *)MEMP(PCR));
+  printf("PCR: %08x SPR: %08x PSR: %08x PDT: %08x IDT: %08x\n",
+	 PCR, SPR, PSR, PDTR, IDTR);
   print_registers();
-  print_stack(SPR);
-  print_traceback();
 }

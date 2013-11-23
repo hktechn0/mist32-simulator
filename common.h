@@ -52,14 +52,17 @@
 #define PSR_MMUPS ((PSR & PSR_MMUPS_MASK) >> 7)
 #define PSR_MMUPS_4KB 0x1
 
-struct FLAGS {
-  unsigned int          : 27;
-  unsigned int sign     : 1;
-  unsigned int overflow : 1;
-  unsigned int carry    : 1;
-  unsigned int parity   : 1;
-  unsigned int zero     : 1;
-};
+typedef union {
+  struct {
+    unsigned int _reserved : 27;
+    unsigned int sign      : 1;
+    unsigned int overflow  : 1;
+    unsigned int carry     : 1;
+    unsigned int parity    : 1;
+    unsigned int zero      : 1;
+  };
+  unsigned int flags;
+} FLAGS;
 
 /* Instruction format */
 #include "instruction_format.h"
@@ -90,14 +93,22 @@ extern Memory vmem;
 extern int GR[32];
 
 /* System Register */
-extern struct FLAGS FLAGR;
+extern FLAGS FLAGR;
 extern Memory PCR, next_PCR;
 extern Memory SPR;
 extern unsigned int PSR;
 extern Memory IOSR;
 extern Memory PDTR;
 extern Memory IDTR;
+extern unsigned int TIDR;
 extern unsigned long long FRCR;
+
+/* Previous System Registers */
+extern FLAGS PFLAGR;
+extern Memory PPCR;
+extern unsigned int PPSR;
+extern Memory PPDTR;
+extern unsigned int PTIDR;
 
 /* opcode */
 OpcodeTable opcode_table_init(void);

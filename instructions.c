@@ -610,6 +610,24 @@ void i_srpdtr(Instruction *inst)
   GR[inst->o1.operand1] = PDTR;
 }
 
+void i_srpidr(Instruction *inst)
+{
+  /* FIXME: not implemented */
+  GR[inst->o1.operand1] = 0;
+}
+
+void i_srcidr(Instruction *inst)
+{
+  /* FIXME: not implemented */
+  GR[inst->o1.operand1] = 0;
+}
+
+void i_srmoder(Instruction *inst)
+{
+  /* FIXME: not implemented */
+  GR[inst->o1.operand1] = 0;
+}
+
 void i_srieir(Instruction *inst)
 {
   GR[inst->o1.operand1] = (PSR & PSR_IM_ENABLE) >> 2;
@@ -623,6 +641,31 @@ void i_srmmur(Instruction *inst)
 void i_sriosr(Instruction *inst)
 {
   GR[inst->o1.operand1] = IOSR;
+}
+
+void i_srtidr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = TIDR;
+}
+
+void i_srppsr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = PPSR;
+}
+
+void i_srppcr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = PPCR;
+}
+
+void i_srppdtr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = PPDTR;
+}
+
+void i_srptidr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = PTIDR;
 }
 
 void i_srpsr(Instruction *inst)
@@ -643,6 +686,11 @@ void i_srfrclr(Instruction *inst)
 void i_srfrchr(Instruction *inst)
 {
   GR[inst->o1.operand1] = (unsigned int)(FRCR >> 32);
+}
+
+void i_srpflagr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = PFLAGR.flags;
 }
 
 void i_srspw(Instruction *inst)
@@ -674,6 +722,26 @@ void i_srmmuw(Instruction *inst)
   DEBUGMMU("[MMU] SRMMUW: MMUMOD %d\n", PSR & PSR_MMUMOD_MASK);
 }
 
+void i_srppsw(Instruction *inst)
+{
+  PPSR = (Memory)GR[inst->o1.operand1];
+}
+
+void i_srppcw(Instruction *inst)
+{
+  PPCR = (Memory)GR[inst->o1.operand1];
+}
+
+void i_srppdtw(Instruction *inst)
+{
+  PPDTR = (Memory)GR[inst->o1.operand1];
+}
+
+void i_srptidw(Instruction *inst)
+{
+  PTIDR = (Memory)GR[inst->o1.operand1];
+}
+
 void i_sridtw(Instruction *inst)
 {
   IDTR = (Memory)GR[inst->o1.operand1];
@@ -684,6 +752,11 @@ void i_srpsw(Instruction *inst)
 {
   PSR = GR[inst->o1.operand1];
   DEBUGMMU("[MMU] SRPSW: MMUMOD %d MMUPS %d\n", PSR_MMUMOD, PSR_MMUPS);
+}
+
+void i_srpflagw(Instruction *inst)
+{
+  PFLAGR.flags = GR[inst->o1.operand1];
 }
 
 void i_srspadd(Instruction *inst)

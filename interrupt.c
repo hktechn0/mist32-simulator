@@ -8,11 +8,11 @@
 idt_entry idt_cache[IDT_ENTRY_MAX];
 
 /* Previous system registers */
-struct FLAGS PFLAGR;
+FLAGS PFLAGR;
 Memory PPCR;
 unsigned int PPSR;
-/* unsigned int PPDTR; */
-/* unsigned int PTIDR; */
+Memory PPDTR;
+unsigned int PTIDR;
 
 int interrupt_nmi = -1;
 
@@ -38,6 +38,8 @@ void interrupt_entry(unsigned int num)
   PFLAGR = FLAGR;
   PPCR = PCR;
   PPSR = PSR;
+  PPDTR = PDTR;
+  PTIDR = TIDR;
 
   /* interrupt disable */
   PSR &= ~PSR_IM_ENABLE;
@@ -45,17 +47,18 @@ void interrupt_entry(unsigned int num)
   /* entry interrupt */
   PCR = idt_cache[num].handler;
 
-  DEBUGINT("[INTERRUPT] IRQ %x\n", num);
+  DEBUGINT("[INTERRUPT] IRQ %02x to %08x\n", num, PCR);
 }
 
 void interrupt_exit(void)
 {
-  PSR = PPSR;
   FLAGR = PFLAGR;
-
   next_PCR = PPCR;
+  PSR = PPSR;
+  PDTR = PPDTR;
+  TIDR = PTIDR;
 
-  DEBUGINT("[INTERRUPT] IRQ Exit\n");
+  DEBUGINT("[INTERRUPT] IRQ Exit return %08x\n", PPCR);
 }
 
 void interrupt_dispatch_nonmask(unsigned int num)

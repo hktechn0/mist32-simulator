@@ -12,13 +12,14 @@ Memory mem;
 int GR[32];
 
 /* System Register */
-struct FLAGS FLAGR;
+FLAGS FLAGR;
 Memory PCR, next_PCR;
 Memory SPR;
 unsigned int PSR;
 Memory IOSR;
 Memory PDTR;
 Memory IDTR;
+unsigned int TIDR;
 unsigned long long FRCR;
 
 Memory traceback[1024];

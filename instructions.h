@@ -63,24 +63,24 @@ void i_ib(Instruction *inst);
 
 void i_srspr(Instruction *inst);
 void i_srpdtr(Instruction *inst);
-/* void i_srpidr(Instruction *inst); */
-/* void i_srcidr(Instruction *inst); */
-/* void i_srmoder(Instruction *inst); */
+void i_srpidr(Instruction *inst);
+void i_srcidr(Instruction *inst);
+void i_srmoder(Instruction *inst);
 void i_srieir(Instruction *inst);
 /* void i_srtisr(Instruction *inst); */
 /* void i_srkpdtr(Instruction *inst); */
 void i_srmmur(Instruction *inst);
 void i_sriosr(Instruction *inst);
-/* void i_srtidr(Instruction *inst); */
-/* void i_srppsr(Instruction *inst); */
-/* void i_srpcr(Instruction *inst); */
-/* void i_srppdtr(Instruction *inst); */
-/* void i_srptidr(Instruction *inst); */
+void i_srtidr(Instruction *inst);
+void i_srppsr(Instruction *inst);
+void i_srppcr(Instruction *inst);
+void i_srppdtr(Instruction *inst);
+void i_srptidr(Instruction *inst);
 void i_srpsr(Instruction *inst);
 void i_srfrcr(Instruction *inst);
 void i_srfrclr(Instruction *inst);
 void i_srfrchr(Instruction *inst);
-/* void i_srpflagr(Instruction *inst); */
+void i_srpflagr(Instruction *inst);
 
 void i_srspw(Instruction *inst);
 void i_srpdtw(Instruction *inst);
@@ -88,15 +88,16 @@ void i_srieiw(Instruction *inst);
 /* void i_srtisw(Instruction *inst); */
 /* void i_srkpdtw(Instruction *inst); */
 void i_srmmuw(Instruction *inst);
-/* void i_srppsw(Instruction *inst); */
-/* void i_srppcw(Instruction *inst); */
-/* void i_srppdtw(Instruction *inst); */
-/* void i_srptidw(Instruction *inst); */
+void i_srppsw(Instruction *inst);
+void i_srppcw(Instruction *inst);
+void i_srppdtw(Instruction *inst);
+void i_srptidw(Instruction *inst);
 void i_sridtw(Instruction *inst);
 void i_srpsw(Instruction *inst);
 /* void i_srfrcw(Instruction *inst); */
 /* void i_srfrclw(Instruction *inst); */
 /* void i_srfrchw(Instruction *inst); */
+void i_srpflagw(Instruction *inst); /* ??? */
 void i_srspadd(Instruction *inst);
 
 void i_nop(Instruction *inst);
