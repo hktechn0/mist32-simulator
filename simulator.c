@@ -98,11 +98,12 @@ int exec(Memory entry_p)
     if(step_by_step) {
       print_registers();
       print_traceback();
-      print_stack(SPR);
-      dps_info();
+      // print_stack(SPR);
+      // dps_info();
 
       printf("> ");
-      c = getchar();
+
+      while((c = getchar()) == -1);
 
       if(c == 'c') {
 	step_by_step = false;
