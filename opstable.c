@@ -91,6 +91,7 @@ OpcodeTable opcode_table_init(void)
   opcode_t[234] = i_srmmuw;
   opcode_t[242] = i_sridtw;
   opcode_t[243] = i_srpsw;
+  opcode_t[255] = i_srspadd;
 
   opcode_t[256] = i_nop;
   opcode_t[257] = i_halt;

@@ -31,6 +31,8 @@
 
 #define msb(word) (!!((word) & 0x80000000))
 #define NOT(reg) (reg = ~reg)
+#define SIGN_EXT8(n) ((n & 0x80) ? (n | 0xffffff00) : (n & 0xff))
+#define SIGN_EXT16(n) ((n & 0x8000) ? (n | 0xffff0000) : (n & 0xffff))
 
 /* reg */
 #define GR_TMP 7

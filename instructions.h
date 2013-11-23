@@ -97,7 +97,7 @@ void i_srpsw(Instruction *inst);
 /* void i_srfrcw(Instruction *inst); */
 /* void i_srfrclw(Instruction *inst); */
 /* void i_srfrchw(Instruction *inst); */
-/* void i_srspwadd(Instruction *inst); */
+void i_srspadd(Instruction *inst);
 
 void i_nop(Instruction *inst);
 void i_halt(Instruction *inst);

@@ -43,9 +43,9 @@ struct instruction_o1 {
 };
 
 struct instruction_c {
-  unsigned int _reserve     : 16;
+  unsigned int immediate    : 16;
   unsigned int condition    : 4;
-  unsigned int __reserve    : 1;
+  unsigned int is_immediate : 1;
   unsigned int opcode       : 10;
   unsigned int _extend      : 1;
 };

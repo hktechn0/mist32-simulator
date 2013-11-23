@@ -107,7 +107,7 @@ void i_div(Instruction *inst)
   ops_o2_i11(inst, &dest, &src);
 
   *dest = *dest / src;
-  
+
   clr_flags();
   /* FIXME: flags unavailable */
 }
@@ -173,31 +173,21 @@ void i_dec(Instruction *inst)
 void i_sext8(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   dest = (unsigned int *)&GR[inst->o2.operand1];
   src = (unsigned int)GR[inst->o2.operand2];
 
-  if(src & 0x80) {
-    *dest = src | 0xffffff00;
-  }
-  else {
-    *dest = src & 0xff;
-  }
+  *dest = SIGN_EXT8(src);
 }
 
 void i_sext16(Instruction *inst)
 {
   unsigned int *dest, src;
-  
+
   dest = (unsigned int *)&GR[inst->o2.operand1];
   src = (unsigned int)GR[inst->o2.operand2];
 
-  if(src & 0x8000) {
-    *dest = src | 0xffff0000;
-  }
-  else {
-    *dest = src & 0xffff;
-  }
+  *dest = SIGN_EXT16(src);
 }
 
 /* Shift, Rotate */
@@ -670,6 +660,11 @@ void i_srpsw(Instruction *inst)
 {
   PSR = GR[inst->o1.operand1];
   DEBUGMMU("[MMU] SRPSW: MMUMOD %d MMUPS %d\n", PSR_MMUMOD, PSR_MMUPS);
+}
+
+void i_srspadd(Instruction *inst)
+{
+  SPR += (int)SIGN_EXT16(inst->c.immediate << 2);
 }
 
 void i_nop(Instruction *inst)
