@@ -318,8 +318,7 @@ void dps_sci_rxd_read(Memory addr, Memory offset)
     }
 
     sci->rxd = ((unsigned int)c & 0xff) | SCIRXD_VALID;
-
-    DEBUGIO("[I/O] DPS SCI RXD 0x%02x\n", c);
+    /* DEBUGIO("[I/O] DPS SCI RXD 0x%02x\n", c); */
   }
   else {
     /* FIFO Empty */
@@ -334,8 +333,7 @@ void dps_sci_txd_write(Memory addr, Memory offset)
   if(sci->cfg & SCICFG_TEN) {
     c = sci->txd & 0xff;
     write(fd_scitxd, &c, 1);
-
-    DEBUGIO("[I/O] DPS SCI TXD 0x%02x\n", c);
+    /* DEBUGIO("[I/O] DPS SCI TXD 0x%02x\n", c); */
   }
 }
 

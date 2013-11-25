@@ -10,7 +10,8 @@ void print_instruction(Instruction *inst)
 void print_registers(void)
 {
   unsigned int i;  
-  
+  printf("PSR: %08x PDT: %08x IDT: %08x TID: %08x\n",
+	 PSR, PDTR, IDTR, TIDR);
   printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
 	 FLAGR.zero, FLAGR.parity, FLAGR.carry, FLAGR.overflow, FLAGR.sign);
   for(i = 0; i < 32; i++) {
@@ -44,7 +45,6 @@ void print_traceback(void)
 void abort_sim(void)
 {
   printf("---- !!!! ABORT !!!! ----\n");
-  printf("PCR: %08x SPR: %08x PSR: %08x PDT: %08x IDT: %08x\n",
-	 PCR, SPR, PSR, PDTR, IDTR);
+  printf("PCR: %08x SPR: %08x\n", PCR, SPR);
   print_registers();
 }

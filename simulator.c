@@ -90,6 +90,7 @@ int exec(Memory entry_p)
 
     /* decode */
     if(opcode_t[inst->base.opcode] == NULL) {
+      abort_sim();
       errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, inst->base.opcode);
     }
 
