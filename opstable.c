@@ -113,6 +113,7 @@ OpcodeTable opcode_table_init(void)
   opcode_t[259] = i_movepc;
 
   opcode_t[288] = i_swi;
+  opcode_t[289] = i_tas;
   opcode_t[290] = i_idts;
   
   return opcode_t;

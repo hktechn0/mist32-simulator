@@ -810,6 +810,35 @@ void i_swi(Instruction *inst)
   interrupt_dispatch_nonmask(num);
 }
 
+void i_tas(Instruction *inst)
+{
+  unsigned int *dest, src;
+
+  ops_o2_ui11(inst, &dest, &src);
+
+  if(inst->i11.is_immediate) {
+    src <<= 2;
+  }
+
+  if(src & 0x3) {
+    errx(EXIT_FAILURE, "tas: invalid alignment.");
+  }
+  else if(src >= IOSR) {
+    errx(EXIT_FAILURE, "tas: test and set in I/O area.");
+  }
+
+  if((*dest = *((unsigned int *)MEMP(src))) == 0) {
+    /* success */
+    *((unsigned int *)MEMP(src)) = 1;
+  }
+  else {
+    /* if fail, do nothing */
+  }
+
+  DEBUGST("[TAS] Addr: 0x%08x, %s, PC: 0x%08x\n", src, *dest ? "fail" : "success", PCR);
+  /* DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest); */
+}
+
 void i_idts(Instruction *inst)
 {
   interrupt_idt_store();
