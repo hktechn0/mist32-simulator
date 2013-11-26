@@ -591,7 +591,7 @@ void i_b(Instruction *inst)
 
   /* for traceback */
   if(!inst->jo1.is_immediate && inst->jo1.operand1 == GR_RET) {
-    if(traceback > 0 && traceback[traceback_next] == next_PCR) {
+    if(traceback > 0) {
       traceback_next--;
     }
   }
@@ -710,12 +710,18 @@ void i_srieiw(Instruction *inst)
 {
   if(src_o1_i11(inst) & 1) {
     PSR |= PSR_IM_ENABLE;
+
+    if(!(PSR & PSR_IM_ENABLE)) {
+      DEBUGINT("[INTERRUPT] SRIEIW: Interrupt Enabled.\n");
+    }
   }
   else {
     PSR &= ~PSR_IM_ENABLE;
-  }
 
-  DEBUGINT("[INTERRUPT] SRIEIW: Interrupt %s\n", (PSR & PSR_IM_ENABLE) ? "Enabled" : "Disabled");
+    if(PSR & PSR_IM_ENABLE) {
+      DEBUGINT("[INTERRUPT] SRIEIW: Interrupt Disabled.\n");
+    }
+  }
 }
 
 void i_srmmuw(Instruction *inst)
