@@ -22,7 +22,7 @@ Memory IDTR;
 unsigned int TIDR;
 unsigned long long FRCR;
 
-Memory traceback[1024];
+Memory traceback[TRACEBACK_MAX];
 unsigned int traceback_next = 0;
 
 bool step_by_step = false;
@@ -142,8 +142,8 @@ int exec(Memory entry_p)
     interrupt_dispatcher();
     clk++;
 
-  } while(!(PCR == 0 && GR[31] == 0) && !exec_finish);
-  /* exit if b rret && rret == 0 */
+  } while(!(PCR == 0 && GR[31] == 0 && DEBUG_EXIT_B0) && !exec_finish);
+  /* DEBUG_EXIT_B0: exit if b rret && rret == 0 */
 
   puts("---- Program Terminated ----");
   print_instruction(inst);

@@ -591,7 +591,9 @@ void i_b(Instruction *inst)
 
   /* for traceback */
   if(!inst->jo1.is_immediate && inst->jo1.operand1 == GR_RET) {
-    traceback_next--;
+    if(traceback > 0 && traceback[traceback_next] == next_PCR) {
+      traceback_next--;
+    }
   }
 }
 
@@ -788,7 +790,9 @@ void i_movepc(Instruction *inst)
 
   /* for traceback */
   if(inst->o2.operand1 == GR_RET) {
-    traceback[traceback_next++] = PCR + 4;
+    if(traceback_next < TRACEBACK_MAX) {
+      traceback[traceback_next++] = PCR + 4;
+    }
   }
 }
 
