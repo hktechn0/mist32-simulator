@@ -743,6 +743,10 @@ void i_srppsw(Instruction *inst)
 void i_srppcw(Instruction *inst)
 {
   PPCR = (Memory)GR[inst->o1.operand1];
+
+  if(PPCR & 0x3) {
+    errx(EXIT_FAILURE, "srppcw: invalid alignment. %08x PC: %08x", PPCR, PCR);
+  }
 }
 
 void i_sruspw(Instruction *inst)

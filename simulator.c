@@ -153,6 +153,12 @@ int exec(Memory entry_p)
 
     /* next */
     if(next_PCR != ~0) {
+      /* alignment check */
+      if(next_PCR & 0x3) {
+	abort_sim();
+	errx(EXIT_FAILURE, "invalid branch addres. %08x", next_PCR);
+      }
+
       PCR = next_PCR;
     }
     else {
