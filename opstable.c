@@ -86,6 +86,7 @@ OpcodeTable opcode_table_init(void)
   opcode_t[204] = i_srtidr;
   opcode_t[205] = i_srppsr;
   opcode_t[206] = i_srppcr;
+  opcode_t[207] = i_sruspr;
   opcode_t[208] = i_srppdtr;
   opcode_t[209] = i_srptidr;
   opcode_t[211] = i_srpsr;
@@ -100,6 +101,7 @@ OpcodeTable opcode_table_init(void)
   opcode_t[234] = i_srmmuw;
   opcode_t[237] = i_srppsw;
   opcode_t[238] = i_srppcw;
+  opcode_t[239] = i_sruspw;
   opcode_t[240] = i_srppdtw;
   opcode_t[241] = i_srptidw;
   opcode_t[242] = i_sridtw;

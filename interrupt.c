@@ -41,8 +41,8 @@ void interrupt_entry(unsigned int num)
   PPDTR = PDTR;
   PTIDR = TIDR;
 
-  /* interrupt disable */
-  PSR &= ~PSR_IM_ENABLE;
+  /* interrupt disable, kernel mode */
+  PSR &= (~PSR_IM_ENABLE & ~PSR_CMOD_MASK);
 
   /* entry interrupt */
   PCR = idt_cache[num].handler;

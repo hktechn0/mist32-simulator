@@ -36,7 +36,7 @@
 #define SIGN_EXT8(n) ((n & 0x80) ? (n | 0xffffff00) : (n & 0xff))
 #define SIGN_EXT16(n) ((n & 0x8000) ? (n | 0xffff0000) : (n & 0xffff))
 
-/* reg */
+/* Register constants */
 #define GR_TMP 7
 #define GR_GLOBL 29
 #define GR_BASE 30
@@ -48,6 +48,7 @@
 #define PSR_MMUMOD_L1 0x1
 #define PSR_MMUMOD_L2 0x2
 #define PSR_IM_ENABLE 0x4
+#define PSR_CMOD_MASK 0x60
 #define PSR_CMOD_KERNEL 0x00
 #define PSR_CMOD_USER 0x60
 #define PSR_MMUPS_MASK 0x380
@@ -97,7 +98,7 @@ extern int GR[32];
 /* System Register */
 extern FLAGS FLAGR;
 extern Memory PCR, next_PCR;
-extern Memory SPR;
+extern Memory SPR, KSPR, USPR;
 extern unsigned int PSR;
 extern Memory IOSR;
 extern Memory PDTR;

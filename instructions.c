@@ -660,6 +660,11 @@ void i_srppcr(Instruction *inst)
   GR[inst->o1.operand1] = PPCR;
 }
 
+void i_sruspr(Instruction *inst)
+{
+  GR[inst->o1.operand1] = USPR;
+}
+
 void i_srppdtr(Instruction *inst)
 {
   GR[inst->o1.operand1] = PPDTR;
@@ -738,6 +743,11 @@ void i_srppsw(Instruction *inst)
 void i_srppcw(Instruction *inst)
 {
   PPCR = (Memory)GR[inst->o1.operand1];
+}
+
+void i_sruspw(Instruction *inst)
+{
+  USPR = (Memory)GR[inst->o1.operand1];
 }
 
 void i_srppdtw(Instruction *inst)

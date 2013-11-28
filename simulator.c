@@ -18,7 +18,7 @@ int GR[32];
 /* System Register */
 FLAGS FLAGR;
 Memory PCR, next_PCR;
-Memory SPR;
+Memory SPR, KSPR, USPR;
 unsigned int PSR;
 Memory IOSR;
 Memory PDTR;
@@ -68,15 +68,16 @@ int exec(Memory entry_p)
   /* opcode table init */
   opcode_t = opcode_table_init();
 
-  /* set stack pointer (bottom of memory) */
-  SPR = (Memory)STACK_DEFAULT;
-  PCR = entry_p;
+  /* setup system registers */
   PSR = 0;
+  PCR = entry_p;
+  KSPR = (Memory)STACK_DEFAULT;
 
   printf("Execution Start: entry = 0x%08x\n", PCR);
 
   do {
     next_PCR = ~0;
+    SPR = (PSR & PSR_CMOD_MASK) ? USPR : KSPR;
 
     /* break point check */
     for(i = 0; i < breakp_next; i++) {
@@ -102,6 +103,14 @@ int exec(Memory entry_p)
 
     /* execution */
     (*(opcode_t[inst->base.opcode]))(inst);
+
+    /* writeback SP */
+    if(PSR & PSR_CMOD_MASK) {
+      USPR = SPR;
+    }
+    else {
+      KSPR = SPR;
+    }
 
     if(step_by_step) {
       print_registers();
