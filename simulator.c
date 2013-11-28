@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <err.h>
 
 #include "common.h"
@@ -45,6 +49,8 @@ int exec(Memory entry_p)
   Instruction *inst;
   OpcodeTable opcode_t;
   unsigned long clk = 0;
+
+  int memfd;
 
   unsigned int i;
   char c;
@@ -112,6 +118,11 @@ int exec(Memory entry_p)
       }
       else if(c == 'q') {
 	exec_finish = true;
+      }
+      else if(c == 'm') {
+	memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
+	write(memfd, MEMP(0), 0x1000);
+	close(memfd);
       }
     }
     else {
