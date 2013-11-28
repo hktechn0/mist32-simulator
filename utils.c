@@ -12,7 +12,7 @@ void print_registers(void)
   unsigned int i;  
   printf("PSR: %08x IDT: %08x PDT: %08x TID: %08x\n",
 	 PSR, IDTR, PDTR, TIDR);
-  printf("KSPR: %08x USPR: %08x\n",
+  printf("KSP: %08x USP: %08x\n",
 	 KSPR, USPR);
   printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
 	 FLAGR.zero, FLAGR.parity, FLAGR.carry, FLAGR.overflow, FLAGR.sign);

@@ -544,10 +544,10 @@ void i_st32(Instruction *inst)
 void i_push(Instruction *inst)
 {
   SPR -= 4;
-  *((int *)MEMP(SPR)) = GR[inst->o1.operand1];
+  *((int *)MEMP(SPR)) = inst->c.is_immediate ? inst->c.immediate : GR[inst->o1.operand1];
 
-  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, GR[inst->o1.operand1], PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, GR[inst->o1.operand1]);
+  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *((int *)MEMP(SPR)), PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *((int *)MEMP(SPR)));
 }
 
 void i_pushpc(Instruction *inst)
