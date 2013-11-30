@@ -50,6 +50,7 @@ int exec(Memory entry_p)
   OpcodeTable opcode_t;
   unsigned long clk = 0;
 
+  unsigned int cmod;
   int memfd;
 
   unsigned int i;
@@ -77,7 +78,10 @@ int exec(Memory entry_p)
 
   do {
     next_PCR = ~0;
-    SPR = (PSR & PSR_CMOD_MASK) ? USPR : KSPR;
+
+    /* choose stack */
+    cmod = (PSR & PSR_CMOD_MASK);
+    SPR = cmod ? USPR : KSPR;
 
     /* break point check */
     for(i = 0; i < breakp_next; i++) {
@@ -105,7 +109,7 @@ int exec(Memory entry_p)
     (*(opcode_t[inst->base.opcode]))(inst);
 
     /* writeback SP */
-    if(PSR & PSR_CMOD_MASK) {
+    if(cmod) {
       USPR = SPR;
     }
     else {
