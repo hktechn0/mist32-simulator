@@ -29,6 +29,10 @@
 #define MMU_PTE_D 0x004
 #define MMU_PTE_EX 0x008
 #define MMU_PTE_PP 0x030
+#define MMU_PTE_PP_RWXX 0x000
+#define MMU_PTE_PP_RDXX 0x010
+#define MMU_PTE_PP_RWRD 0x020
+#define MMU_PTE_PP_RWRW 0x030
 #define MMU_PTE_CD 0x040
 #define MMU_PTE_G 0x080
 #define MMU_PTE_PE 0x100
@@ -90,4 +94,32 @@ static inline void *memory_addr_get(Memory addr)
   else {
     errx(EXIT_FAILURE, "MMU mode (%d) not supported.", PSR_MMUMOD);
   }
+}
+
+static inline bool memory_check_privilege(unsigned int pte, bool write)
+{
+  switch(pte & MMU_PTE_PP) {
+  case MMU_PTE_PP_RWXX:
+    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL) {
+      return true;
+    }
+    break;
+  case MMU_PTE_PP_RDXX:
+    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL && !write) {
+      return true;
+    }
+    break;
+  case MMU_PTE_PP_RWRD:
+    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL || !write) {
+      return true;
+    }
+    break;
+  case MMU_PTE_PP_RWRW:
+    return true;
+    break;
+  default:
+    break;
+  }
+
+  return false;
 }

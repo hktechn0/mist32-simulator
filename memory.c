@@ -63,7 +63,13 @@ void *memory_addr_get_L2page(Memory addr)
   if(!(pdt[index_l1] & MMU_PTE_VALID)) {
     /* Page Fault */
     abort_sim();
-    errx(EXIT_FAILURE, "PAGE FAULT L1 at 0x%08x (%08x) PC: %08x", addr, pdt[index_l1], PCR);
+    errx(EXIT_FAILURE, "PAGE FAULT L1 at 0x%08x (%08x)", addr, pdt[index_l1]);
+  }
+
+  /* L1 privilege */
+  if(!memory_check_privilege(pdt[index_l1], 0)) {
+    abort_sim();
+    errx(EXIT_FAILURE, "PAGE ACCESS DENIED L1 at 0x%08x (%08x)", addr, pdt[index_l1]);
   }
 
   if(pdt[index_l1] & MMU_PTE_PE) {
@@ -79,7 +85,13 @@ void *memory_addr_get_L2page(Memory addr)
   if(!(pt[index_l2] & MMU_PTE_VALID)) {
     /* Page Fault */
     abort_sim();
-    errx(EXIT_FAILURE, "PAGE FAULT L2 at 0x%08x (%08x) PC: %08x", addr, pdt[index_l2], PCR);
+    errx(EXIT_FAILURE, "PAGE FAULT L2 at 0x%08x (%08x)", addr, pt[index_l2]);
+  }
+
+  /* L2 privilege */
+  if(!memory_check_privilege(pt[index_l2], 0)) {
+    abort_sim();
+    errx(EXIT_FAILURE, "PAGE ACCESS DENIED L2 at 0x%08x (%08x)", addr, pt[index_l2]);
   }
 
   offset = addr & MMU_PAGE_OFFSET;
