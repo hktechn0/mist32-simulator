@@ -427,6 +427,7 @@ void i_ld8(Instruction *inst)
   ops_o2_ui11(inst, &dest, &src);
 
   if(src >= IOSR) {
+    abort_sim();
     errx(EXIT_FAILURE, "ld8: only word access accepted in IO area.");
   }
 
@@ -446,9 +447,11 @@ void i_ld16(Instruction *inst)
   }
 
   if(src & 0x1) {
+    abort_sim();
     errx(EXIT_FAILURE, "ld16: invalid alignment.");
   }
   else if(src >= IOSR) {
+    abort_sim();
     errx(EXIT_FAILURE, "ld16: only word access accepted in IO area.");
   }
 
@@ -468,6 +471,7 @@ void i_ld32(Instruction *inst)
   }
 
   if(src & 0x3) {
+    abort_sim();
     errx(EXIT_FAILURE, "ld32: invalid alignment.");
   }
   else if(src >= IOSR) {
@@ -485,13 +489,14 @@ void i_st8(Instruction *inst)
 
   ops_o2_ui11(inst, &dest, &src);
 
+  if(src >= IOSR) {
+    abort_sim();
+    errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
+  }
+
   *((unsigned char *)MEMP8(src)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
-
-  if(src >= IOSR) {
-    errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
-  }
 }
 
 void i_st16(Instruction *inst)
@@ -505,16 +510,17 @@ void i_st16(Instruction *inst)
   }
 
   if(src & 0x1) {
+    abort_sim();
     errx(EXIT_FAILURE, "st16: invalid alignment.");
+  }
+  else if(src >= IOSR) {
+    abort_sim();
+    errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
   }
 
   *((unsigned short *)MEMP16(src)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
-
-  if(src >= IOSR) {
-    errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
-  }
 }
 
 void i_st32(Instruction *inst)
@@ -528,6 +534,7 @@ void i_st32(Instruction *inst)
   }
 
   if(src & 0x3) {
+    abort_sim();
     errx(EXIT_FAILURE, "st32: invalid alignment.");
   }
 

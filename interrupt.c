@@ -58,7 +58,7 @@ void interrupt_exit(void)
   PDTR = PPDTR;
   TIDR = PTIDR;
 
-  DEBUGINT("[INTERRUPT] IRQ Exit return %08x\n", PPCR);
+  DEBUGINT("[INTERRUPT] IRQ Exit return %08x PSR: %08x USP: %08x\n", PPCR, PPSR, USPR);
 }
 
 void interrupt_dispatch_nonmask(unsigned int num)
