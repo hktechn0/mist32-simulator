@@ -51,7 +51,7 @@ void interrupt_entry(unsigned int num)
   /* entry interrupt */
   PCR = idt_cache[num].handler;
 
-  DEBUGINT("[INTERRUPT] IRQ %02x to %08x\n", num, PCR);
+  DEBUGINT("[IRQ] %02x to %08x PSR: %08x KSP: %08x USP: %08x\n", num, PCR, PPSR, KSPR, USPR);
 }
 
 void interrupt_exit(void)
@@ -62,7 +62,8 @@ void interrupt_exit(void)
   PDTR = PPDTR;
   TIDR = PTIDR;
 
-  DEBUGINT("[INTERRUPT] IRQ Exit return %08x PSR: %08x USP: %08x\n", PPCR, PPSR, USPR);
+  DEBUGINT("[IRQ] Exit %08x PSR: %08x KSP: %08x USP: %08x\n", PPCR, PPSR, KSPR, USPR);
+  /* print_registers(); */
 }
 
 void interrupt_dispatch_nonmask(unsigned int num)

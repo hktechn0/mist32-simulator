@@ -574,10 +574,10 @@ void i_pop(Instruction *inst)
   sp = MEMP(SPR, false);
   GR[inst->o1.operand1] = *sp;
 
-  SPR += 4;
+  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *sp, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *sp);
 
-  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR - 4, *sp, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR - 4, *sp);
+  SPR += 4;
 }
 
 /* Branch */
