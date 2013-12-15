@@ -18,10 +18,10 @@
 #define TLB_INDEX_MASK (TLB_ENTRY_MAX - 1)
 #define TLB_INDEX(addr) ((addr >> 22) & TLB_INDEX_MASK)
 
-#define MEMP(addr) ((unsigned int *)memory_addr_get(addr))
+#define MEMP(addr, w) ((unsigned int *)memory_addr_get(addr, w))
 /* for little endian */
-#define MEMP8(addr) ((unsigned char *)memory_addr_get(addr ^ 3))
-#define MEMP16(addr) ((unsigned short *)memory_addr_get(addr ^ 2))
+#define MEMP8(addr, w) ((unsigned char *)memory_addr_get(addr ^ 3, w))
+#define MEMP16(addr, w) ((unsigned short *)memory_addr_get(addr ^ 2, w))
 
 /* 4KB Page */
 #define MMU_PAGE_INDEX_L1 0xffc00000
@@ -62,7 +62,7 @@ void memory_init(void);
 void memory_free(void);
 
 void *memory_addr_get_nonmemory(Memory addr);
-void *memory_addr_get_L2page(Memory addr);
+void *memory_addr_get_L2page(Memory addr, bool is_write);
 void memory_page_alloc(Memory addr, PageEntry *entry);
 void memory_convert_endian(void);
 
@@ -95,22 +95,26 @@ static inline void *memory_addr_get_from_physical(Memory addr)
 }
 
 /* Virtual or Physical addr to VM memory addr */
-static inline void *memory_addr_get(Memory addr)
+static inline void *memory_addr_get(Memory addr, bool is_write)
 {
-  if(PSR_MMUMOD == PSR_MMUMOD_DIRECT) {
+  switch(PSR_MMUMOD) {
+  case PSR_MMUMOD_DIRECT:
     /* Direct mode */
     return memory_addr_get_from_physical(addr);
-  }
-  else if(PSR_MMUMOD == PSR_MMUMOD_L2) {
+    break;
+  case PSR_MMUMOD_L2:
     /* 2-Level Paging Mode */
-    return memory_addr_get_L2page(addr);
-  }
-  else {
+    return memory_addr_get_L2page(addr, is_write);
+    break;
+  default:
     errx(EXIT_FAILURE, "MMU mode (%d) not supported.", PSR_MMUMOD);
+    break;
   }
+
+  return NULL;
 }
 
-static inline bool memory_check_privilege(unsigned int pte, bool write)
+static inline bool memory_check_privilege(unsigned int pte, bool is_write)
 {
   switch(pte & MMU_PTE_PP) {
   case MMU_PTE_PP_RWXX:
@@ -119,12 +123,12 @@ static inline bool memory_check_privilege(unsigned int pte, bool write)
     }
     break;
   case MMU_PTE_PP_RDXX:
-    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL && !write) {
+    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL && !is_write) {
       return true;
     }
     break;
   case MMU_PTE_PP_RWRD:
-    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL || !write) {
+    if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL || !is_write) {
       return true;
     }
     break;

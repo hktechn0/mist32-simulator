@@ -431,7 +431,7 @@ void i_ld8(Instruction *inst)
     errx(EXIT_FAILURE, "ld8: only word access accepted in IO area.");
   }
 
-  *dest = *((unsigned char *)MEMP8(src));
+  *dest = *((unsigned char *)MEMP8(src, false));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
   DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
 }
@@ -455,7 +455,7 @@ void i_ld16(Instruction *inst)
     errx(EXIT_FAILURE, "ld16: only word access accepted in IO area.");
   }
 
-  *dest = *((unsigned short *)MEMP16(src));
+  *dest = *((unsigned short *)MEMP16(src, false));
   DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
   DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
 }
@@ -478,7 +478,7 @@ void i_ld32(Instruction *inst)
     io_load(src);
   }
 
-  *dest = *((unsigned int *)MEMP(src));
+  *dest = *((unsigned int *)MEMP(src, false));
   DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
   DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 }
@@ -494,7 +494,7 @@ void i_st8(Instruction *inst)
     errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
   }
 
-  *((unsigned char *)MEMP8(src)) = (unsigned char)*dest;
+  *((unsigned char *)MEMP8(src, true)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
 }
@@ -518,7 +518,7 @@ void i_st16(Instruction *inst)
     errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
   }
 
-  *((unsigned short *)MEMP16(src)) = (unsigned short)*dest;
+  *((unsigned short *)MEMP16(src, true)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
 }
@@ -538,7 +538,7 @@ void i_st32(Instruction *inst)
     errx(EXIT_FAILURE, "st32: invalid alignment.");
   }
 
-  *((unsigned int *)MEMP(src)) = *dest;
+  *((unsigned int *)MEMP(src, true)) = *dest;
   DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 
@@ -550,26 +550,34 @@ void i_st32(Instruction *inst)
 /* Stack */
 void i_push(Instruction *inst)
 {
-  SPR -= 4;
-  *((int *)MEMP(SPR)) = inst->c.is_immediate ? inst->c.immediate : GR[inst->o1.operand1];
+  unsigned int *sp;
 
-  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *((int *)MEMP(SPR)), PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *((int *)MEMP(SPR)));
+  SPR -= 4;
+
+  sp = MEMP(SPR, true);
+  *sp = inst->c.is_immediate ? inst->c.immediate : GR[inst->o1.operand1];
+
+  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *sp, PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *sp);
 }
 
 void i_pushpc(Instruction *inst)
 {
   SPR -= 4;
-  *((int *)MEMP(SPR)) = PCR;
+  *((int *)MEMP(SPR, true)) = PCR;
 }
 
 void i_pop(Instruction *inst)
 {
-  GR[inst->o1.operand1] = *((int *)MEMP(SPR));
+  unsigned int *sp;
+
+  sp = MEMP(SPR, false);
+  GR[inst->o1.operand1] = *sp;
+
   SPR += 4;
 
-  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR - 4, GR[inst->o1.operand1], PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR - 4, GR[inst->o1.operand1]);
+  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR - 4, *sp, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR - 4, *sp);
 }
 
 /* Branch */
@@ -841,6 +849,7 @@ void i_swi(Instruction *inst)
 void i_tas(Instruction *inst)
 {
   unsigned int *dest, src;
+  unsigned int *p;
 
   ops_o2_ui11(inst, &dest, &src);
 
@@ -855,9 +864,11 @@ void i_tas(Instruction *inst)
     errx(EXIT_FAILURE, "tas: test and set in I/O area.");
   }
 
-  if((*dest = *((unsigned int *)MEMP(src))) == 0) {
+  p = MEMP(src, true);
+
+  if((*dest = *p) == 0) {
     /* success */
-    *((unsigned int *)MEMP(src)) = 1;
+    *p = 1;
   }
   else {
     /* if fail, do nothing */

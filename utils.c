@@ -29,7 +29,7 @@ void print_stack(Memory sp)
   printf("---- Stack ----\n");
   for(i = sp; i - sp < 40; i += 4) {
     if(i >= MEMORY_MAX_ADDR) { break; }
-    data = *(unsigned int *)MEMP(i);
+    data = *(unsigned int *)MEMP(i, false);
     printf("0x%08x: 0x%08x (%11d)\n", i, data, data);
   }
 }

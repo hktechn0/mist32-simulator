@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 	  size = PAGE_SIZE - (buffer_addr - (buffer_addr & PAGE_INDEX_MASK));
 
 	  /* get real destination from virtual address */
-	  allocp = MEMP(buffer_addr);
+	  allocp = MEMP(buffer_addr, true);
 
 	  if(size <= remaining) {
 	    memcpy(allocp, (char *)data->d_buf + i, size);

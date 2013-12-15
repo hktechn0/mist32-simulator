@@ -26,7 +26,7 @@ void memory_free(void)
 {
   unsigned int i;
   PageEntry *entry;
-  
+
   for(i = 0; i < PAGE_ENTRY_NUM; i++) {
     entry = &page_table[i];
     if(entry->valid) {
@@ -56,12 +56,10 @@ void *memory_addr_get_nonmemory(Memory addr)
   return NULL;
 }
 
-void *memory_addr_get_L2page(Memory addr)
+void *memory_addr_get_L2page(Memory addr, bool is_write)
 {
   unsigned int *pdt, *pt;
   unsigned int index_l1, index_l2, offset, phyaddr;
-
-  bool is_write = false;
 
   if(PSR_MMUPS != PSR_MMUPS_4KB) {
     errx(EXIT_FAILURE, "MMU page size (%d) not supported.", PSR_MMUPS);

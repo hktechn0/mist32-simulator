@@ -92,7 +92,7 @@ int exec(Memory entry_p)
     }
 
     /* instruction fetch */
-    inst = (Instruction *)MEMP(PCR);
+    inst = (Instruction *)MEMP(PCR, false);
 
     if(DEBUG || step_by_step) {
       puts("---");
@@ -134,7 +134,7 @@ int exec(Memory entry_p)
       }
       else if(c == 'm') {
 	memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
-	write(memfd, MEMP(0), 0x1000);
+	write(memfd, MEMP(0, false), 0x1000);
 	close(memfd);
       }
     }
