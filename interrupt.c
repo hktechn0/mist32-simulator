@@ -35,6 +35,10 @@ void interrupt_entry(unsigned int num)
     return;
   }
 
+  if(PPDTR != PDTR) {
+    memory_tlb_flush();
+  }
+
   PFLAGR = FLAGR;
   PPCR = PCR;
   PPSR = PSR;

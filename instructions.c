@@ -764,6 +764,7 @@ void i_sruspw(Instruction *inst)
 void i_srppdtw(Instruction *inst)
 {
   PPDTR = (Memory)GR[inst->o1.operand1];
+  memory_tlb_flush();
 }
 
 void i_srptidw(Instruction *inst)

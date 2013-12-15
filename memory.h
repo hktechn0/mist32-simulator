@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <err.h>
 
-/* VM virtual memory != MMU */
+/* simulator virtual memory construct (not MMU VM) */
 #define PAGE_SIZE (16384)        /* 2 ^ 14 */
 #define PAGE_ENTRY_NUM (262144)  /* 2 ^ 18 */
 #define PAGE_SIZE_IN_WORD (PAGE_SIZE >> 2)
@@ -11,6 +11,12 @@
 #define PAGE_OFFSET_MASK 0x00003fff /* 14 bit */
 #define PAGE_NUM_MASK 0x0003ffff /* 18 bit */
 #define PAGE_INDEX_MASK (PAGE_NUM_MASK << PAGE_OFFSET_BIT_NUM)
+
+/* simulator TLB settings */
+#define TLB_ENABLE 1
+#define TLB_ENTRY_MAX 16  /* must be 2^n */
+#define TLB_INDEX_MASK (TLB_ENTRY_MAX - 1)
+#define TLB_INDEX(addr) ((addr >> 22) & TLB_INDEX_MASK)
 
 #define MEMP(addr) ((unsigned int *)memory_addr_get(addr))
 /* for little endian */
@@ -37,12 +43,20 @@
 #define MMU_PTE_G 0x080
 #define MMU_PTE_PE 0x100
 
+/* simulator virtual memory PageEntry (not MMU VM) */
 typedef struct _pageentry {
   bool valid;
   void *addr;
 } PageEntry;
 
 extern PageEntry *page_table;
+
+typedef struct _tlb {
+  unsigned int page_num;
+  unsigned int page_entry;
+} TLB;
+
+extern TLB memory_tlb[TLB_ENTRY_MAX];
 
 void memory_init(void);
 void memory_free(void);
@@ -122,4 +136,15 @@ static inline bool memory_check_privilege(unsigned int pte, bool write)
   }
 
   return false;
+}
+
+static inline void memory_tlb_flush(void)
+{
+#if TLB_ENABLE
+  unsigned int i;
+
+  for(i = 0; i < TLB_ENTRY_MAX; i++) {
+    memory_tlb[i].page_entry = 0;
+  }
+#endif
 }
