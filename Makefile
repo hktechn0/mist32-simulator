@@ -22,4 +22,4 @@ install: mist32_simulator
 	cp mist32_simulator /usr/local/bin/
 
 clean:
-	rm *.o mist32_simulator
+	rm -f *.o mist32_simulator
