@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "common.h"
 
-void print_instruction(Instruction *inst)
+void print_instruction(Instruction insn)
 {
   printf("PC: 0x%08x Op: 0x%03x(%4d) Insn: 0x%08x SP: 0x%08x\n",
-	 PCR, inst->base.opcode, inst->base.opcode, inst->value, SPR);
+	 PCR, insn.base.opcode, insn.base.opcode, insn.value, SPR);
 }
 
 void print_registers(void)
@@ -29,7 +29,12 @@ void print_stack(Memory sp)
   printf("---- Stack ----\n");
   for(i = sp; i - sp < 40; i += 4) {
     if(i >= MEMORY_MAX_ADDR) { break; }
-    data = *(unsigned int *)MEMP(i, false);
+
+    if(memory_ld32(&data, i)) {
+      /* if fault */
+      break;
+    }
+
     printf("0x%08x: 0x%08x (%11d)\n", i, data, data);
   }
 }

@@ -73,7 +73,7 @@ typedef union {
 typedef unsigned int Memory;
 
 /* Function pointer void *pOpcodeFunc(Instruction *) */
-typedef void (*pOpcodeFunc) (Instruction *);
+typedef void (*pOpcodeFunc) (Instruction);
 typedef pOpcodeFunc* OpcodeTable;
 
 /* Debug flags */
@@ -117,7 +117,7 @@ extern unsigned int PTIDR;
 OpcodeTable opcode_table_init(void);
 
 /* utils */
-void print_instruction(Instruction *inst);
+void print_instruction(Instruction insn);
 void print_registers(void);
 void print_stack(Memory sp);
 void print_traceback(void);

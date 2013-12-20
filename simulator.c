@@ -27,7 +27,7 @@ unsigned int TIDR;
 unsigned long long FRCR;
 
 Memory traceback[TRACEBACK_MAX];
-unsigned int traceback_next = 0;
+unsigned int traceback_next;
 
 bool step_by_step = false;
 bool exec_finish = false;
@@ -46,7 +46,7 @@ void signal_on_sigint(int signo)
 
 int exec(Memory entry_p)
 {
-  Instruction *inst;
+  Instruction insn;
   OpcodeTable opcode_t;
   unsigned long clk = 0;
 
@@ -65,6 +65,11 @@ int exec(Memory entry_p)
     printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
   }
   */
+
+  /* initialize internal variable */
+  traceback_next = 0;
+  memory_is_fault = 0;
+  memory_io_writeback = 0;
 
   /* opcode table init */
   opcode_t = opcode_table_init();
@@ -92,21 +97,39 @@ int exec(Memory entry_p)
     }
 
     /* instruction fetch */
-    inst = (Instruction *)MEMP(PCR, false);
-
-    if(DEBUG || step_by_step) {
-      puts("---");
-      print_instruction(inst);
+    if(memory_ld32(&insn.value, PCR)) {
+      /* fault fetch */
+      DEBUGINT("[FAULT] Instruction fetch: %08x\n", PCR);
+      goto fault;
     }
 
     /* decode */
-    if(opcode_t[inst->base.opcode] == NULL) {
+    if(opcode_t[insn.base.opcode] == NULL) {
       abort_sim();
-      errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, inst->base.opcode);
+      errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, insn.base.opcode);
+    }
+
+    if(DEBUG || step_by_step) {
+      puts("---");
+      print_instruction(insn);
     }
 
     /* execution */
-    (*(opcode_t[inst->base.opcode]))(inst);
+    (*(opcode_t[insn.base.opcode]))(insn);
+
+  fault:
+    if(memory_is_fault) {
+      /* faulting memory access */
+      interrupt_dispatch_nonmask(memory_is_fault);
+
+      memory_io_writeback = 0;
+      memory_is_fault = 0;
+    }
+    else if(memory_io_writeback) {
+      /* sync io */
+      io_store(memory_io_writeback);
+      memory_io_writeback = 0;
+    }
 
     /* writeback SP */
     if(cmod) {
@@ -134,7 +157,7 @@ int exec(Memory entry_p)
       }
       else if(c == 'm') {
 	memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
-	write(memfd, MEMP(0, false), 0x1000);
+	write(memfd, memory_addr_get(0, false), 0x1000);
 	close(memfd);
       }
     }
@@ -176,7 +199,7 @@ int exec(Memory entry_p)
   /* DEBUG_EXIT_B0: exit if b rret && rret == 0 */
 
   puts("---- Program Terminated ----");
-  print_instruction(inst);
+  print_instruction(insn);
   print_registers();
 
   free(opcode_t);

@@ -12,36 +12,36 @@
 #include "flags.h"
 
 /* Arithmetic */
-void i_add(Instruction *inst)
+void i_add(Instruction insn)
 {
   int *dest;
   int src, result;
   
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
   
   result = (*dest) + src;
   set_flags_add(result, *dest, src);
   *dest = result;
 }
 
-inline void i_sub(Instruction *inst)
+inline void i_sub(Instruction insn)
 {
   int *dest;
   int src, result;
   
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
   
   result = (*dest) - src;
   set_flags_sub(result, *dest, src);
   *dest = result;
 }
 
-void i_mull(Instruction *inst)
+void i_mull(Instruction insn)
 {
   int *dest;
   int src;
 
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
   
   *dest = *dest * src;
 
@@ -49,13 +49,13 @@ void i_mull(Instruction *inst)
   /* FIXME: flags unavailable */
 }
 
-void i_mulh(Instruction *inst)
+void i_mulh(Instruction insn)
 { 
   int *dest;
   int src;
   long long result;
 
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
 
   result = (long long)(*dest) * (long long)src;
   *dest = result >> 32;
@@ -64,12 +64,12 @@ void i_mulh(Instruction *inst)
   /* FIXME: flags unavailable */
 }
 
-void i_udiv(Instruction *inst)
+void i_udiv(Instruction insn)
 {
   unsigned int *dest;
   unsigned int src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -83,12 +83,12 @@ void i_udiv(Instruction *inst)
   /* FIXME: flags unavailable */
 }
 
-void i_umod(Instruction *inst)
+void i_umod(Instruction insn)
 {
   unsigned int *dest;
   unsigned int src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -102,21 +102,21 @@ void i_umod(Instruction *inst)
   /* FIXME: flags unavailable */
 }
 
-void i_cmp(Instruction *inst)
+void i_cmp(Instruction insn)
 {
   int dest;
   
-  dest = GR[inst->o2.operand1];
-  i_sub(inst);
-  GR[inst->o2.operand1] = dest;
+  dest = GR[insn.o2.operand1];
+  i_sub(insn);
+  GR[insn.o2.operand1] = dest;
 }
 
-void i_div(Instruction *inst)
+void i_div(Instruction insn)
 {
   int *dest;
   int src;
 
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -130,12 +130,12 @@ void i_div(Instruction *inst)
   /* FIXME: flags unavailable */
 }
 
-void i_mod(Instruction *inst)
+void i_mod(Instruction insn)
 {
   int *dest;
   int src;
 
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -149,77 +149,77 @@ void i_mod(Instruction *inst)
   /* FIXME: flags unavailable */
 }
 
-void i_neg(Instruction *inst)
+void i_neg(Instruction insn)
 {
-  GR[inst->o2.operand1] = -GR[inst->o2.operand2];
-  set_flags(GR[inst->o2.operand1]);
-  if(GR[inst->o2.operand1] == 0x80000000) { FLAGR.overflow = 1; }
+  GR[insn.o2.operand1] = -GR[insn.o2.operand2];
+  set_flags(GR[insn.o2.operand1]);
+  if(GR[insn.o2.operand1] == 0x80000000) { FLAGR.overflow = 1; }
 }
 
-void i_addc(Instruction *inst)
+void i_addc(Instruction insn)
 {
   int *dest;
   int src, result;
   
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
   
   result = (*dest) + src;
   set_flags_add(result, *dest, src);
   *dest = FLAGR.carry;
 }
 
-void i_inc(Instruction *inst)
+void i_inc(Instruction insn)
 {
   int *dest;
   int src, result;
   
-  dest = &GR[inst->o2.operand1];
-  src = GR[inst->o2.operand2];
+  dest = &GR[insn.o2.operand1];
+  src = GR[insn.o2.operand2];
   
   result = src + 1;
   set_flags_add(result, src, 1);
   *dest = result;
 }
 
-void i_dec(Instruction *inst)
+void i_dec(Instruction insn)
 {
   int *dest;
   int src, result;
   
-  dest = &GR[inst->o2.operand1];
-  src = GR[inst->o2.operand2];
+  dest = &GR[insn.o2.operand1];
+  src = GR[insn.o2.operand2];
   
   result = src - 1;
   set_flags_sub(result, src, 1);
   *dest = result;
 }
 
-void i_sext8(Instruction *inst)
+void i_sext8(Instruction insn)
 {
   unsigned int *dest, src;
 
-  dest = (unsigned int *)&GR[inst->o2.operand1];
-  src = (unsigned int)GR[inst->o2.operand2];
+  dest = (unsigned int *)&GR[insn.o2.operand1];
+  src = (unsigned int)GR[insn.o2.operand2];
 
   *dest = SIGN_EXT8(src);
 }
 
-void i_sext16(Instruction *inst)
+void i_sext16(Instruction insn)
 {
   unsigned int *dest, src;
 
-  dest = (unsigned int *)&GR[inst->o2.operand1];
-  src = (unsigned int)GR[inst->o2.operand2];
+  dest = (unsigned int *)&GR[insn.o2.operand1];
+  src = (unsigned int)GR[insn.o2.operand2];
 
   *dest = SIGN_EXT16(src);
 }
 
 /* Shift, Rotate */
-void i_shl(Instruction *inst)
+void i_shl(Instruction insn)
 {
   unsigned int *dest, n;
   
-  ops_o2_ui11(inst, &dest, &n);
+  ops_o2_ui11(insn, &dest, &n);
   
   clr_flags();
   FLAGR.carry = (*dest) >> (32 - n);
@@ -227,11 +227,11 @@ void i_shl(Instruction *inst)
   set_flags(*dest);
 }
 
-void i_shr(Instruction *inst)
+void i_shr(Instruction insn)
 {
   unsigned int *dest, n;
   
-  ops_o2_ui11(inst, &dest, &n);
+  ops_o2_ui11(insn, &dest, &n);
   
   clr_flags();
   FLAGR.carry = (*dest >> (n - 1)) & 0x00000001;
@@ -239,12 +239,12 @@ void i_shr(Instruction *inst)
   set_flags(*dest);
 }
 
-void i_sar(Instruction *inst)
+void i_sar(Instruction insn)
 {
   int *dest;
   unsigned int n;
 
-  ops_o2_i11(inst, &dest, (int *)&n);
+  ops_o2_i11(insn, &dest, (int *)&n);
 
   clr_flags();
   FLAGR.carry = ((*dest) >> (n - 1)) & 0x00000001;
@@ -252,11 +252,11 @@ void i_sar(Instruction *inst)
   set_flags(*dest);
 }
 
-void i_rol(Instruction *inst)
+void i_rol(Instruction insn)
 {
   unsigned int *dest, n;
   
-  ops_o2_ui11(inst, &dest, &n);
+  ops_o2_ui11(insn, &dest, &n);
   
   *dest = ((*dest) << n) | ((*dest) >> (32 - n));
   
@@ -265,11 +265,11 @@ void i_rol(Instruction *inst)
   FLAGR.carry = !!(*dest & 0x00000001);
 }
 
-void i_ror(Instruction *inst)
+void i_ror(Instruction insn)
 {
   unsigned int *dest, n;
   
-  ops_o2_ui11(inst, &dest, &n);
+  ops_o2_ui11(insn, &dest, &n);
   
   *dest = ((*dest) << (32 - n));
   
@@ -279,456 +279,462 @@ void i_ror(Instruction *inst)
 }
 
 /* Logic */
-inline void i_and(Instruction *inst)
+inline void i_and(Instruction insn)
 {
-  GR[inst->o2.operand1] &= GR[inst->o2.operand2];
+  GR[insn.o2.operand1] &= GR[insn.o2.operand2];
   clr_flags();
-  set_flags(GR[inst->o2.operand1]);
+  set_flags(GR[insn.o2.operand1]);
 }
 
-inline void i_or(Instruction *inst)
+inline void i_or(Instruction insn)
 {
-  GR[inst->o2.operand1] |= GR[inst->o2.operand2];
+  GR[insn.o2.operand1] |= GR[insn.o2.operand2];
   clr_flags();
-  set_flags(GR[inst->o2.operand1]);
+  set_flags(GR[insn.o2.operand1]);
 }
 
-void i_not(Instruction *inst)
+void i_not(Instruction insn)
 {
-  GR[inst->o2.operand1] = ~GR[inst->o2.operand2];
+  GR[insn.o2.operand1] = ~GR[insn.o2.operand2];
 }
 
-inline void i_xor(Instruction *inst)
+inline void i_xor(Instruction insn)
 {
-  GR[inst->o2.operand1] ^= GR[inst->o2.operand2];
+  GR[insn.o2.operand1] ^= GR[insn.o2.operand2];
   clr_flags();
-  set_flags(GR[inst->o2.operand1]);
+  set_flags(GR[insn.o2.operand1]);
 }
 
-void i_nand(Instruction *inst)
+void i_nand(Instruction insn)
 {
-  i_and(inst);
-  NOT(GR[inst->o2.operand1]);
-
-  clr_flags();
-  set_flags(GR[inst->o2.operand1]);
-}
-
-void i_nor(Instruction *inst)
-{
-  i_or(inst);
-  NOT(GR[inst->o2.operand1]);
+  i_and(insn);
+  NOT(GR[insn.o2.operand1]);
 
   clr_flags();
-  set_flags(GR[inst->o2.operand1]);
+  set_flags(GR[insn.o2.operand1]);
 }
 
-void i_xnor(Instruction *inst)
+void i_nor(Instruction insn)
 {
-  i_xor(inst);
-  NOT(GR[inst->o2.operand1]);
+  i_or(insn);
+  NOT(GR[insn.o2.operand1]);
 
   clr_flags();
-  set_flags(GR[inst->o2.operand1]);
+  set_flags(GR[insn.o2.operand1]);
 }
 
-void i_test(Instruction *inst)
+void i_xnor(Instruction insn)
+{
+  i_xor(insn);
+  NOT(GR[insn.o2.operand1]);
+
+  clr_flags();
+  set_flags(GR[insn.o2.operand1]);
+}
+
+void i_test(Instruction insn)
 {
   int dest;
   
-  dest = GR[inst->o2.operand1];
-  i_and(inst);
-  GR[inst->o2.operand1] = dest;
+  dest = GR[insn.o2.operand1];
+  i_and(insn);
+  GR[insn.o2.operand1] = dest;
 }
 
 /* Register operations */
-void i_wl16(Instruction *inst)
+void i_wl16(Instruction insn)
 {
-  GR[inst->i16.operand] = ((unsigned int)GR[inst->i16.operand] & 0xffff0000) | (immediate_i16(inst) & 0xffff);
+  GR[insn.i16.operand] = ((unsigned int)GR[insn.i16.operand] & 0xffff0000) | (immediate_i16(insn) & 0xffff);
 }
 
-void i_wh16(Instruction *inst)
+void i_wh16(Instruction insn)
 {
-  GR[inst->i16.operand] = ((unsigned int)GR[inst->i16.operand] & 0xffff) | ((immediate_i16(inst) & 0xffff) << 16);
+  GR[insn.i16.operand] = ((unsigned int)GR[insn.i16.operand] & 0xffff) | ((immediate_i16(insn) & 0xffff) << 16);
 }
 
-void i_clrb(Instruction *inst)
+void i_clrb(Instruction insn)
 {
-  GR[inst->i11.operand] &= ~((unsigned int)0x01 << immediate_i11(inst));
+  GR[insn.i11.operand] &= ~((unsigned int)0x01 << immediate_i11(insn));
 }
 
-void i_setb(Instruction *inst)
+void i_setb(Instruction insn)
 {
-  GR[inst->i11.operand] |= (unsigned int)0x01 << immediate_i11(inst);
+  GR[insn.i11.operand] |= (unsigned int)0x01 << immediate_i11(insn);
 }
 
-void i_clr(Instruction *inst)
+void i_clr(Instruction insn)
 {
-  GR[inst->o1.operand1] = 0x00000000;
+  GR[insn.o1.operand1] = 0x00000000;
 }
 
-void i_set(Instruction *inst)
+void i_set(Instruction insn)
 {
-  GR[inst->o1.operand1] = (unsigned int)0xffffffff;
+  GR[insn.o1.operand1] = (unsigned int)0xffffffff;
 }
 
-void i_revb(Instruction *inst)
+void i_revb(Instruction insn)
 {
   /* FIXME: not implement */
   fprintf(stderr, "[Error] %s not implemented yet.\n", "revb");
   exit(EXIT_FAILURE);
 }
 
-void i_rev8(Instruction *inst)
+void i_rev8(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
   *dest = htobe32(src);
 }
 
-void i_getb(Instruction *inst)
+void i_getb(Instruction insn)
 {
   /* FIXME: not implement */
   fprintf(stderr, "[Error] %s not implemented yet.\n", "getb");
   exit(EXIT_FAILURE);
 }
 
-void i_get8(Instruction *inst)
+void i_get8(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
   *dest = ((*dest) >> (src * 4)) & 0xff;
 }
 
-void i_lil(Instruction *inst)
+void i_lil(Instruction insn)
 {
-  GR[inst->i16.operand] = immediate_i16(inst);
+  GR[insn.i16.operand] = immediate_i16(insn);
 }
 
-void i_lih(Instruction *inst)
+void i_lih(Instruction insn)
 {
-  GR[inst->i16.operand] = (unsigned int)immediate_ui16(inst) << 16;
+  GR[insn.i16.operand] = (unsigned int)immediate_ui16(insn) << 16;
 }
 
-void i_ulil(Instruction *inst)
+void i_ulil(Instruction insn)
 {
-  GR[inst->i16.operand] = immediate_ui16(inst);
+  GR[insn.i16.operand] = immediate_ui16(insn);
 }
 
 /* Load, Store */
-void i_ld8(Instruction *inst)
+void i_ld8(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(src >= IOSR) {
-    abort_sim();
-    errx(EXIT_FAILURE, "ld8: only word access accepted in IO area.");
+  if(memory_ld8(dest, src)) {
+    /* memory fault */
+    return;
   }
 
-  *dest = *((unsigned char *)MEMP8(src, false));
-  DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, *dest, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 }
 
-void i_ld16(Instruction *inst)
+void i_ld16(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(inst->i11.is_immediate) {
+  if(insn.i11.is_immediate) {
     src <<= 1;
   }
-
-  if(src & 0x1) {
+  else if(src & 0x1) {
     abort_sim();
     errx(EXIT_FAILURE, "ld16: invalid alignment.");
   }
-  else if(src >= IOSR) {
-    abort_sim();
-    errx(EXIT_FAILURE, "ld16: only word access accepted in IO area.");
+
+  if(memory_ld16(dest, src)) {
+    /* memory fault */
+    return;
   }
 
-  *dest = *((unsigned short *)MEMP16(src, false));
-  DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
+  DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, *dest, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 }
 
-void i_ld32(Instruction *inst)
+void i_ld32(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(inst->i11.is_immediate) {
+  if(insn.i11.is_immediate) {
     src <<= 2;
   }
-
-  if(src & 0x3) {
+  else if(src & 0x3) {
     abort_sim();
     errx(EXIT_FAILURE, "ld32: invalid alignment.");
   }
-  else if(src >= IOSR) {
-    io_load(src);
+
+  if(memory_ld32(dest, src)) {
+    /* memory fault */
+    return;
   }
 
-  *dest = *((unsigned int *)MEMP(src, false));
   DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
   DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
 }
 
-void i_st8(Instruction *inst)
+void i_st8(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(src >= IOSR) {
-    abort_sim();
-    errx(EXIT_FAILURE, "st8: only word access accepted in IO area.");
+  if(memory_st8(src, (unsigned char)*dest)) {
+    /* memory fault */
+    return;
   }
 
-  *((unsigned char *)MEMP8(src, true)) = (unsigned char)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
 }
 
-void i_st16(Instruction *inst)
+void i_st16(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(inst->i11.is_immediate) {
+  if(insn.i11.is_immediate) {
     src <<= 1;
   }
-
-  if(src & 0x1) {
+  else if(src & 0x1) {
     abort_sim();
     errx(EXIT_FAILURE, "st16: invalid alignment.");
   }
-  else if(src >= IOSR) {
-    abort_sim();
-    errx(EXIT_FAILURE, "st16: only word access accepted in IO area.");
+
+  if(memory_st16(src, (unsigned short)*dest)) {
+    /* memory fault */
+    return;
   }
 
-  *((unsigned short *)MEMP16(src, true)) = (unsigned short)*dest;
   DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
 }
 
-void i_st32(Instruction *inst)
+void i_st32(Instruction insn)
 {
   unsigned int *dest, src;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(inst->i11.is_immediate) {
+  if(insn.i11.is_immediate) {
     src <<= 2;
   }
-
-  if(src & 0x3) {
+  else if(src & 0x3) {
     abort_sim();
     errx(EXIT_FAILURE, "st32: invalid alignment.");
   }
 
-  *((unsigned int *)MEMP(src, true)) = *dest;
+  if(memory_st32(src, *dest)) {
+    /* memory fault */
+    return;
+  }
+
   DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
-
-  if(src >= IOSR) {
-    io_store(src);
-  }
 }
 
 /* Stack */
-void i_push(Instruction *inst)
+void i_push(Instruction insn)
 {
-  unsigned int *sp;
+  unsigned int src;
 
   SPR -= 4;
+  src = insn.c.is_immediate ? insn.c.immediate : GR[insn.o1.operand1];
 
-  sp = MEMP(SPR, true);
-  *sp = inst->c.is_immediate ? inst->c.immediate : GR[inst->o1.operand1];
+  if(memory_st32(SPR, src)) {
+    /* memory fault */
+    return;
+  }
 
-  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *sp, PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *sp);
+  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, src, PCR);
+  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, src);
 }
 
-void i_pushpc(Instruction *inst)
+void i_pushpc(Instruction insn)
 {
   SPR -= 4;
-  *((int *)MEMP(SPR, true)) = PCR;
+
+  if(memory_st32(SPR, PCR)) {
+    /* memory fault */
+    return;
+  }
 }
 
-void i_pop(Instruction *inst)
+void i_pop(Instruction insn)
 {
-  unsigned int *sp;
+  unsigned int *dest;
 
-  sp = MEMP(SPR, false);
-  GR[inst->o1.operand1] = *sp;
+  dest = (unsigned int *)&(GR[insn.o1.operand1]);
 
-  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *sp, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *sp);
+  if(memory_ld32(dest, SPR)) {
+    /* memory fault */
+    return;
+  }
+
+  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *dest, PCR);
+  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *dest);
 
   SPR += 4;
 }
 
 /* Branch */
-void i_bur(Instruction *inst)
+void i_bur(Instruction insn)
 {
-  if(check_condition(inst)) {
-    DEBUGJMP("[Branch] URE: 0x%08x, Cond: %X, PC: 0x%08x\n", PCR + src_jo1_jui16(inst), inst->ji16.condition, PCR);
-    next_PCR = PCR + src_jo1_jui16(inst);
+  if(check_condition(insn)) {
+    DEBUGJMP("[Branch] URE: 0x%08x, Cond: %X, PC: 0x%08x\n", PCR + src_jo1_jui16(insn), insn.ji16.condition, PCR);
+    next_PCR = PCR + src_jo1_jui16(insn);
   }
 }
 
-void i_br(Instruction *inst)
+void i_br(Instruction insn)
 {
-  if(check_condition(inst)) {
-    DEBUGJMP("[Branch] REL: 0x%08x, Cond: %X, PC: 0x%08x\n", PCR + src_jo1_ji16(inst), inst->ji16.condition, PCR);
-    next_PCR = PCR + src_jo1_ji16(inst);
+  if(check_condition(insn)) {
+    DEBUGJMP("[Branch] REL: 0x%08x, Cond: %X, PC: 0x%08x\n", PCR + src_jo1_ji16(insn), insn.ji16.condition, PCR);
+    next_PCR = PCR + src_jo1_ji16(insn);
   }
 }
 
-void i_b(Instruction *inst)
+void i_b(Instruction insn)
 {
-  if(check_condition(inst)) {
-    DEBUGJMP("[Branch]  D : 0x%08x, Cond: %X, PCR: 0x%08x\n", src_jo1_jui16(inst), inst->ji16.condition, PCR);
-    next_PCR = src_jo1_jui16(inst);
+  if(check_condition(insn)) {
+    DEBUGJMP("[Branch]  D : 0x%08x, Cond: %X, PCR: 0x%08x\n", src_jo1_jui16(insn), insn.ji16.condition, PCR);
+    next_PCR = src_jo1_jui16(insn);
   }
 
   /* for traceback */
-  if(!inst->jo1.is_immediate && inst->jo1.operand1 == GR_RET) {
+  if(!insn.jo1.is_immediate && insn.jo1.operand1 == GR_RET) {
     if(traceback > 0) {
       traceback_next--;
     }
   }
 }
 
-void i_ib(Instruction *inst)
+void i_ib(Instruction insn)
 {
   interrupt_exit();
 }
 
-void i_srspr(Instruction *inst)
+void i_srspr(Instruction insn)
 {
-  GR[inst->o1.operand1] = SPR;
+  GR[insn.o1.operand1] = SPR;
 }
 
-void i_srpdtr(Instruction *inst)
+void i_srpdtr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PDTR;
+  GR[insn.o1.operand1] = PDTR;
 }
 
-void i_srpidr(Instruction *inst)
-{
-  /* FIXME: not implemented */
-  GR[inst->o1.operand1] = 0;
-}
-
-void i_srcidr(Instruction *inst)
+void i_srpidr(Instruction insn)
 {
   /* FIXME: not implemented */
-  GR[inst->o1.operand1] = 0;
+  GR[insn.o1.operand1] = 0;
 }
 
-void i_srmoder(Instruction *inst)
+void i_srcidr(Instruction insn)
 {
   /* FIXME: not implemented */
-  GR[inst->o1.operand1] = 0;
+  GR[insn.o1.operand1] = 0;
 }
 
-void i_srieir(Instruction *inst)
+void i_srmoder(Instruction insn)
 {
-  GR[inst->o1.operand1] = (PSR & PSR_IM_ENABLE) >> 2;
+  /* FIXME: not implemented */
+  GR[insn.o1.operand1] = 0;
 }
 
-void i_srmmur(Instruction *inst)
+void i_srieir(Instruction insn)
 {
-  GR[inst->o1.operand1] = (PSR & PSR_MMUMOD_MASK);
+  GR[insn.o1.operand1] = (PSR & PSR_IM_ENABLE) >> 2;
 }
 
-void i_sriosr(Instruction *inst)
+void i_srmmur(Instruction insn)
 {
-  GR[inst->o1.operand1] = IOSR;
+  GR[insn.o1.operand1] = (PSR & PSR_MMUMOD_MASK);
 }
 
-void i_srtidr(Instruction *inst)
+void i_sriosr(Instruction insn)
 {
-  GR[inst->o1.operand1] = TIDR;
+  GR[insn.o1.operand1] = IOSR;
 }
 
-void i_srppsr(Instruction *inst)
+void i_srtidr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PPSR;
+  GR[insn.o1.operand1] = TIDR;
 }
 
-void i_srppcr(Instruction *inst)
+void i_srppsr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PPCR;
+  GR[insn.o1.operand1] = PPSR;
 }
 
-void i_sruspr(Instruction *inst)
+void i_srppcr(Instruction insn)
 {
-  GR[inst->o1.operand1] = USPR;
+  GR[insn.o1.operand1] = PPCR;
 }
 
-void i_srppdtr(Instruction *inst)
+void i_sruspr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PPDTR;
+  GR[insn.o1.operand1] = USPR;
 }
 
-void i_srptidr(Instruction *inst)
+void i_srppdtr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PTIDR;
+  GR[insn.o1.operand1] = PPDTR;
 }
 
-void i_srpsr(Instruction *inst)
+void i_srptidr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PSR;
+  GR[insn.o1.operand1] = PTIDR;
 }
 
-void i_srfrcr(Instruction *inst)
+void i_srpsr(Instruction insn)
+{
+  GR[insn.o1.operand1] = PSR;
+}
+
+void i_srfrcr(Instruction insn)
 {
   FRCR = (unsigned long long)clock();
 }
 
-void i_srfrclr(Instruction *inst)
+void i_srfrclr(Instruction insn)
 {
-  GR[inst->o1.operand1] = (unsigned int)(FRCR & 0xffffffff);
+  GR[insn.o1.operand1] = (unsigned int)(FRCR & 0xffffffff);
 }
 
-void i_srfrchr(Instruction *inst)
+void i_srfrchr(Instruction insn)
 {
-  GR[inst->o1.operand1] = (unsigned int)(FRCR >> 32);
+  GR[insn.o1.operand1] = (unsigned int)(FRCR >> 32);
 }
 
-void i_srpflagr(Instruction *inst)
+void i_srpflagr(Instruction insn)
 {
-  GR[inst->o1.operand1] = PFLAGR.flags;
+  GR[insn.o1.operand1] = PFLAGR.flags;
 }
 
-void i_srspw(Instruction *inst)
+void i_srspw(Instruction insn)
 {
-  SPR = GR[inst->o1.operand1];
+  SPR = GR[insn.o1.operand1];
 }
 
-void i_srpdtw(Instruction *inst)
+void i_srpdtw(Instruction insn)
 {
-  PDTR = GR[inst->o1.operand1];
+  PDTR = GR[insn.o1.operand1];
   DEBUGMMU("[MMU] SRPDTW: 0x%08x\n", PDTR);
 }
 
-void i_srieiw(Instruction *inst)
+void i_srieiw(Instruction insn)
 {
-  if(src_o1_i11(inst) & 1) {
+  if(src_o1_i11(insn) & 1) {
     PSR |= PSR_IM_ENABLE;
 
     if(!(PSR & PSR_IM_ENABLE)) {
@@ -744,99 +750,99 @@ void i_srieiw(Instruction *inst)
   }
 }
 
-void i_srmmuw(Instruction *inst)
+void i_srmmuw(Instruction insn)
 {
-  PSR = (PSR & ~PSR_MMUMOD_MASK) | (src_o1_i11(inst) & PSR_MMUMOD_MASK);
+  PSR = (PSR & ~PSR_MMUMOD_MASK) | (src_o1_i11(insn) & PSR_MMUMOD_MASK);
   DEBUGMMU("[MMU] SRMMUW: MMUMOD %d\n", PSR & PSR_MMUMOD_MASK);
 }
 
-void i_srppsw(Instruction *inst)
+void i_srppsw(Instruction insn)
 {
-  PPSR = (Memory)GR[inst->o1.operand1];
+  PPSR = (Memory)GR[insn.o1.operand1];
 }
 
-void i_srppcw(Instruction *inst)
+void i_srppcw(Instruction insn)
 {
-  PPCR = (Memory)GR[inst->o1.operand1];
+  PPCR = (Memory)GR[insn.o1.operand1];
 
   if(PPCR & 0x3) {
     errx(EXIT_FAILURE, "srppcw: invalid alignment. %08x PC: %08x", PPCR, PCR);
   }
 }
 
-void i_sruspw(Instruction *inst)
+void i_sruspw(Instruction insn)
 {
-  USPR = (Memory)GR[inst->o1.operand1];
+  USPR = (Memory)GR[insn.o1.operand1];
 }
 
-void i_srppdtw(Instruction *inst)
+void i_srppdtw(Instruction insn)
 {
-  PPDTR = (Memory)GR[inst->o1.operand1];
+  PPDTR = (Memory)GR[insn.o1.operand1];
   memory_tlb_flush();
 }
 
-void i_srptidw(Instruction *inst)
+void i_srptidw(Instruction insn)
 {
-  PTIDR = (Memory)GR[inst->o1.operand1];
+  PTIDR = (Memory)GR[insn.o1.operand1];
 }
 
-void i_sridtw(Instruction *inst)
+void i_sridtw(Instruction insn)
 {
-  IDTR = (Memory)GR[inst->o1.operand1];
+  IDTR = (Memory)GR[insn.o1.operand1];
   DEBUGINT("[INTERRUPT] SRIDTW: idtr <= 0x%08x\n", IDTR);
 }
 
-void i_srpsw(Instruction *inst)
+void i_srpsw(Instruction insn)
 {
-  PSR = GR[inst->o1.operand1];
+  PSR = GR[insn.o1.operand1];
   DEBUGMMU("[MMU] SRPSW: MMUMOD %d MMUPS %d\n", PSR_MMUMOD, PSR_MMUPS);
 }
 
-void i_srpflagw(Instruction *inst)
+void i_srpflagw(Instruction insn)
 {
-  PFLAGR.flags = GR[inst->o1.operand1];
+  PFLAGR.flags = GR[insn.o1.operand1];
 }
 
-void i_srspadd(Instruction *inst)
+void i_srspadd(Instruction insn)
 {
-  SPR += (int)SIGN_EXT16(inst->c.immediate << 2);
+  SPR += (int)SIGN_EXT16(insn.c.immediate << 2);
 }
 
-void i_nop(Instruction *inst)
+void i_nop(Instruction insn)
 {
   return;
 }
 
-void i_halt(Instruction *inst)
+void i_halt(Instruction insn)
 {
   exit(EXIT_FAILURE);
 }
 
-void i_move(Instruction *inst)
+void i_move(Instruction insn)
 {
-  GR[inst->o2.operand1] = GR[inst->o2.operand2];
+  GR[insn.o2.operand1] = GR[insn.o2.operand2];
 }
 
-void i_movepc(Instruction *inst)
+void i_movepc(Instruction insn)
 {
   int *dest, src;
 
-  ops_o2_i11(inst, &dest, &src);
+  ops_o2_i11(insn, &dest, &src);
   *dest = PCR + (src << 2);
 
   /* for traceback */
-  if(inst->o2.operand1 == GR_RET) {
+  if(insn.o2.operand1 == GR_RET) {
     if(traceback_next < TRACEBACK_MAX) {
       traceback[traceback_next++] = PCR + 4;
     }
   }
 }
 
-void i_swi(Instruction *inst)
+void i_swi(Instruction insn)
 {
   unsigned int num;
 
-  num = immediate_i11(inst);
+  num = immediate_i11(insn);
 
   if(num < IDT_SWIRQ_START_NUM) {
     /* software irq number should be 64 or above */
@@ -846,39 +852,42 @@ void i_swi(Instruction *inst)
   interrupt_dispatch_nonmask(num);
 }
 
-void i_tas(Instruction *inst)
+void i_tas(Instruction insn)
 {
   unsigned int *dest, src;
-  unsigned int *p;
 
-  ops_o2_ui11(inst, &dest, &src);
+  ops_o2_ui11(insn, &dest, &src);
 
-  if(inst->i11.is_immediate) {
+  if(insn.i11.is_immediate) {
     src <<= 2;
   }
-
-  if(src & 0x3) {
+  else if(src & 0x3) {
     errx(EXIT_FAILURE, "tas: invalid alignment.");
   }
-  else if(src >= IOSR) {
-    errx(EXIT_FAILURE, "tas: test and set in I/O area.");
+
+  /* load flag */
+  if(memory_ld32(dest, src)) {
+    /* memory fault */
+    return;
   }
 
-  p = MEMP(src, true);
-
-  if((*dest = *p) == 0) {
-    /* success */
-    *p = 1;
+  /* test */
+  if(*dest == 0) {
+    /* success, and set */
+    if(memory_st32(src, 1)) {
+      /* memory fault */
+      return;
+    }
   }
   else {
-    /* if fail, do nothing */
+    /* fail, do nothing */
   }
 
   DEBUGST("[TAS] Addr: 0x%08x, %s, PC: 0x%08x\n", src, *dest ? "fail" : "success", PCR);
   /* DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest); */
 }
 
-void i_idts(Instruction *inst)
+void i_idts(Instruction insn)
 {
   interrupt_idt_store();
 }

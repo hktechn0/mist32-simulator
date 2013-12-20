@@ -87,7 +87,7 @@ void interrupt_dispatch_nonmask(unsigned int num)
 
 void interrupt_idt_store(void)
 {
-  memcpy((void *)idt_cache, memory_addr_get_from_physical(IDTR), IDT_ENTRY_MAX * sizeof(idt_entry));
+  memcpy((void *)idt_cache, memory_addr_get_from_physical(IDTR, false), IDT_ENTRY_MAX * sizeof(idt_entry));
 
   DEBUGINT("[INTERRUPT] IDT Store\n");
 }

@@ -1,113 +1,113 @@
 /* fetch immediate for i11 format */
-static inline unsigned int immediate_ui11(Instruction *inst)
+static inline unsigned int immediate_ui11(Instruction insn)
 {
-  return (inst->i11.immediate1 << 5) + inst->i11.immediate2;
+  return (insn.i11.immediate1 << 5) + insn.i11.immediate2;
 }
 
-static inline int immediate_i11(Instruction *inst)
+static inline int immediate_i11(Instruction insn)
 {
   int imm;
   
   /* sign extend */
-  imm = ((int)immediate_ui11(inst) << 21) >> 21;
+  imm = ((int)immediate_ui11(insn) << 21) >> 21;
   
   return imm;
 }
 
 /* fetch immediate for i16 format */
-static inline unsigned int immediate_ui16(Instruction *inst)
+static inline unsigned int immediate_ui16(Instruction insn)
 {
-  return (inst->i16.immediate1 << 5) + inst->i16.immediate2;
+  return (insn.i16.immediate1 << 5) + insn.i16.immediate2;
 }
 
-static inline int immediate_i16(Instruction *inst)
+static inline int immediate_i16(Instruction insn)
 {
   int imm;
 
   /* sign extend */
-  imm = ((int)immediate_ui16(inst) << 16) >> 16;
+  imm = ((int)immediate_ui16(insn) << 16) >> 16;
   
   return imm;
 }
 
 /* fetch o2 or i11 format operand
-  inst: Instruction struct,
+  insn: Instruction struct,
   op1:  store operand1 pointer (writable, directly to register),
   op2:  store operand2 (read only) */
-static inline void ops_o2_i11(Instruction *inst, int **op1, int *op2)
+static inline void ops_o2_i11(Instruction insn, int **op1, int *op2)
 {
-  if(inst->i11.is_immediate) {
-    *op1 = &(GR[inst->i11.operand]);
-    *op2 = immediate_i11(inst);
+  if(insn.i11.is_immediate) {
+    *op1 = &(GR[insn.i11.operand]);
+    *op2 = immediate_i11(insn);
   }
   else {
-    *op1 = &(GR[inst->o2.operand1]);
-    *op2 = GR[inst->o2.operand2];
+    *op1 = &(GR[insn.o2.operand1]);
+    *op2 = GR[insn.o2.operand2];
   }
 }
 
-static inline void ops_o2_ui11(Instruction *inst, unsigned int **op1, unsigned int *op2)
+static inline void ops_o2_ui11(Instruction insn, unsigned int **op1, unsigned int *op2)
 {
-  if(inst->i11.is_immediate) {
-    *op1 = (unsigned int *)&(GR[inst->i11.operand]);
-    *op2 = immediate_ui11(inst);
+  if(insn.i11.is_immediate) {
+    *op1 = (unsigned int *)&(GR[insn.i11.operand]);
+    *op2 = immediate_ui11(insn);
   }
   else {
-    *op1 = (unsigned int *)&(GR[inst->o2.operand1]);
-    *op2 = (unsigned int)GR[inst->o2.operand2];
+    *op1 = (unsigned int *)&(GR[insn.o2.operand1]);
+    *op2 = (unsigned int)GR[insn.o2.operand2];
   }
 }
 
 /* return source operand value (I11, O2 format) */
-static inline int src_o2_i11(Instruction *inst)
+static inline int src_o2_i11(Instruction insn)
 {
-  if(inst->i11.is_immediate) {
-    return immediate_i11(inst);
+  if(insn.i11.is_immediate) {
+    return immediate_i11(insn);
   }
   else {
-    return GR[inst->o2.operand2];
+    return GR[insn.o2.operand2];
   }
 }
 
 /* return source operand value (I11, O1 format) */
-static inline int src_o1_i11(Instruction *inst)
+static inline int src_o1_i11(Instruction insn)
 {
-  if(inst->i11.is_immediate) {
-    return immediate_i11(inst);
+  if(insn.i11.is_immediate) {
+    return immediate_i11(insn);
   }
   else {
-    return GR[inst->o1.operand1];
+    return GR[insn.o1.operand1];
   }
 }
 
 /* return source operand value (JI16, JO1 format) */
-static inline int src_jo1_ji16(Instruction *inst)
+static inline int src_jo1_ji16(Instruction insn)
 {
-  if(inst->ji16.is_immediate) {
-    return ((int)inst->ji16.immediate << 16) >> 14;
+  if(insn.ji16.is_immediate) {
+    return ((int)insn.ji16.immediate << 16) >> 14;
   }
   else {
-    return GR[inst->jo1.operand1];
+    return GR[insn.jo1.operand1];
   }
 }
 
 /* return source operand value (JI16, JO1 format) */
-static inline unsigned int src_jo1_jui16(Instruction *inst)
+static inline unsigned int src_jo1_jui16(Instruction insn)
 {
-  if(inst->ji16.is_immediate) {
+  if(insn.ji16.is_immediate) {
     /* no sign extend */
-    return inst->ji16.immediate << 2;
+    return insn.ji16.immediate << 2;
   }
   else {
-    return GR[inst->jo1.operand1];
+    return GR[insn.jo1.operand1];
   }
 }
 
 /* Check condition code and flags */
 /* return: true, false */
-static inline int check_condition(Instruction *inst)
+static inline int check_condition(Instruction insn)
 {
-  switch(inst->ji16.condition) {
+  switch(insn.ji16.condition) {
   case 0:
     return 1;
     break;

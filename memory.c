@@ -9,6 +9,9 @@
 PageEntry *page_table;
 TLB memory_tlb[TLB_ENTRY_MAX];
 
+int memory_is_fault;
+Memory memory_io_writeback;
+
 /* unsigned int tlb_access = 0, tlb_hit = 0; */
 
 void memory_init(void)
@@ -43,14 +46,28 @@ void memory_free(void)
   free(page_table);
 }
 
-void *memory_addr_get_nonmemory(Memory addr)
+void *memory_addr_get_nonmemory(Memory addr, bool is_write)
 {
   if(addr >= IOSR) {
     /* memory mapped IO area */
+    if(addr & 0x3) {
+      abort_sim();
+      errx(EXIT_FAILURE, "Invalid alignment in IO area. Must be word align.");
+    }
+
+    if(is_write) {
+      /* set io address for writeback */
+      memory_io_writeback = addr;
+    }
+    else {
+      io_load(addr);
+    }
+
     return io_addr_get(addr);
   }
   else if(addr >= MEMORY_MAX_ADDR) {
-    errx(EXIT_FAILURE, "no memory at %08x", addr);
+    abort_sim();
+    errx(EXIT_FAILURE, "No memory at %08x", addr);
   }
 
   return NULL;
@@ -99,7 +116,7 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
 
     if(memory_check_privilege(memory_tlb[i].page_entry, is_write)) {
       /* tlb_hit++; */
-      return memory_addr_get_from_physical(phyaddr);
+      return memory_addr_get_from_physical(phyaddr, is_write);
     }
     else {
       errx(EXIT_FAILURE, "PAGE ACCESS DENIED TLB at 0x%08x (%08x)", addr, memory_tlb[i].page_entry);
@@ -108,7 +125,7 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
 #endif
 
   /* Level 1 */
-  pdt = memory_addr_get_from_physical(PDTR);
+  pdt = memory_addr_get_from_physical(PDTR, false);
   index_l1 = (addr & MMU_PAGE_INDEX_L1) >> 22;
 
   if(!(pdt[index_l1] & MMU_PTE_VALID)) {
@@ -132,11 +149,11 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
 
     offset = addr & MMU_PAGE_OFFSET_PSE;
     phyaddr = (pdt[index_l1] & MMU_PAGE_INDEX_L1) | offset;
-    return memory_addr_get_from_physical(phyaddr);
+    return memory_addr_get_from_physical(phyaddr, is_write);
   }
 
   /* Level 2 */
-  pt = memory_addr_get_from_physical(pdt[index_l1] & MMU_PAGE_NUM);
+  pt = memory_addr_get_from_physical(pdt[index_l1] & MMU_PAGE_NUM, false);
   index_l2 = (addr & MMU_PAGE_INDEX_L2) >> 12;
 
   if(!(pt[index_l2] & MMU_PTE_VALID)) {
@@ -159,7 +176,7 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
 
   offset = addr & MMU_PAGE_OFFSET;
   phyaddr = (pt[index_l2] & MMU_PAGE_NUM) | offset;
-  return memory_addr_get_from_physical(phyaddr);
+  return memory_addr_get_from_physical(phyaddr, is_write);
 }
 
 void memory_page_alloc(Memory addr, PageEntry *entry)

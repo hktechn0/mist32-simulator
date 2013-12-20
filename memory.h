@@ -18,10 +18,10 @@
 #define TLB_INDEX_MASK (TLB_ENTRY_MAX - 1)
 #define TLB_INDEX(addr) ((addr >> 22) & TLB_INDEX_MASK)
 
-#define MEMP(addr, w) ((unsigned int *)memory_addr_get(addr, w))
+// #define MEMP(addr, w) ((unsigned int *)memory_addr_get(addr, w))
 /* for little endian */
-#define MEMP8(addr, w) ((unsigned char *)memory_addr_get(addr ^ 3, w))
-#define MEMP16(addr, w) ((unsigned short *)memory_addr_get(addr ^ 2, w))
+// #define MEMP8(addr, w) ((unsigned char *)memory_addr_get(addr ^ 3, w))
+// #define MEMP16(addr, w) ((unsigned short *)memory_addr_get(addr ^ 2, w))
 
 /* 4KB Page */
 #define MMU_PAGE_INDEX_L1 0xffc00000
@@ -58,10 +58,13 @@ typedef struct _tlb {
 
 extern TLB memory_tlb[TLB_ENTRY_MAX];
 
+extern int memory_is_fault;
+extern Memory memory_io_writeback;
+
 void memory_init(void);
 void memory_free(void);
 
-void *memory_addr_get_nonmemory(Memory addr);
+void *memory_addr_get_nonmemory(Memory addr, bool is_write);
 void *memory_addr_get_L2page(Memory addr, bool is_write);
 void memory_page_alloc(Memory addr, PageEntry *entry);
 void memory_convert_endian(void);
@@ -83,7 +86,7 @@ static inline void *memory_page_addr(Memory addr)
 }
 
 /* Physical addr to VM memory addr */
-static inline void *memory_addr_get_from_physical(Memory addr)
+static inline void *memory_addr_get_from_physical(Memory addr, bool is_write)
 {
   if(addr < MEMORY_MAX_ADDR) {
     /* virtual memory */
@@ -91,7 +94,7 @@ static inline void *memory_addr_get_from_physical(Memory addr)
   }
 
   /* memory mapped I/O */
-  return memory_addr_get_nonmemory(addr);
+  return memory_addr_get_nonmemory(addr, is_write);
 }
 
 /* Virtual or Physical addr to VM memory addr */
@@ -100,7 +103,7 @@ static inline void *memory_addr_get(Memory addr, bool is_write)
   switch(PSR_MMUMOD) {
   case PSR_MMUMOD_DIRECT:
     /* Direct mode */
-    return memory_addr_get_from_physical(addr);
+    return memory_addr_get_from_physical(addr, is_write);
     break;
   case PSR_MMUMOD_L2:
     /* 2-Level Paging Mode */
@@ -151,4 +154,74 @@ static inline void memory_tlb_flush(void)
     memory_tlb[i].page_entry = 0;
   }
 #endif
+}
+
+static inline int memory_ld32(unsigned int *dest, Memory addr)
+{
+  unsigned int tmp;
+
+  tmp = *((unsigned int *)memory_addr_get(addr, false));
+  if(memory_is_fault) return -1;
+  *dest = tmp;
+
+  return 0;
+}
+
+static inline int memory_ld16(unsigned int *dest, Memory addr)
+{
+  unsigned short tmp;
+
+  /* XOR for little endian */
+  tmp = *((unsigned short *)memory_addr_get(addr ^ 2, false));
+  if(memory_is_fault) return -1;
+  *dest = tmp;
+
+  return 0;
+}
+
+static inline int memory_ld8(unsigned int *dest, Memory addr)
+{
+  unsigned char tmp;
+
+  /* XOR for little endian */
+  tmp = *((unsigned char *)memory_addr_get(addr ^ 3, false));
+  if(memory_is_fault) return -1;
+  *dest = tmp;
+
+  return 0;
+}
+
+static inline int memory_st32(Memory addr, unsigned int src)
+{
+  unsigned int *tmp;
+
+  tmp = (unsigned int *)memory_addr_get(addr, true);
+  if(memory_is_fault) return -1;
+  *tmp = src;
+
+  return 0;
+}
+
+static inline int memory_st16(Memory addr, unsigned int src)
+{
+  unsigned short *tmp;
+
+  /* XOR for little endian */
+  tmp = (unsigned short *)memory_addr_get(addr ^ 2, true);
+  if(memory_is_fault) return -1;
+  *tmp = (unsigned short)src;
+
+  return 0;
+}
+
+static inline int memory_st8(Memory addr, unsigned int src)
+{
+  unsigned char *tmp;
+
+  /* XOR for little endian */
+  tmp = (unsigned char *)memory_addr_get(addr ^ 3, true);
+  if(memory_is_fault) return -1;
+  *tmp = (unsigned char)src;
+
+  return 0;
 }
