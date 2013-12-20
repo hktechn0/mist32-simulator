@@ -25,6 +25,7 @@ Memory PDTR;
 Memory IDTR;
 unsigned int TIDR;
 unsigned long long FRCR;
+unsigned int FI0R, FI1R;
 
 Memory traceback[TRACEBACK_MAX];
 unsigned int traceback_next;
@@ -121,6 +122,7 @@ int exec(Memory entry_p)
     if(memory_is_fault) {
       /* faulting memory access */
       interrupt_dispatch_nonmask(memory_is_fault);
+      next_PCR = PCR;
 
       memory_io_writeback = 0;
       memory_is_fault = 0;

@@ -5,6 +5,7 @@
 #include <endian.h>
 
 #include "common.h"
+#include "interrupt.h"
 
 PageEntry *page_table;
 TLB memory_tlb[TLB_ENTRY_MAX];
@@ -75,7 +76,7 @@ void *memory_addr_get_nonmemory(Memory addr, bool is_write)
 
 void *memory_addr_get_L2page(Memory addr, bool is_write)
 {
-  unsigned int *pdt, *pt;
+  unsigned int *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset, phyaddr;
 
   if(PSR_MMUPS != PSR_MMUPS_4KB) {
@@ -102,24 +103,29 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
       continue;
     }
 
-    if(memory_tlb[i].page_entry & MMU_PTE_PE) {
+    pte = memory_tlb[i].page_entry;
+
+    if(pte & MMU_PTE_PE) {
       /* Page Size Extension */
-      phyaddr = (memory_tlb[i].page_entry & MMU_PAGE_INDEX_L1) | (addr & MMU_PAGE_OFFSET_PSE);
+      phyaddr = (pte & MMU_PAGE_INDEX_L1) | (addr & MMU_PAGE_OFFSET_PSE);
     }
     else if(!(xoraddr & MMU_PAGE_NUM)) {
-      phyaddr = (memory_tlb[i].page_entry & MMU_PAGE_NUM) | (addr & MMU_PAGE_OFFSET);
+      phyaddr = (pte & MMU_PAGE_NUM) | (addr & MMU_PAGE_OFFSET);
     }
     else {
       /* miss */
       continue;
     }
 
-    if(memory_check_privilege(memory_tlb[i].page_entry, is_write)) {
+    if(memory_check_privilege(pte, is_write)) {
       /* tlb_hit++; */
       return memory_addr_get_from_physical(phyaddr, is_write);
     }
     else {
-      errx(EXIT_FAILURE, "PAGE ACCESS DENIED TLB at 0x%08x (%08x)", addr, memory_tlb[i].page_entry);
+      if(DEBUG_MMU) abort_sim();
+      DEBUGMMU("[MMU] PAGE ACCESS DENIED TLB at 0x%08x (%08x)\n", addr, pte);
+
+      return memory_page_protection_fault(addr);
     }
   } while(0);
 #endif
@@ -127,56 +133,82 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
   /* Level 1 */
   pdt = memory_addr_get_from_physical(PDTR, false);
   index_l1 = (addr & MMU_PAGE_INDEX_L1) >> 22;
+  pte = pdt[index_l1];
 
-  if(!(pdt[index_l1] & MMU_PTE_VALID)) {
+  if(!(pte & MMU_PTE_VALID)) {
     /* Page Fault */
-    abort_sim();
-    errx(EXIT_FAILURE, "PAGE FAULT L1 at 0x%08x (%08x)", addr, pdt[index_l1]);
+    if(DEBUG_MMU) abort_sim();
+    DEBUGMMU("[MMU] PAGE FAULT L1 at 0x%08x (%08x)\n", addr, pte);
+
+    return memory_page_fault(addr);
   }
 
   /* L1 privilege */
-  if(!memory_check_privilege(pdt[index_l1], is_write)) {
-    abort_sim();
-    errx(EXIT_FAILURE, "PAGE ACCESS DENIED L1 at 0x%08x (%08x)", addr, pdt[index_l1]);
+  if(!memory_check_privilege(pte, is_write)) {
+    if(DEBUG_MMU) abort_sim();
+    DEBUGMMU("[MMU] PAGE ACCESS DENIED L1 at 0x%08x (%08x)\n", addr, pte);
+
+    return memory_page_protection_fault(addr);
   }
 
-  if(pdt[index_l1] & MMU_PTE_PE) {
+  if(pte & MMU_PTE_PE) {
     /* Page Size Extension */
 #if TLB_ENABLE
     memory_tlb[TLB_INDEX(addr)].page_num = addr;
-    memory_tlb[TLB_INDEX(addr)].page_entry = pdt[index_l1];
+    memory_tlb[TLB_INDEX(addr)].page_entry = pte;
 #endif
 
     offset = addr & MMU_PAGE_OFFSET_PSE;
-    phyaddr = (pdt[index_l1] & MMU_PAGE_INDEX_L1) | offset;
+    phyaddr = (pte & MMU_PAGE_INDEX_L1) | offset;
     return memory_addr_get_from_physical(phyaddr, is_write);
   }
 
   /* Level 2 */
-  pt = memory_addr_get_from_physical(pdt[index_l1] & MMU_PAGE_NUM, false);
+  pt = memory_addr_get_from_physical(pte & MMU_PAGE_NUM, false);
   index_l2 = (addr & MMU_PAGE_INDEX_L2) >> 12;
+  pte = pt[index_l2];
 
-  if(!(pt[index_l2] & MMU_PTE_VALID)) {
+  if(!(pte & MMU_PTE_VALID)) {
     /* Page Fault */
-    abort_sim();
-    errx(EXIT_FAILURE, "PAGE FAULT L2 at 0x%08x (%08x)", addr, pt[index_l2]);
+    if(DEBUG_MMU) abort_sim();
+    DEBUGMMU("[MMU] PAGE FAULT L2 at 0x%08x (%08x)\n", addr, pte);
+
+    return memory_page_fault(addr);
   }
 
   /* L2 privilege */
-  if(!memory_check_privilege(pt[index_l2], is_write)) {
-    abort_sim();
-    errx(EXIT_FAILURE, "PAGE ACCESS DENIED L2 at 0x%08x (%08x)", addr, pt[index_l2]);
+  if(!memory_check_privilege(pte, is_write)) {
+    if(DEBUG_MMU) abort_sim();
+    DEBUGMMU("[MMU] PAGE ACCESS DENIED L2 at 0x%08x (%08x)\n", addr, pte);
+
+    return memory_page_protection_fault(addr);
   }
 
 #if TLB_ENABLE
   /* add TLB */
   memory_tlb[TLB_INDEX(addr)].page_num = addr;
-  memory_tlb[TLB_INDEX(addr)].page_entry = pt[index_l2];
+  memory_tlb[TLB_INDEX(addr)].page_entry = pte;
 #endif
 
   offset = addr & MMU_PAGE_OFFSET;
-  phyaddr = (pt[index_l2] & MMU_PAGE_NUM) | offset;
+  phyaddr = (pte & MMU_PAGE_NUM) | offset;
   return memory_addr_get_from_physical(phyaddr, is_write);
+}
+
+void *memory_page_fault(Memory addr)
+{
+  memory_is_fault = IDT_PAGEFAULT_NUM;
+  FI0R = addr;
+
+  return NULL;
+}
+
+void *memory_page_protection_fault(Memory addr)
+{
+  memory_is_fault = IDT_INVALID_PRIV_NUM;
+  FI0R = addr;
+
+  return NULL;
 }
 
 void memory_page_alloc(Memory addr, PageEntry *entry)

@@ -105,6 +105,7 @@ extern Memory PDTR;
 extern Memory IDTR;
 extern unsigned int TIDR;
 extern unsigned long long FRCR;
+extern unsigned int FI0R, FI1R;
 
 /* Previous System Registers */
 extern FLAGS PFLAGR;

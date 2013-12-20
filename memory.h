@@ -66,6 +66,8 @@ void memory_free(void);
 
 void *memory_addr_get_nonmemory(Memory addr, bool is_write);
 void *memory_addr_get_L2page(Memory addr, bool is_write);
+void *memory_page_fault(Memory addr);
+void *memory_page_protection_fault(Memory addr);
 void memory_page_alloc(Memory addr, PageEntry *entry);
 void memory_convert_endian(void);
 
@@ -158,35 +160,35 @@ static inline void memory_tlb_flush(void)
 
 static inline int memory_ld32(unsigned int *dest, Memory addr)
 {
-  unsigned int tmp;
+  unsigned int *tmp;
 
-  tmp = *((unsigned int *)memory_addr_get(addr, false));
-  if(memory_is_fault) return -1;
-  *dest = tmp;
+  tmp = (unsigned int *)memory_addr_get(addr, false);
+  if(tmp == NULL) return -1;
+  *dest = *tmp;
 
   return 0;
 }
 
 static inline int memory_ld16(unsigned int *dest, Memory addr)
 {
-  unsigned short tmp;
+  unsigned short *tmp;
 
   /* XOR for little endian */
-  tmp = *((unsigned short *)memory_addr_get(addr ^ 2, false));
-  if(memory_is_fault) return -1;
-  *dest = tmp;
+  tmp = (unsigned short *)memory_addr_get(addr ^ 2, false);
+  if(tmp == NULL) return -1;
+  *dest = *tmp;
 
   return 0;
 }
 
 static inline int memory_ld8(unsigned int *dest, Memory addr)
 {
-  unsigned char tmp;
+  unsigned char *tmp;
 
   /* XOR for little endian */
-  tmp = *((unsigned char *)memory_addr_get(addr ^ 3, false));
-  if(memory_is_fault) return -1;
-  *dest = tmp;
+  tmp = (unsigned char *)memory_addr_get(addr ^ 3, false);
+  if(tmp == NULL) return -1;
+  *dest = *tmp;
 
   return 0;
 }
@@ -196,7 +198,7 @@ static inline int memory_st32(Memory addr, unsigned int src)
   unsigned int *tmp;
 
   tmp = (unsigned int *)memory_addr_get(addr, true);
-  if(memory_is_fault) return -1;
+  if(tmp == NULL) return -1;
   *tmp = src;
 
   return 0;
@@ -208,7 +210,7 @@ static inline int memory_st16(Memory addr, unsigned int src)
 
   /* XOR for little endian */
   tmp = (unsigned short *)memory_addr_get(addr ^ 2, true);
-  if(memory_is_fault) return -1;
+  if(tmp == NULL) return -1;
   *tmp = (unsigned short)src;
 
   return 0;
@@ -220,7 +222,7 @@ static inline int memory_st8(Memory addr, unsigned int src)
 
   /* XOR for little endian */
   tmp = (unsigned char *)memory_addr_get(addr ^ 3, true);
-  if(memory_is_fault) return -1;
+  if(tmp == NULL) return -1;
   *tmp = (unsigned char)src;
 
   return 0;
