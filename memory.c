@@ -79,10 +79,6 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
   unsigned int *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset, phyaddr;
 
-  if(PSR_MMUPS != PSR_MMUPS_4KB) {
-    errx(EXIT_FAILURE, "MMU page size (%d) not supported.", PSR_MMUPS);
-  }
-
 #if TLB_ENABLE
   /* check TLB */
   do {
@@ -91,7 +87,9 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
     i = TLB_INDEX(addr);
     /* tlb_access++; */
 
-    if(!(memory_tlb[i].page_entry & MMU_PTE_VALID)) {
+    pte = memory_tlb[i].page_entry;
+
+    if(!(pte & MMU_PTE_VALID)) {
       /* miss */
       continue;
     }
@@ -102,8 +100,6 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
       /* miss */
       continue;
     }
-
-    pte = memory_tlb[i].page_entry;
 
     if(pte & MMU_PTE_PE) {
       /* Page Size Extension */

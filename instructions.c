@@ -796,6 +796,11 @@ void i_srpsw(Instruction insn)
 {
   PSR = GR[insn.o1.operand1];
   DEBUGMMU("[MMU] SRPSW: MMUMOD %d MMUPS %d\n", PSR_MMUMOD, PSR_MMUPS);
+
+  if(PSR_MMUPS != PSR_MMUPS_4KB) {
+    abort_sim();
+    errx(EXIT_FAILURE, "MMU page size (%d) not supported.", PSR_MMUPS);
+  }
 }
 
 void i_srpflagw(Instruction insn)
