@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <err.h>
 
 /* simulator virtual memory construct (not MMU VM) */
@@ -17,6 +18,17 @@
 #define TLB_ENTRY_MAX 16  /* must be 2^n */
 #define TLB_INDEX_MASK (TLB_ENTRY_MAX - 1)
 #define TLB_INDEX(addr) ((addr >> 22) & TLB_INDEX_MASK)
+
+/* L1 Cache */
+#define CACHE_L1_I_ENABLE 1
+#define CACHE_L1_I_PROFILE 1
+#define CACHE_L1_WAY 4
+#define CACHE_L1_LINE_PER_WAY 16
+#define CACHE_L1_LINE_SIZE 16 /* number of word */
+#define CACHE_L1_LINE_MASK 0xffffffc0
+#define CACHE_L1_TAG(addr) (addr & 0xfffffc00)
+#define CACHE_L1_INDEX(addr) ((addr >> 6) & 0xf)
+#define CACHE_L1_WORD(addr) ((addr >> 2) & 0xf)
 
 // #define MEMP(addr, w) ((unsigned int *)memory_addr_get(addr, w))
 /* for little endian */
@@ -43,6 +55,18 @@
 #define MMU_PTE_G 0x080
 #define MMU_PTE_PE 0x100
 
+typedef struct _cachelinel1 {
+  bool valid;
+  unsigned char miss;
+  unsigned int tag;
+  unsigned int line[CACHE_L1_LINE_SIZE];
+} CacheLineL1;
+
+extern CacheLineL1 cache_l1i[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
+extern CacheLineL1 cache_l1d[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
+extern unsigned long long cache_l1i_total, cache_l1i_hit;
+extern unsigned long long cache_l1d_total, cache_l1d_hit;
+
 /* simulator virtual memory PageEntry (not MMU VM) */
 typedef struct _pageentry {
   bool valid;
@@ -64,59 +88,55 @@ extern Memory memory_io_writeback;
 void memory_init(void);
 void memory_free(void);
 
-void *memory_addr_get_nonmemory(Memory addr, bool is_write);
-void *memory_addr_get_L2page(Memory addr, bool is_write);
-void *memory_page_fault(Memory addr);
-void *memory_page_protection_fault(Memory addr);
-void memory_page_alloc(Memory addr, PageEntry *entry);
-void memory_convert_endian(void);
+void *memory_addr_mmio(Memory paddr, bool is_write);
+Memory memory_page_walk_L2(Memory vaddr, bool is_write);
+Memory memory_page_fault(Memory vaddr);
+Memory memory_page_protection_fault(Memory vaddr);
 
-static inline void *memory_page_addr(Memory addr)
+void memory_vm_alloc(Memory paddr, PageEntry *entry);
+void memory_vm_convert_endian(void);
+
+/* Physical address to VM memory address */
+static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
 {
   PageEntry *entry;
   unsigned int page_num;
 
-  page_num = (addr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
+  if(paddr >= MEMORY_MAX_ADDR) {
+    /* memory mapped I/O */
+    return memory_addr_mmio(paddr, is_write);
+  }
+
+  /* virtual memory */
+  page_num = (paddr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
   entry = &page_table[page_num];
 
   if(!entry->valid) {
     /* VM memory page fault */
-    memory_page_alloc(addr, entry);
+    memory_vm_alloc(paddr, entry);
   }
 
-  return entry->addr;
+  return (char *)entry->addr + (paddr & PAGE_OFFSET_MASK);
 }
 
-/* Physical addr to VM memory addr */
-static inline void *memory_addr_get_from_physical(Memory addr, bool is_write)
-{
-  if(addr < MEMORY_MAX_ADDR) {
-    /* virtual memory */
-    return (char *)memory_page_addr(addr) + (addr & PAGE_OFFSET_MASK);
-  }
-
-  /* memory mapped I/O */
-  return memory_addr_get_nonmemory(addr, is_write);
-}
-
-/* Virtual or Physical addr to VM memory addr */
-static inline void *memory_addr_get(Memory addr, bool is_write)
+/* Get Physical address */
+static inline Memory memory_addr_virt2phy(Memory vaddr, bool is_write)
 {
   switch(PSR_MMUMOD) {
   case PSR_MMUMOD_DIRECT:
     /* Direct mode */
-    return memory_addr_get_from_physical(addr, is_write);
+    return vaddr;
     break;
   case PSR_MMUMOD_L2:
     /* 2-Level Paging Mode */
-    return memory_addr_get_L2page(addr, is_write);
+    return memory_page_walk_L2(vaddr, is_write);
     break;
   default:
     errx(EXIT_FAILURE, "MMU mode (%d) not supported.", PSR_MMUMOD);
-    break;
   }
 
-  return NULL;
+  /* will not reach here */
+  return MEMORY_MAX_ADDR;
 }
 
 static inline bool memory_check_privilege(unsigned int pte, bool is_write)
@@ -158,72 +178,158 @@ static inline void memory_tlb_flush(void)
 #endif
 }
 
-static inline int memory_ld32(unsigned int *dest, Memory addr)
+static inline unsigned int memory_cache_l1i_read(Memory paddr)
 {
-  unsigned int *tmp;
+  unsigned int w, i;
+  unsigned int tag, index, word;
+  unsigned int miss, maxmiss, target;
 
-  tmp = (unsigned int *)memory_addr_get(addr, false);
-  if(tmp == NULL) return -1;
-  *dest = *tmp;
+  tag = CACHE_L1_TAG(paddr);
+  index = CACHE_L1_INDEX(paddr);
+  word = CACHE_L1_WORD(paddr);
+
+  for(w = 0; w < CACHE_L1_WAY; w++) {
+    if(cache_l1i[w][index].tag == tag && cache_l1i[w][index].valid) {
+      /* hit */
+      for(i = 0; i < CACHE_L1_WAY; i++) {
+	/* LRU */
+	cache_l1i[i][index].miss++;
+      }
+      cache_l1i[w][index].miss = 0;
+
+#if CACHE_L1_I_PROFILE
+      cache_l1i_total++;
+      cache_l1i_hit++;
+#endif
+
+      return cache_l1i[w][index].line[word];
+    }
+  }
+
+  /* miss */
+  maxmiss = 0;
+
+#if CACHE_L1_I_PROFILE
+      cache_l1i_total++;
+#endif
+
+  /* find victim by LRU */
+  for(w = 0; w < CACHE_L1_WAY; w++) {
+    if(!cache_l1i[w][index].valid) {
+      target = w;
+      break;
+    }
+
+    miss = cache_l1i[w][index].miss;
+    if(maxmiss < miss) {
+      maxmiss = miss;
+      target = w;
+    }
+  }
+
+  cache_l1i[target][index].valid = true;
+  cache_l1i[target][index].miss = 0;
+  cache_l1i[target][index].tag = tag;
+  memcpy(&cache_l1i[target][index].line,
+	 memory_addr_phy2vm(paddr & CACHE_L1_LINE_MASK, false),
+	 CACHE_L1_LINE_SIZE * sizeof(unsigned int));
+
+  return cache_l1i[target][index].line[word];
+}
+
+static inline bool memory_cache_l1i_write(Memory paddr)
+{
+  unsigned int w, tag, index;
+
+  tag = CACHE_L1_TAG(paddr);
+  index = CACHE_L1_INDEX(paddr);
+
+  for(w = 0; w < CACHE_L1_WAY; w++) {
+    if(cache_l1i[w][index].tag == tag) {
+      cache_l1i[w][index].valid = false;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static inline int memory_ld32(unsigned int *dest, Memory vaddr)
+{
+  Memory paddr;
+
+  paddr = memory_addr_virt2phy(vaddr, false);
+  if(memory_is_fault) return -1;
+  *dest = *(unsigned int *)memory_addr_phy2vm(paddr, false);
 
   return 0;
 }
 
-static inline int memory_ld16(unsigned int *dest, Memory addr)
+static inline int memory_ld16(unsigned int *dest, Memory vaddr)
 {
-  unsigned short *tmp;
+  unsigned short tmp[2];
+  int e;
+  if(!(e = memory_ld32((unsigned int *)&tmp, vaddr & 0xfffffffc))) {
+    /* trick for little endian */
+    *dest = tmp[(~vaddr >> 1) & 1];
+  }
+  return e;
+}
 
+static inline int memory_ld8(unsigned int *dest, Memory vaddr)
+{
+  unsigned char tmp[4];
+  int e;
+  if(!(e = memory_ld32((unsigned int *)&tmp, vaddr & 0xfffffffc))) {
+    /* trick for little endian */
+    *dest = tmp[~vaddr & 3];
+  }
+  return e;
+}
+
+static inline int memory_st32(Memory vaddr, unsigned int src)
+{
+  Memory paddr;
+
+  paddr = memory_addr_virt2phy(vaddr, true);
+  if(memory_is_fault) return -1;
+  *(unsigned int *)memory_addr_phy2vm(paddr, true) = src;
+
+#if CACHE_L1_I_ENABLE
+  memory_cache_l1i_write(paddr);
+#endif
+
+  return 0;
+}
+
+static inline int memory_st16(Memory vaddr, unsigned int src)
+{
+  Memory paddr;
+
+  paddr = memory_addr_virt2phy(vaddr, true);
+  if(memory_is_fault) return -1;
   /* XOR for little endian */
-  tmp = (unsigned short *)memory_addr_get(addr ^ 2, false);
-  if(tmp == NULL) return -1;
-  *dest = *tmp;
+  *(unsigned short *)memory_addr_phy2vm(paddr ^ 2, true) = (unsigned short)src;
+
+#if CACHE_L1_I_ENABLE
+  memory_cache_l1i_write(paddr);
+#endif
 
   return 0;
 }
 
-static inline int memory_ld8(unsigned int *dest, Memory addr)
+static inline int memory_st8(Memory vaddr, unsigned int src)
 {
-  unsigned char *tmp;
+  Memory paddr;
 
+  paddr = memory_addr_virt2phy(vaddr, true);
+  if(memory_is_fault) return -1;
   /* XOR for little endian */
-  tmp = (unsigned char *)memory_addr_get(addr ^ 3, false);
-  if(tmp == NULL) return -1;
-  *dest = *tmp;
+  *(unsigned char *)memory_addr_phy2vm(paddr ^ 3, true) = (unsigned char)src;
 
-  return 0;
-}
-
-static inline int memory_st32(Memory addr, unsigned int src)
-{
-  unsigned int *tmp;
-
-  tmp = (unsigned int *)memory_addr_get(addr, true);
-  if(tmp == NULL) return -1;
-  *tmp = src;
-
-  return 0;
-}
-
-static inline int memory_st16(Memory addr, unsigned int src)
-{
-  unsigned short *tmp;
-
-  /* XOR for little endian */
-  tmp = (unsigned short *)memory_addr_get(addr ^ 2, true);
-  if(tmp == NULL) return -1;
-  *tmp = (unsigned short)src;
-
-  return 0;
-}
-
-static inline int memory_st8(Memory addr, unsigned int src)
-{
-  unsigned char *tmp;
-
-  /* XOR for little endian */
-  tmp = (unsigned char *)memory_addr_get(addr ^ 3, true);
-  if(tmp == NULL) return -1;
-  *tmp = (unsigned char)src;
+#if CACHE_L1_I_ENABLE
+  memory_cache_l1i_write(paddr);
+#endif
 
   return 0;
 }

@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 	  size = PAGE_SIZE - (buffer_addr - (buffer_addr & PAGE_INDEX_MASK));
 
 	  /* get real destination from virtual address */
-	  allocp = memory_addr_get(buffer_addr, true);
+	  allocp = memory_addr_phy2vm(buffer_addr, true);
 
 	  if(size <= remaining) {
 	    memcpy(allocp, (char *)data->d_buf + i, size);
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
   }
 
   /* mist32 binary is big endian */
-  memory_convert_endian();
+  memory_vm_convert_endian();
 
   printf("---- Start ----\n");
 

@@ -7,6 +7,11 @@
 #include "common.h"
 #include "interrupt.h"
 
+CacheLineL1 cache_l1i[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
+CacheLineL1 cache_l1d[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
+unsigned long long cache_l1i_total, cache_l1i_hit;
+unsigned long long cache_l1d_total, cache_l1d_hit;
+
 PageEntry *page_table;
 TLB memory_tlb[TLB_ENTRY_MAX];
 
@@ -17,13 +22,29 @@ Memory memory_io_writeback;
 
 void memory_init(void)
 {
-  unsigned int i;
+  unsigned int i, w;
 
   page_table = calloc(PAGE_ENTRY_NUM, sizeof(PageEntry));
 
+  /* internal virtual memory table flush */
   for(i = 0; i < PAGE_ENTRY_NUM; i++) {
     page_table[i].valid = false;
   }
+
+  cache_l1i_total = 0;
+  cache_l1i_hit = 0;
+  //cache_l1d_total = 0;
+  //cache_l1d_hit = 0;
+
+  /* L1 cache flush */
+  for(w = 0; w < CACHE_L1_WAY; w++) {
+    for(i = 0; i < CACHE_L1_LINE_PER_WAY; i++) {
+      cache_l1i[w][i].valid = false;
+      //cache_l1d[w][i].valid = false;
+    }
+  }
+
+  memory_tlb_flush();
 }
 
 void memory_free(void)
@@ -44,47 +65,52 @@ void memory_free(void)
 #endif
 */
 
+#if CACHE_L1_I_PROFILE
+  printf("[Cache] L1 I hit %lld / %lld\n", cache_l1i_hit, cache_l1i_total);
+#endif
+
   free(page_table);
 }
 
-void *memory_addr_get_nonmemory(Memory addr, bool is_write)
+void *memory_addr_mmio(Memory paddr, bool is_write)
 {
-  if(addr >= IOSR) {
+  if(paddr >= IOSR) {
     /* memory mapped IO area */
-    if(addr & 0x3) {
+    if(paddr & 0x3) {
       abort_sim();
       errx(EXIT_FAILURE, "Invalid alignment in IO area. Must be word align.");
     }
 
     if(is_write) {
       /* set io address for writeback */
-      memory_io_writeback = addr;
+      memory_io_writeback = paddr;
     }
     else {
-      io_load(addr);
+      io_load(paddr);
     }
 
-    return io_addr_get(addr);
+    return io_addr_get(paddr);
   }
-  else if(addr >= MEMORY_MAX_ADDR) {
+  else if(paddr >= MEMORY_MAX_ADDR) {
     abort_sim();
-    errx(EXIT_FAILURE, "No memory at %08x", addr);
+    errx(EXIT_FAILURE, "No memory at %08x", paddr);
   }
 
   return NULL;
 }
 
-void *memory_addr_get_L2page(Memory addr, bool is_write)
+Memory memory_page_walk_L2(Memory vaddr, bool is_write)
 {
   unsigned int *pdt, *pt, pte;
-  unsigned int index_l1, index_l2, offset, phyaddr;
+  unsigned int index_l1, index_l2, offset;
+  Memory paddr;
 
 #if TLB_ENABLE
   /* check TLB */
   do {
     unsigned int i, xoraddr;
 
-    i = TLB_INDEX(addr);
+    i = TLB_INDEX(vaddr);
     /* tlb_access++; */
 
     pte = memory_tlb[i].page_entry;
@@ -94,7 +120,7 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
       continue;
     }
 
-    xoraddr = memory_tlb[i].page_num ^ addr;
+    xoraddr = memory_tlb[i].page_num ^ vaddr;
 
     if(xoraddr & MMU_PAGE_INDEX_L1) {
       /* miss */
@@ -103,10 +129,10 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
 
     if(pte & MMU_PTE_PE) {
       /* Page Size Extension */
-      phyaddr = (pte & MMU_PAGE_INDEX_L1) | (addr & MMU_PAGE_OFFSET_PSE);
+      paddr = (pte & MMU_PAGE_INDEX_L1) | (vaddr & MMU_PAGE_OFFSET_PSE);
     }
     else if(!(xoraddr & MMU_PAGE_NUM)) {
-      phyaddr = (pte & MMU_PAGE_NUM) | (addr & MMU_PAGE_OFFSET);
+      paddr = (pte & MMU_PAGE_NUM) | (vaddr & MMU_PAGE_OFFSET);
     }
     else {
       /* miss */
@@ -115,99 +141,97 @@ void *memory_addr_get_L2page(Memory addr, bool is_write)
 
     if(memory_check_privilege(pte, is_write)) {
       /* tlb_hit++; */
-      return memory_addr_get_from_physical(phyaddr, is_write);
+      return paddr;
     }
     else {
       if(DEBUG_MMU) abort_sim();
-      DEBUGMMU("[MMU] PAGE ACCESS DENIED TLB at 0x%08x (%08x)\n", addr, pte);
+      DEBUGMMU("[MMU] PAGE ACCESS DENIED TLB at 0x%08x (%08x)\n", vaddr, pte);
 
-      return memory_page_protection_fault(addr);
+      return memory_page_protection_fault(vaddr);
     }
   } while(0);
 #endif
 
   /* Level 1 */
-  pdt = memory_addr_get_from_physical(PDTR, false);
-  index_l1 = (addr & MMU_PAGE_INDEX_L1) >> 22;
+  pdt = memory_addr_phy2vm(PDTR, false);
+  index_l1 = (vaddr & MMU_PAGE_INDEX_L1) >> 22;
   pte = pdt[index_l1];
 
   if(!(pte & MMU_PTE_VALID)) {
     /* Page Fault */
     if(DEBUG_MMU) abort_sim();
-    DEBUGMMU("[MMU] PAGE FAULT L1 at 0x%08x (%08x)\n", addr, pte);
+    DEBUGMMU("[MMU] PAGE FAULT L1 at 0x%08x (%08x)\n", vaddr, pte);
 
-    return memory_page_fault(addr);
+    return memory_page_fault(vaddr);
   }
 
   /* L1 privilege */
   if(!memory_check_privilege(pte, is_write)) {
     if(DEBUG_MMU) abort_sim();
-    DEBUGMMU("[MMU] PAGE ACCESS DENIED L1 at 0x%08x (%08x)\n", addr, pte);
+    DEBUGMMU("[MMU] PAGE ACCESS DENIED L1 at 0x%08x (%08x)\n", vaddr, pte);
 
-    return memory_page_protection_fault(addr);
+    return memory_page_protection_fault(vaddr);
   }
 
   if(pte & MMU_PTE_PE) {
     /* Page Size Extension */
 #if TLB_ENABLE
-    memory_tlb[TLB_INDEX(addr)].page_num = addr;
-    memory_tlb[TLB_INDEX(addr)].page_entry = pte;
+    memory_tlb[TLB_INDEX(vaddr)].page_num = vaddr;
+    memory_tlb[TLB_INDEX(vaddr)].page_entry = pte;
 #endif
 
-    offset = addr & MMU_PAGE_OFFSET_PSE;
-    phyaddr = (pte & MMU_PAGE_INDEX_L1) | offset;
-    return memory_addr_get_from_physical(phyaddr, is_write);
+    offset = vaddr & MMU_PAGE_OFFSET_PSE;
+    return (pte & MMU_PAGE_INDEX_L1) | offset;
   }
 
   /* Level 2 */
-  pt = memory_addr_get_from_physical(pte & MMU_PAGE_NUM, false);
-  index_l2 = (addr & MMU_PAGE_INDEX_L2) >> 12;
+  pt = memory_addr_phy2vm(pte & MMU_PAGE_NUM, false);
+  index_l2 = (vaddr & MMU_PAGE_INDEX_L2) >> 12;
   pte = pt[index_l2];
 
   if(!(pte & MMU_PTE_VALID)) {
     /* Page Fault */
     if(DEBUG_MMU) abort_sim();
-    DEBUGMMU("[MMU] PAGE FAULT L2 at 0x%08x (%08x)\n", addr, pte);
+    DEBUGMMU("[MMU] PAGE FAULT L2 at 0x%08x (%08x)\n", vaddr, pte);
 
-    return memory_page_fault(addr);
+    return memory_page_fault(vaddr);
   }
 
   /* L2 privilege */
   if(!memory_check_privilege(pte, is_write)) {
     if(DEBUG_MMU) abort_sim();
-    DEBUGMMU("[MMU] PAGE ACCESS DENIED L2 at 0x%08x (%08x)\n", addr, pte);
+    DEBUGMMU("[MMU] PAGE ACCESS DENIED L2 at 0x%08x (%08x)\n", vaddr, pte);
 
-    return memory_page_protection_fault(addr);
+    return memory_page_protection_fault(vaddr);
   }
 
 #if TLB_ENABLE
   /* add TLB */
-  memory_tlb[TLB_INDEX(addr)].page_num = addr;
-  memory_tlb[TLB_INDEX(addr)].page_entry = pte;
+  memory_tlb[TLB_INDEX(vaddr)].page_num = vaddr;
+  memory_tlb[TLB_INDEX(vaddr)].page_entry = pte;
 #endif
 
-  offset = addr & MMU_PAGE_OFFSET;
-  phyaddr = (pte & MMU_PAGE_NUM) | offset;
-  return memory_addr_get_from_physical(phyaddr, is_write);
+  offset = vaddr & MMU_PAGE_OFFSET;
+  return (pte & MMU_PAGE_NUM) | offset;
 }
 
-void *memory_page_fault(Memory addr)
+Memory memory_page_fault(Memory vaddr)
 {
   memory_is_fault = IDT_PAGEFAULT_NUM;
-  FI0R = addr;
+  FI0R = vaddr;
 
-  return NULL;
+  return MEMORY_MAX_ADDR;
 }
 
-void *memory_page_protection_fault(Memory addr)
+Memory memory_page_protection_fault(Memory vaddr)
 {
   memory_is_fault = IDT_INVALID_PRIV_NUM;
-  FI0R = addr;
+  FI0R = vaddr;
 
-  return NULL;
+  return MEMORY_MAX_ADDR;
 }
 
-void memory_page_alloc(Memory addr, PageEntry *entry)
+void memory_vm_alloc(Memory paddr, PageEntry *entry)
 {
   if(!entry || entry->valid) {
     errx(EXIT_FAILURE, "page_alloc invalid entry");
@@ -219,11 +243,11 @@ void memory_page_alloc(Memory addr, PageEntry *entry)
   entry->valid = true;
 
   DPUTS("[Memory] alloc: Virt %p, Real 0x%08x on 0x%08x\n",
-	entry->addr, addr & PAGE_INDEX_MASK, addr);
+	entry->addr, paddr & PAGE_INDEX_MASK, paddr);
 }
 
-/* convert endian. must pass real address */
-void memory_page_convert_endian(unsigned int *page)
+/* convert endian. must pass vm address */
+void memory_vm_page_convert_endian(unsigned int *page)
 {
   unsigned int i;
   unsigned int *value;
@@ -241,13 +265,13 @@ void memory_page_convert_endian(unsigned int *page)
   }
 }
 
-void memory_convert_endian(void)
+void memory_vm_convert_endian(void)
 {
   unsigned int i;
     
   for(i = 0; i < PAGE_ENTRY_NUM; i++) {
     if(page_table[i].valid) {
-      memory_page_convert_endian(page_table[i].addr);
+      memory_vm_page_convert_endian(page_table[i].addr);
     }
   }
 }

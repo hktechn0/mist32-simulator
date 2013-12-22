@@ -47,8 +47,10 @@ void signal_on_sigint(int signo)
 
 int exec(Memory entry_p)
 {
-  Instruction insn;
   OpcodeTable opcode_t;
+
+  Instruction insn;
+  Memory phypc;
   unsigned long clk = 0;
 
   unsigned int cmod;
@@ -98,14 +100,23 @@ int exec(Memory entry_p)
     }
 
     /* instruction fetch */
-    if(memory_ld32(&insn.value, PCR)) {
+    phypc = memory_addr_virt2phy(PCR, false);
+
+    if(memory_is_fault) {
       /* fault fetch */
       DEBUGINT("[FAULT] Instruction fetch: %08x\n", PCR);
       goto fault;
     }
 
+#if CACHE_L1_I_ENABLE
+    insn.value = memory_cache_l1i_read(phypc);
+#else
+    insn.value = *(unsigned int *)memory_addr_phy2vm(phypc, false);
+#endif
+
     /* decode */
     if(opcode_t[insn.base.opcode] == NULL) {
+      print_instruction(insn);
       abort_sim();
       errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, insn.base.opcode);
     }
@@ -159,7 +170,7 @@ int exec(Memory entry_p)
       }
       else if(c == 'm') {
 	memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
-	write(memfd, memory_addr_get(0, false), 0x1000);
+	write(memfd, memory_addr_phy2vm(memory_addr_virt2phy(0, false), 0x1000), false);
 	close(memfd);
       }
     }
