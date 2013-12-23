@@ -1,7 +1,7 @@
 /* L1 Cache */
 #define CACHE_L1_I_ENABLE 1
 #define CACHE_L1_D_ENABLE 1
-#define CACHE_L1_PROFILE 0
+#define CACHE_L1_PROFILE 1
 
 #define CACHE_L1_WAY 4
 #define CACHE_L1_LINE_PER_WAY 16

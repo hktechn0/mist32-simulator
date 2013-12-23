@@ -13,12 +13,6 @@
 #define PAGE_NUM_MASK 0x0003ffff /* 18 bit */
 #define PAGE_INDEX_MASK (PAGE_NUM_MASK << PAGE_OFFSET_BIT_NUM)
 
-/* simulator TLB settings */
-#define TLB_ENABLE 1
-#define TLB_ENTRY_MAX 16  /* must be 2^n */
-#define TLB_INDEX_MASK (TLB_ENTRY_MAX - 1)
-#define TLB_INDEX(addr) ((addr >> 22) & TLB_INDEX_MASK)
-
 // #define MEMP(addr, w) ((unsigned int *)memory_addr_get(addr, w))
 /* for little endian */
 // #define MEMP8(addr, w) ((unsigned char *)memory_addr_get(addr ^ 3, w))
@@ -58,13 +52,6 @@ typedef struct _pageentry {
 
 extern PageEntry *page_table;
 
-typedef struct _tlb {
-  unsigned int page_num;
-  unsigned int page_entry;
-} TLB;
-
-extern TLB memory_tlb[TLB_ENTRY_MAX];
-
 extern int memory_is_fault;
 extern Memory memory_io_writeback;
 
@@ -78,51 +65,6 @@ Memory memory_page_protection_fault(Memory vaddr);
 
 void memory_vm_alloc(Memory paddr, PageEntry *entry);
 void memory_vm_convert_endian(void);
-
-/* Physical address to VM memory address */
-static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
-{
-  PageEntry *entry;
-  unsigned int page_num;
-
-  if(paddr >= MEMORY_MAX_ADDR) {
-    /* memory mapped I/O */
-    return memory_addr_mmio(paddr, is_write);
-  }
-
-  /* virtual memory */
-  page_num = (paddr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
-  entry = &page_table[page_num];
-
-  if(!entry->valid) {
-    /* VM memory page fault */
-    memory_vm_alloc(paddr, entry);
-  }
-
-  return (char *)entry->addr + (paddr & PAGE_OFFSET_MASK);
-}
-
-/* Get Physical address */
-static inline Memory memory_addr_virt2phy(Memory vaddr, bool is_write)
-{
-  switch(PSR_MMUMOD) {
-  case PSR_MMUMOD_DIRECT:
-    /* Direct mode */
-    return vaddr;
-    break;
-  case PSR_MMUMOD_L2:
-    /* 2-Level Paging Mode */
-    return memory_page_walk_L2(vaddr, is_write);
-    break;
-  default:
-    errx(EXIT_FAILURE, "MMU mode (%d) not supported.", PSR_MMUMOD);
-  }
-
-  /* will not reach here */
-  return MEMORY_MAX_ADDR;
-}
-
-#include "cache.h"
 
 static inline bool memory_check_privilege(unsigned int pte, bool is_write)
 {
@@ -152,16 +94,60 @@ static inline bool memory_check_privilege(unsigned int pte, bool is_write)
   return false;
 }
 
-static inline void memory_tlb_flush(void)
+/* Physical address to VM memory address */
+static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
 {
-#if TLB_ENABLE
-  unsigned int i;
+  PageEntry *entry;
+  unsigned int page_num;
 
-  for(i = 0; i < TLB_ENTRY_MAX; i++) {
-    memory_tlb[i].page_entry = 0;
+  if(paddr >= MEMORY_MAX_ADDR) {
+    /* memory mapped I/O */
+    return memory_addr_mmio(paddr, is_write);
   }
-#endif
+
+  /* virtual memory */
+  page_num = (paddr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
+  entry = &page_table[page_num];
+
+  if(!entry->valid) {
+    /* VM memory page fault */
+    memory_vm_alloc(paddr, entry);
+  }
+
+  return (char *)entry->addr + (paddr & PAGE_OFFSET_MASK);
 }
+
+#include "tlb.h"
+
+/* Get Physical address */
+static inline Memory memory_addr_virt2phy(Memory vaddr, bool is_write)
+{
+  switch(PSR_MMUMOD) {
+  case PSR_MMUMOD_DIRECT:
+    /* Direct mode */
+    return vaddr;
+    break;
+  case PSR_MMUMOD_L2:
+    /* 2-Level Paging Mode */
+#if TLB_ENABLE
+    Memory paddr;
+
+    if((paddr = memory_tlb_get(vaddr, is_write)) != MEMORY_MAX_ADDR) {
+      /* TLB hit */
+      return paddr;
+    }
+#endif
+    return memory_page_walk_L2(vaddr, is_write);
+    break;
+  default:
+    errx(EXIT_FAILURE, "MMU mode (%d) not supported.", PSR_MMUMOD);
+  }
+
+  /* will not reach here */
+  return MEMORY_MAX_ADDR;
+}
+
+#include "cache.h"
 
 static inline int memory_ld32(unsigned int *dest, Memory vaddr)
 {

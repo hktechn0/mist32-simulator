@@ -11,12 +11,12 @@ unsigned long long cache_l1i_total, cache_l1i_hit;
 unsigned long long cache_l1d_total, cache_l1d_hit;
 
 PageEntry *page_table;
-TLB memory_tlb[TLB_ENTRY_MAX];
 
 int memory_is_fault;
 Memory memory_io_writeback;
 
-/* unsigned int tlb_access = 0, tlb_hit = 0; */
+TLB memory_tlb[TLB_ENTRY_MAX];
+unsigned long long tlb_access, tlb_hit;
 
 void memory_init(void)
 {
@@ -42,6 +42,9 @@ void memory_init(void)
     }
   }
 
+  tlb_access = 0;
+  tlb_hit = 0;
+
   memory_tlb_flush();
 }
 
@@ -57,15 +60,13 @@ void memory_free(void)
     }
   }
 
-/*
-#if TLB_ENABLE
-  printf("[TLB] Info hit %d / %d\n", tlb_hit, tlb_access);
-#endif
-*/
-
 #if CACHE_L1_PROFILE
   printf("[Cache] L1 I hit %lld / %lld\n", cache_l1i_hit, cache_l1i_total);
   printf("[Cache] L1 D hit %lld / %lld\n", cache_l1d_hit, cache_l1d_total);
+#endif
+
+#if TLB_PROFILE
+  printf("[TLB] hit %lld / %lld\n", tlb_hit, tlb_access);
 #endif
 
   free(page_table);
@@ -102,54 +103,6 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write)
 {
   unsigned int *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset;
-  Memory paddr;
-
-#if TLB_ENABLE
-  /* check TLB */
-  do {
-    unsigned int i, xoraddr;
-
-    i = TLB_INDEX(vaddr);
-    /* tlb_access++; */
-
-    pte = memory_tlb[i].page_entry;
-
-    if(!(pte & MMU_PTE_VALID)) {
-      /* miss */
-      continue;
-    }
-
-    xoraddr = memory_tlb[i].page_num ^ vaddr;
-
-    if(xoraddr & MMU_PAGE_INDEX_L1) {
-      /* miss */
-      continue;
-    }
-
-    if(pte & MMU_PTE_PE) {
-      /* Page Size Extension */
-      paddr = (pte & MMU_PAGE_INDEX_L1) | (vaddr & MMU_PAGE_OFFSET_PSE);
-    }
-    else if(!(xoraddr & MMU_PAGE_NUM)) {
-      paddr = (pte & MMU_PAGE_NUM) | (vaddr & MMU_PAGE_OFFSET);
-    }
-    else {
-      /* miss */
-      continue;
-    }
-
-    if(memory_check_privilege(pte, is_write)) {
-      /* tlb_hit++; */
-      return paddr;
-    }
-    else {
-      if(DEBUG_MMU) abort_sim();
-      DEBUGMMU("[MMU] PAGE ACCESS DENIED TLB at 0x%08x (%08x)\n", vaddr, pte);
-
-      return memory_page_protection_fault(vaddr);
-    }
-  } while(0);
-#endif
 
   /* Level 1 */
   pdt = memory_addr_phy2vm(PDTR, false);
