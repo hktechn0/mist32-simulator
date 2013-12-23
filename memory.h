@@ -210,7 +210,8 @@ static inline int memory_st32(Memory vaddr, unsigned int src)
 
 #if CACHE_L1_I_ENABLE || CACHE_L1_D_ENABLE
   memory_cache_l1_write(paddr, src);
-#else
+#endif
+#if !CACHE_L1_D_ENABLE
   *(unsigned int *)memory_addr_phy2vm(paddr, true) = src;
 #endif
 

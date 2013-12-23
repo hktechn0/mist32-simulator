@@ -111,14 +111,16 @@ static inline unsigned int memory_cache_l1_read(Memory paddr, int is_icache)
 
 static inline void memory_cache_l1_write(Memory paddr, int data)
 {
-  unsigned int w, tag, index, word;
+  unsigned int w, tag, index;
 
   tag = CACHE_L1_TAG(paddr);
   index = CACHE_L1_INDEX(paddr);
 
   if(paddr >= MEMORY_MAX_ADDR) {
     /* non-cache area */
+#if CACHE_L1_D_ENABLE
     *(unsigned int *)memory_addr_phy2vm(paddr, true) = data;
+#endif
     return;
   }
 
@@ -133,6 +135,8 @@ static inline void memory_cache_l1_write(Memory paddr, int data)
 #endif
 
 #if CACHE_L1_D_ENABLE
+  unsigned int word;
+
   /* writethrough */
   *(unsigned int *)memory_addr_phy2vm(paddr, true) = data;
 
