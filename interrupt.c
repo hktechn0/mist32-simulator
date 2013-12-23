@@ -23,7 +23,8 @@ void interrupt_entry(unsigned int num)
     DEBUGINT("[INTERRUPT] IRQ %x: invalid vector.\n", num);
 
     if(num == IDT_DOUBLEFAULT_NUM) {
-      errx(EXIT_FAILURE, "Invalid double fault vector.");
+      printf("[INTERRUPT] Invalid double fault vector.\n");
+      exec_finish = true;
     }
     else if(num == IDT_INVALID_IDT_NUM) {
       interrupt_entry(IDT_DOUBLEFAULT_NUM);
