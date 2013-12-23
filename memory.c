@@ -33,14 +33,14 @@ void memory_init(void)
 
   cache_l1i_total = 0;
   cache_l1i_hit = 0;
-  //cache_l1d_total = 0;
-  //cache_l1d_hit = 0;
+  cache_l1d_total = 0;
+  cache_l1d_hit = 0;
 
   /* L1 cache flush */
   for(w = 0; w < CACHE_L1_WAY; w++) {
     for(i = 0; i < CACHE_L1_LINE_PER_WAY; i++) {
       cache_l1i[w][i].valid = false;
-      //cache_l1d[w][i].valid = false;
+      cache_l1d[w][i].valid = false;
     }
   }
 
@@ -65,8 +65,9 @@ void memory_free(void)
 #endif
 */
 
-#if CACHE_L1_I_PROFILE
+#if CACHE_L1_PROFILE
   printf("[Cache] L1 I hit %lld / %lld\n", cache_l1i_hit, cache_l1i_total);
+  printf("[Cache] L1 D hit %lld / %lld\n", cache_l1d_hit, cache_l1d_total);
 #endif
 
   free(page_table);

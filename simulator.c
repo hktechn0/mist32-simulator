@@ -109,7 +109,7 @@ int exec(Memory entry_p)
     }
 
 #if CACHE_L1_I_ENABLE
-    insn.value = memory_cache_l1i_read(phypc);
+    insn.value = memory_cache_l1_read(phypc, 1);
 #else
     insn.value = *(unsigned int *)memory_addr_phy2vm(phypc, false);
 #endif
