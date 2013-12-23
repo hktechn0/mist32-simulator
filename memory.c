@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <err.h>
 
-#include <endian.h>
-
 #include "common.h"
 #include "interrupt.h"
 
@@ -256,12 +254,7 @@ void memory_vm_page_convert_endian(unsigned int *page)
   value = page;
 
   for(i = 0; i < PAGE_SIZE_IN_WORD; i++) {
-    /*
-     *value = (*value >> 24) | (*value << 24) | ((*value >> 8) & 0xff00) | ((*value << 8) & 0xff0000);
-     value++;
-    */
-
-    *value = htobe32(*value);
+    *value = __builtin_bswap32(*value);
     value++;
   }
 }

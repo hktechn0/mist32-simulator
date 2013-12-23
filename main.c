@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <err.h>
 
-#include <elf.h>
 #include <libelf.h>
 #include <gelf.h>
 

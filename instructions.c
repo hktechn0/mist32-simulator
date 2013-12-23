@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <err.h>
-
 #include <time.h>
-#include <endian.h>
+#include <err.h>
 
 #include "common.h"
 #include "interrupt.h"
@@ -385,7 +383,7 @@ void i_rev8(Instruction insn)
 
   ops_o2_ui11(insn, &dest, &src);
 
-  *dest = htobe32(src);
+  *dest = __builtin_bswap32(src);
 }
 
 void i_getb(Instruction insn)
