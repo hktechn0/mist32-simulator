@@ -25,7 +25,7 @@ static inline void memory_tlb_flush(void)
 #endif
 }
 
-static inline Memory memory_tlb_get(Memory vaddr, bool is_write)
+static inline Memory memory_tlb_get(Memory vaddr, bool is_write, bool is_exec)
 {
   unsigned int i, xoraddr, pte;
   Memory paddr;
@@ -62,7 +62,7 @@ static inline Memory memory_tlb_get(Memory vaddr, bool is_write)
     return MEMORY_MAX_ADDR;
   }
 
-  if(!memory_check_privilege(pte, is_write)) {
+  if(!memory_check_privilege(pte, is_write, is_exec)) {
     /* privilege fault */
     return MEMORY_MAX_ADDR;
   }

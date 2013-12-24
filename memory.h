@@ -59,15 +59,19 @@ void memory_init(void);
 void memory_free(void);
 
 void *memory_addr_mmio(Memory paddr, bool is_write);
-Memory memory_page_walk_L2(Memory vaddr, bool is_write);
+Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec);
 Memory memory_page_fault(Memory vaddr);
 Memory memory_page_protection_fault(Memory vaddr);
 
 void memory_vm_alloc(Memory paddr, PageEntry *entry);
 void memory_vm_convert_endian(void);
 
-static inline bool memory_check_privilege(unsigned int pte, bool is_write)
+static inline bool memory_check_privilege(unsigned int pte, bool is_write, bool is_exec)
 {
+  if(is_exec && !(pte & MMU_PTE_EX)) {
+    return false;
+  }
+
   switch(pte & MMU_PTE_PP) {
   case MMU_PTE_PP_RWXX:
     if((PSR & PSR_CMOD_MASK) == PSR_CMOD_KERNEL) {
@@ -120,8 +124,12 @@ static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
 #include "tlb.h"
 
 /* Get Physical address */
-static inline Memory memory_addr_virt2phy(Memory vaddr, bool is_write)
+static inline Memory memory_addr_virt2phy(Memory vaddr, bool is_write, bool is_exec)
 {
+#if TLB_ENABLE
+  Memory paddr;
+#endif
+
   switch(PSR_MMUMOD) {
   case PSR_MMUMOD_DIRECT:
     /* Direct mode */
@@ -130,14 +138,12 @@ static inline Memory memory_addr_virt2phy(Memory vaddr, bool is_write)
   case PSR_MMUMOD_L2:
     /* 2-Level Paging Mode */
 #if TLB_ENABLE
-    Memory paddr;
-
-    if((paddr = memory_tlb_get(vaddr, is_write)) != MEMORY_MAX_ADDR) {
+    if((paddr = memory_tlb_get(vaddr, is_write, is_exec)) != MEMORY_MAX_ADDR) {
       /* TLB hit */
       return paddr;
     }
 #endif
-    return memory_page_walk_L2(vaddr, is_write);
+    return memory_page_walk_L2(vaddr, is_write, is_exec);
     break;
   default:
     errx(EXIT_FAILURE, "MMU mode (%d) not supported.", PSR_MMUMOD);
@@ -153,7 +159,7 @@ static inline int memory_ld32(unsigned int *dest, Memory vaddr)
 {
   Memory paddr;
 
-  paddr = memory_addr_virt2phy(vaddr, false);
+  paddr = memory_addr_virt2phy(vaddr, false, false);
   if(memory_is_fault) return -1;
 
 #if CACHE_L1_D_ENABLE
@@ -191,7 +197,7 @@ static inline int memory_st32(Memory vaddr, unsigned int src)
 {
   Memory paddr;
 
-  paddr = memory_addr_virt2phy(vaddr, true);
+  paddr = memory_addr_virt2phy(vaddr, true, false);
   if(memory_is_fault) return -1;
 
 #if CACHE_L1_I_ENABLE || CACHE_L1_D_ENABLE
@@ -208,7 +214,7 @@ static inline int memory_st16(Memory vaddr, unsigned int src)
 {
   Memory paddr;
 
-  paddr = memory_addr_virt2phy(vaddr, true);
+  paddr = memory_addr_virt2phy(vaddr, true, false);
   if(memory_is_fault) return -1;
 
 #if CACHE_L1_D_ENABLE
@@ -232,7 +238,7 @@ static inline int memory_st8(Memory vaddr, unsigned int src)
 {
   Memory paddr;
 
-  paddr = memory_addr_virt2phy(vaddr, true);
+  paddr = memory_addr_virt2phy(vaddr, true, false);
   if(memory_is_fault) return -1;
 
 #if CACHE_L1_D_ENABLE

@@ -100,7 +100,7 @@ int exec(Memory entry_p)
     }
 
     /* instruction fetch */
-    phypc = memory_addr_virt2phy(PCR, false);
+    phypc = memory_addr_virt2phy(PCR, false, true);
 
     if(memory_is_fault) {
       /* fault fetch */
@@ -170,7 +170,7 @@ int exec(Memory entry_p)
       }
       else if(c == 'm') {
 	memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
-	write(memfd, memory_addr_phy2vm(memory_addr_virt2phy(0, false), 0x1000), false);
+	write(memfd, memory_addr_phy2vm(memory_addr_virt2phy(0, false, false), 0x1000), false);
 	close(memfd);
       }
     }

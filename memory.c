@@ -99,7 +99,7 @@ void *memory_addr_mmio(Memory paddr, bool is_write)
   return NULL;
 }
 
-Memory memory_page_walk_L2(Memory vaddr, bool is_write)
+Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
 {
   unsigned int *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset;
@@ -118,7 +118,7 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write)
   }
 
   /* L1 privilege */
-  if(!memory_check_privilege(pte, is_write)) {
+  if(!memory_check_privilege(pte, is_write, is_exec)) {
     if(DEBUG_MMU) abort_sim();
     DEBUGMMU("[MMU] PAGE ACCESS DENIED L1 at 0x%08x (%08x)\n", vaddr, pte);
 
@@ -150,7 +150,7 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write)
   }
 
   /* L2 privilege */
-  if(!memory_check_privilege(pte, is_write)) {
+  if(!memory_check_privilege(pte, is_write, is_exec)) {
     if(DEBUG_MMU) abort_sim();
     DEBUGMMU("[MMU] PAGE ACCESS DENIED L2 at 0x%08x (%08x)\n", vaddr, pte);
 
