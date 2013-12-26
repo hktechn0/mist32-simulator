@@ -7,8 +7,8 @@
 #define TLB_INDEX(addr) ((addr >> 22) & TLB_INDEX_MASK)
 
 typedef struct _tlb {
-  unsigned int page_num;
-  unsigned int page_entry;
+  uint32_t page_num;
+  uint32_t page_entry;
 } TLB;
 
 extern TLB memory_tlb[TLB_ENTRY_MAX];
@@ -27,7 +27,8 @@ static inline void memory_tlb_flush(void)
 
 static inline Memory memory_tlb_get(Memory vaddr, bool is_write, bool is_exec)
 {
-  unsigned int i, xoraddr, pte;
+  unsigned int i;
+  uint32_t xoraddr, pte;
   Memory paddr;
 
   i = TLB_INDEX(vaddr);

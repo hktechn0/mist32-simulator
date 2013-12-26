@@ -3,10 +3,10 @@
 #define PREFETCH_TAG 0xffffffc0
 #define PREFETCH_MASK 0x0000003f
 
-extern unsigned int prefetch_insn[PREFETCH_SIZE];
+extern uint32_t prefetch_insn[PREFETCH_SIZE];
 extern Memory prefetch_pc;
 
-static inline unsigned int instruction_fetch(void)
+static inline uint32_t instruction_fetch(void)
 {
   Memory phypc;
 
@@ -23,13 +23,13 @@ static inline unsigned int instruction_fetch(void)
 
   /* prefetch */
   memcpy(prefetch_insn, memory_addr_phy2vm(phypc & PREFETCH_TAG, false), PREFETCH_SIZE);
-
   prefetch_pc = PCR & PREFETCH_TAG;
+
   return prefetch_insn[(PCR & PREFETCH_MASK) >> 2];
 }
 
 #if CACHE_L1_I_ENABLE
-static inline unsigned int instruction_fetch_cache(void)
+static inline uint32_t instruction_fetch_cache(void)
 {
   Memory phypc;
   

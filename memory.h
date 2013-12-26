@@ -39,9 +39,9 @@
 #define MMU_PTE_PE 0x100
 
 union union_int32 {
-  unsigned int u32;
-  unsigned short u16[4];
-  unsigned char u8[4];
+  uint32_t u32;
+  uint16_t u16[4];
+  uint8_t u8[4];
 };
 
 /* simulator virtual memory PageEntry (not MMU VM) */
@@ -66,7 +66,7 @@ Memory memory_page_protection_fault(Memory vaddr);
 void memory_vm_alloc(Memory paddr, PageEntry *entry);
 void memory_vm_convert_endian(void);
 
-static inline bool memory_check_privilege(unsigned int pte, bool is_write, bool is_exec)
+static inline bool memory_check_privilege(uint32_t pte, bool is_write, bool is_exec)
 {
   if(is_exec && !(pte & MMU_PTE_EX)) {
     return false;

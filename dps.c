@@ -18,9 +18,9 @@
 void *dps;
 dps_utim64 *utim64a, *utim64b;
 dps_sci *sci;
-unsigned int *dps_lsflags;
+uint32_t *dps_lsflags;
 
-volatile unsigned int *utim64_flags;
+volatile uint32_t *utim64_flags;
 bool utim64_enable[2];
 timer_t utim64a_timer[4], utim64b_timer[4];
 bool utim64a_enable[4], utim64b_enable[4];
@@ -36,7 +36,7 @@ void dps_init(void)
 {
   struct sigaction sa;
 
-  unsigned int *p;
+  uint32_t *p;
   int i;
 
   dps = calloc(1, DPS_SIZE);

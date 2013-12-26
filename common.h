@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 
 #define DEBUG_REG 0
 #define DEBUG_TRACE 0
@@ -66,13 +67,13 @@ typedef union {
     unsigned int parity    : 1;
     unsigned int zero      : 1;
   };
-  unsigned int flags;
+  uint32_t flags;
 } FLAGS;
 
 /* Instruction format */
 #include "instruction_format.h"
 
-typedef unsigned int Memory;
+typedef uint32_t Memory;
 
 /* Function pointer void *pOpcodeFunc(Instruction *) */
 typedef void (*pOpcodeFunc) (Instruction);
@@ -84,7 +85,7 @@ extern bool MONITOR;
 extern bool step_by_step, exec_finish;
 
 /* Break points */
-extern unsigned int breakp[100];
+extern Memory breakp[100];
 extern unsigned int breakp_next;
 
 /* Traceback */
@@ -95,26 +96,26 @@ extern unsigned int traceback_next;
 extern Memory vmem;
 
 /* General Register */
-extern int GR[32];
+extern int32_t GR[32];
 
 /* System Register */
 extern FLAGS FLAGR;
 extern Memory PCR, next_PCR;
 extern Memory SPR, KSPR, USPR;
-extern unsigned int PSR;
+extern uint32_t PSR;
 extern Memory IOSR;
 extern Memory PDTR;
 extern Memory IDTR;
-extern unsigned int TIDR;
-extern unsigned long long FRCR;
-extern unsigned int FI0R, FI1R;
+extern uint32_t TIDR;
+extern uint64_t FRCR;
+extern uint32_t FI0R, FI1R;
 
 /* Previous System Registers */
 extern FLAGS PFLAGR;
 extern Memory PPCR;
-extern unsigned int PPSR;
+extern uint32_t PPSR;
 extern Memory PPDTR;
-extern unsigned int PTIDR;
+extern uint32_t PTIDR;
 
 /* opcode */
 OpcodeTable opcode_table_init(void);

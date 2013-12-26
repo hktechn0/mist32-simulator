@@ -13,9 +13,9 @@
 
 typedef struct _cachelinel1 {
   bool valid;
-  unsigned char miss;
-  unsigned int tag;
-  unsigned int line[CACHE_L1_LINE_SIZE];
+  unsigned int miss;
+  uint32_t tag;
+  uint32_t line[CACHE_L1_LINE_SIZE];
 } CacheLineL1;
 
 extern CacheLineL1 cache_l1i[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
@@ -25,7 +25,7 @@ extern unsigned long long cache_l1d_total, cache_l1d_hit;
 
 #if CACHE_L1_I_ENABLE || CACHE_L1_D_ENABLE
 
-static inline unsigned int memory_cache_l1_read(Memory paddr, int is_icache)
+static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
 {
   CacheLineL1 (*cache)[CACHE_L1_LINE_PER_WAY];
   unsigned int w, i;
@@ -34,7 +34,7 @@ static inline unsigned int memory_cache_l1_read(Memory paddr, int is_icache)
 
   if(paddr >= MEMORY_MAX_ADDR) {
     /* non-cache area */
-    return *(unsigned int *)memory_addr_phy2vm(paddr, false);
+    return *(uint32_t *)memory_addr_phy2vm(paddr, false);
   }
 
   if(is_icache) {
@@ -104,14 +104,15 @@ static inline unsigned int memory_cache_l1_read(Memory paddr, int is_icache)
   cache[target][index].tag = tag;
   memcpy(&cache[target][index].line,
 	 memory_addr_phy2vm(paddr & CACHE_L1_LINE_MASK, false),
-	 CACHE_L1_LINE_SIZE * sizeof(unsigned int));
+	 CACHE_L1_LINE_SIZE * sizeof(uint32_t));
 
   return cache[target][index].line[word];
 }
 
-static inline void memory_cache_l1_write(Memory paddr, int data)
+static inline void memory_cache_l1_write(Memory paddr, uint32_t data)
 {
-  unsigned int w, tag, index;
+  int w;
+  unsigned int tag, index;
 
   tag = CACHE_L1_TAG(paddr);
   index = CACHE_L1_INDEX(paddr);
@@ -119,7 +120,7 @@ static inline void memory_cache_l1_write(Memory paddr, int data)
   if(paddr >= MEMORY_MAX_ADDR) {
     /* non-cache area */
 #if CACHE_L1_D_ENABLE
-    *(unsigned int *)memory_addr_phy2vm(paddr, true) = data;
+    *(uint32_t *)memory_addr_phy2vm(paddr, true) = data;
 #endif
     return;
   }
@@ -138,7 +139,7 @@ static inline void memory_cache_l1_write(Memory paddr, int data)
   unsigned int word;
 
   /* writethrough */
-  *(unsigned int *)memory_addr_phy2vm(paddr, true) = data;
+  *(uint32_t *)memory_addr_phy2vm(paddr, true) = data;
 
   for(w = 0; w < CACHE_L1_WAY; w++) {
     if(cache_l1d[w][index].tag == tag && cache_l1d[w][index].valid) {

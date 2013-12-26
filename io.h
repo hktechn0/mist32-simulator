@@ -116,26 +116,26 @@
 #define GCI_MMCC_IMAGE_FILE "./mmc.img"
 
 typedef volatile struct _gci_hub_info {
-  unsigned int total;
-  unsigned int space_size;
+  uint32_t total;
+  uint32_t space_size;
 } gci_hub_info;
 
 typedef volatile struct _gci_hub_node {
-  unsigned int size;
-  unsigned int priority;
-  unsigned int _reserved1;
-  unsigned int _reserved2;
-  unsigned int _reserved3;
-  unsigned int _reserved4;
-  unsigned int _reserved5;
-  unsigned int _reserved6;
+  uint32_t size;
+  uint32_t priority;
+  uint32_t _reserved1;
+  uint32_t _reserved2;
+  uint32_t _reserved3;
+  uint32_t _reserved4;
+  uint32_t _reserved5;
+  uint32_t _reserved6;
 } gci_hub_node;
 
 typedef volatile struct _gci_node_info {
-  unsigned int area_size;
-  unsigned int int_priority;
-  volatile unsigned int int_factor;
-  unsigned int _reserved;
+  uint32_t area_size;
+  uint32_t int_priority;
+  volatile uint32_t int_factor;
+  uint32_t _reserved;
 } gci_node_info;
 
 typedef struct _gci_node {
@@ -146,23 +146,23 @@ typedef struct _gci_node {
 } gci_node;
 
 typedef volatile struct _dps_utim64 {
-  volatile unsigned int mcfg;
-  volatile unsigned int mc[2];
-  volatile unsigned int cc[4][2];
-  volatile unsigned int cccfg[4];
+  volatile uint32_t mcfg;
+  volatile uint32_t mc[2];
+  volatile uint32_t cc[4][2];
+  volatile uint32_t cccfg[4];
 } dps_utim64;
 
 typedef volatile struct _dps_sci {
-  volatile unsigned int txd;
-  volatile unsigned int rxd;
-  volatile unsigned int cfg;
+  volatile uint32_t txd;
+  volatile uint32_t rxd;
+  volatile uint32_t cfg;
 } dps_sci;
 
 /* MMCC */
 typedef volatile struct _gci_mmcc {
-  volatile unsigned int init_command;
-  volatile unsigned int sector_read;
-  volatile unsigned int sector_write;
+  volatile uint32_t init_command;
+  volatile uint32_t sector_read;
+  volatile uint32_t sector_write;
 } gci_mmcc;
 
 extern void *dps;

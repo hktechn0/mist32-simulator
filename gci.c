@@ -122,7 +122,8 @@ void gci_close(void)
 
 void gci_info(void)
 {
-  int i, addr;
+  int i;
+  Memory addr;
 
   addr = IOSR + DPS_SIZE;
 
@@ -143,7 +144,7 @@ void gci_info(void)
 /* KMC */
 void gci_kmc_read(Memory addr, Memory offset, void *mem)
 {
-  unsigned int *p;
+  uint32_t *p;
 
   p = gci_nodes[GCI_KMC_NUM].device_area;
 
@@ -178,7 +179,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
 {
   unsigned int c, fg, bg, r, g, b;
   unsigned int p, x, y;
-  unsigned int *vram;
+  uint32_t *vram;
   char chr;
 
   /* escape sequence */
@@ -192,7 +193,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
   if(offset < GCI_DISPLAY_CHAR_SIZE) {
     /* character display mode */
     if(DEBUG_IO) {
-      c = *(unsigned int *)((char *)vram + offset);
+      c = *(uint32_t *)((char *)vram + offset);
       chr = c & 0x7f;
 
       if(isprint(chr)) {
@@ -253,7 +254,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
   }
   else {
     /* bitmap display mode */
-    c = *(unsigned int *)((char *)vram + offset);
+    c = *(uint32_t *)((char *)vram + offset);
 
     p = (offset - GCI_DISPLAY_CHAR_SIZE) / 4;
     x = p % DISPLAY_WIDTH;

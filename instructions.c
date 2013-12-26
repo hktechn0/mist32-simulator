@@ -12,8 +12,8 @@
 /* Arithmetic */
 void i_add(Instruction insn)
 {
-  int *dest;
-  int src, result;
+  int32_t *dest;
+  int32_t src, result;
   
   ops_o2_i11(insn, &dest, &src);
   
@@ -24,8 +24,8 @@ void i_add(Instruction insn)
 
 inline void i_sub(Instruction insn)
 {
-  int *dest;
-  int src, result;
+  int32_t *dest;
+  int32_t src, result;
   
   ops_o2_i11(insn, &dest, &src);
   
@@ -36,8 +36,8 @@ inline void i_sub(Instruction insn)
 
 void i_mull(Instruction insn)
 {
-  int *dest;
-  int src;
+  int32_t *dest;
+  int32_t src;
 
   ops_o2_i11(insn, &dest, &src);
   
@@ -49,13 +49,13 @@ void i_mull(Instruction insn)
 
 void i_mulh(Instruction insn)
 { 
-  int *dest;
-  int src;
-  long long result;
+  int32_t *dest;
+  int32_t src;
+  int64_t result;
 
   ops_o2_i11(insn, &dest, &src);
 
-  result = (long long)(*dest) * (long long)src;
+  result = (int64_t)(*dest) * (int64_t)src;
   *dest = result >> 32;
 
   clr_flags();
@@ -64,8 +64,8 @@ void i_mulh(Instruction insn)
 
 void i_udiv(Instruction insn)
 {
-  unsigned int *dest;
-  unsigned int src;
+  uint32_t *dest;
+  uint32_t src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -83,8 +83,8 @@ void i_udiv(Instruction insn)
 
 void i_umod(Instruction insn)
 {
-  unsigned int *dest;
-  unsigned int src;
+  uint32_t *dest;
+  uint32_t src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -102,7 +102,7 @@ void i_umod(Instruction insn)
 
 void i_cmp(Instruction insn)
 {
-  int dest;
+  int32_t dest;
   
   dest = GR[insn.o2.operand1];
   i_sub(insn);
@@ -111,8 +111,8 @@ void i_cmp(Instruction insn)
 
 void i_div(Instruction insn)
 {
-  int *dest;
-  int src;
+  int32_t *dest;
+  int32_t src;
 
   ops_o2_i11(insn, &dest, &src);
 
@@ -130,8 +130,8 @@ void i_div(Instruction insn)
 
 void i_mod(Instruction insn)
 {
-  int *dest;
-  int src;
+  int32_t *dest;
+  int32_t src;
 
   ops_o2_i11(insn, &dest, &src);
 
@@ -156,8 +156,8 @@ void i_neg(Instruction insn)
 
 void i_addc(Instruction insn)
 {
-  int *dest;
-  int src, result;
+  int32_t *dest;
+  int32_t src, result;
   
   ops_o2_i11(insn, &dest, &src);
   
@@ -168,8 +168,8 @@ void i_addc(Instruction insn)
 
 void i_inc(Instruction insn)
 {
-  int *dest;
-  int src, result;
+  int32_t *dest;
+  int32_t src, result;
   
   dest = &GR[insn.o2.operand1];
   src = GR[insn.o2.operand2];
@@ -181,8 +181,8 @@ void i_inc(Instruction insn)
 
 void i_dec(Instruction insn)
 {
-  int *dest;
-  int src, result;
+  int32_t *dest;
+  int32_t src, result;
   
   dest = &GR[insn.o2.operand1];
   src = GR[insn.o2.operand2];
@@ -194,28 +194,18 @@ void i_dec(Instruction insn)
 
 void i_sext8(Instruction insn)
 {
-  unsigned int *dest, src;
-
-  dest = (unsigned int *)&GR[insn.o2.operand1];
-  src = (unsigned int)GR[insn.o2.operand2];
-
-  *dest = SIGN_EXT8(src);
+  GR[insn.o2.operand1] = SIGN_EXT8((uint32_t)GR[insn.o2.operand2]);
 }
 
 void i_sext16(Instruction insn)
 {
-  unsigned int *dest, src;
-
-  dest = (unsigned int *)&GR[insn.o2.operand1];
-  src = (unsigned int)GR[insn.o2.operand2];
-
-  *dest = SIGN_EXT16(src);
+  GR[insn.o2.operand1] = SIGN_EXT16((uint32_t)GR[insn.o2.operand2]);
 }
 
 /* Shift, Rotate */
 void i_shl(Instruction insn)
 {
-  unsigned int *dest, n;
+  uint32_t *dest, n;
   
   ops_o2_ui11(insn, &dest, &n);
   
@@ -227,7 +217,7 @@ void i_shl(Instruction insn)
 
 void i_shr(Instruction insn)
 {
-  unsigned int *dest, n;
+  uint32_t *dest, n;
   
   ops_o2_ui11(insn, &dest, &n);
   
@@ -239,8 +229,8 @@ void i_shr(Instruction insn)
 
 void i_sar(Instruction insn)
 {
-  int *dest;
-  unsigned int n;
+  int32_t *dest;
+  uint32_t n;
 
   ops_o2_i11(insn, &dest, (int *)&n);
 
@@ -252,7 +242,7 @@ void i_sar(Instruction insn)
 
 void i_rol(Instruction insn)
 {
-  unsigned int *dest, n;
+  uint32_t *dest, n;
   
   ops_o2_ui11(insn, &dest, &n);
   
@@ -265,7 +255,7 @@ void i_rol(Instruction insn)
 
 void i_ror(Instruction insn)
 {
-  unsigned int *dest, n;
+  uint32_t *dest, n;
   
   ops_o2_ui11(insn, &dest, &n);
   
@@ -332,7 +322,7 @@ void i_xnor(Instruction insn)
 
 void i_test(Instruction insn)
 {
-  int dest;
+  int32_t dest;
   
   dest = GR[insn.o2.operand1];
   i_and(insn);
@@ -342,22 +332,22 @@ void i_test(Instruction insn)
 /* Register operations */
 void i_wl16(Instruction insn)
 {
-  GR[insn.i16.operand] = ((unsigned int)GR[insn.i16.operand] & 0xffff0000) | (immediate_i16(insn) & 0xffff);
+  GR[insn.i16.operand] = ((uint32_t)GR[insn.i16.operand] & 0xffff0000) | (immediate_i16(insn) & 0xffff);
 }
 
 void i_wh16(Instruction insn)
 {
-  GR[insn.i16.operand] = ((unsigned int)GR[insn.i16.operand] & 0xffff) | ((immediate_i16(insn) & 0xffff) << 16);
+  GR[insn.i16.operand] = ((uint32_t)GR[insn.i16.operand] & 0xffff) | ((immediate_i16(insn) & 0xffff) << 16);
 }
 
 void i_clrb(Instruction insn)
 {
-  GR[insn.i11.operand] &= ~((unsigned int)0x01 << immediate_i11(insn));
+  GR[insn.i11.operand] &= ~((uint32_t)0x01 << immediate_i11(insn));
 }
 
 void i_setb(Instruction insn)
 {
-  GR[insn.i11.operand] |= (unsigned int)0x01 << immediate_i11(insn);
+  GR[insn.i11.operand] |= (uint32_t)0x01 << immediate_i11(insn);
 }
 
 void i_clr(Instruction insn)
@@ -367,7 +357,7 @@ void i_clr(Instruction insn)
 
 void i_set(Instruction insn)
 {
-  GR[insn.o1.operand1] = (unsigned int)0xffffffff;
+  GR[insn.o1.operand1] = (uint32_t)0xffffffff;
 }
 
 void i_revb(Instruction insn)
@@ -379,7 +369,7 @@ void i_revb(Instruction insn)
 
 void i_rev8(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -395,7 +385,7 @@ void i_getb(Instruction insn)
 
 void i_get8(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -409,7 +399,7 @@ void i_lil(Instruction insn)
 
 void i_lih(Instruction insn)
 {
-  GR[insn.i16.operand] = (unsigned int)immediate_ui16(insn) << 16;
+  GR[insn.i16.operand] = (uint32_t)immediate_ui16(insn) << 16;
 }
 
 void i_ulil(Instruction insn)
@@ -420,7 +410,7 @@ void i_ulil(Instruction insn)
 /* Load, Store */
 void i_ld8(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -435,7 +425,7 @@ void i_ld8(Instruction insn)
 
 void i_ld16(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -458,7 +448,7 @@ void i_ld16(Instruction insn)
 
 void i_ld32(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -481,7 +471,7 @@ void i_ld32(Instruction insn)
 
 void i_st8(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -496,7 +486,7 @@ void i_st8(Instruction insn)
 
 void i_st16(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -519,7 +509,7 @@ void i_st16(Instruction insn)
 
 void i_st32(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 
@@ -543,7 +533,7 @@ void i_st32(Instruction insn)
 /* Stack */
 void i_push(Instruction insn)
 {
-  unsigned int src;
+  uint32_t src;
 
   SPR -= 4;
   src = insn.c.is_immediate ? insn.c.immediate : GR[insn.o1.operand1];
@@ -569,9 +559,9 @@ void i_pushpc(Instruction insn)
 
 void i_pop(Instruction insn)
 {
-  unsigned int *dest;
+  uint32_t *dest;
 
-  dest = (unsigned int *)&(GR[insn.o1.operand1]);
+  dest = (uint32_t *)&(GR[insn.o1.operand1]);
 
   if(memory_ld32(dest, SPR)) {
     /* memory fault */
@@ -708,12 +698,12 @@ void i_srfrcr(Instruction insn)
 
 void i_srfrclr(Instruction insn)
 {
-  GR[insn.o1.operand1] = (unsigned int)(FRCR & 0xffffffff);
+  GR[insn.o1.operand1] = (uint32_t)(FRCR & 0xffffffff);
 }
 
 void i_srfrchr(Instruction insn)
 {
-  GR[insn.o1.operand1] = (unsigned int)(FRCR >> 32);
+  GR[insn.o1.operand1] = (uint32_t)(FRCR >> 32);
 }
 
 void i_srpflagr(Instruction insn)
@@ -840,7 +830,7 @@ void i_move(Instruction insn)
 
 void i_movepc(Instruction insn)
 {
-  int *dest, src;
+  int32_t *dest, src;
 
   ops_o2_i11(insn, &dest, &src);
   *dest = PCR + (src << 2);
@@ -857,7 +847,7 @@ void i_swi(Instruction insn)
 {
   unsigned int num;
 
-  num = immediate_i11(insn);
+  num = immediate_ui11(insn);
 
   if(num < IDT_SWIRQ_START_NUM) {
     /* software irq number should be 64 or above */
@@ -869,7 +859,7 @@ void i_swi(Instruction insn)
 
 void i_tas(Instruction insn)
 {
-  unsigned int *dest, src;
+  uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
 

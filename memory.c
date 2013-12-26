@@ -101,7 +101,7 @@ void *memory_addr_mmio(Memory paddr, bool is_write)
 
 Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
 {
-  unsigned int *pdt, *pt, pte;
+  uint32_t *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset;
 
   /* Level 1 */
@@ -199,10 +199,10 @@ void memory_vm_alloc(Memory paddr, PageEntry *entry)
 }
 
 /* convert endian. must pass vm address */
-void memory_vm_page_convert_endian(unsigned int *page)
+void memory_vm_page_convert_endian(uint32_t *page)
 {
   unsigned int i;
-  unsigned int *value;
+  uint32_t *value;
 
   value = page;
 

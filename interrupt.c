@@ -10,9 +10,9 @@ idt_entry idt_cache[IDT_ENTRY_MAX];
 /* Previous system registers */
 FLAGS PFLAGR;
 Memory PPCR;
-unsigned int PPSR;
+uint32_t PPSR;
 Memory PPDTR;
-unsigned int PTIDR;
+uint32_t PTIDR;
 
 int interrupt_nmi = -1;
 

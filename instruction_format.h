@@ -69,7 +69,7 @@ struct instruction_jo1 {
 };
 
 typedef union _instruction {
-  unsigned int value;
+  uint32_t value;
   struct instruction_base base;
   struct instruction_i11  i11;
   struct instruction_i16  i16;

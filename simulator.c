@@ -13,25 +13,25 @@
 Memory mem;
 
 /* General Register */
-int GR[32];
+int32_t GR[32];
 
 /* System Register */
 FLAGS FLAGR;
 Memory PCR, next_PCR;
 Memory SPR, KSPR, USPR;
-unsigned int PSR;
+uint32_t PSR;
 Memory IOSR;
 Memory PDTR;
 Memory IDTR;
-unsigned int TIDR;
-unsigned long long FRCR;
-unsigned int FI0R, FI1R;
+uint32_t TIDR;
+uint64_t FRCR;
+uint32_t FI0R, FI1R;
 
-unsigned int prefetch_insn[PREFETCH_SIZE];
+uint32_t prefetch_insn[PREFETCH_SIZE];
 Memory prefetch_pc;
 
 Memory traceback[TRACEBACK_MAX];
-unsigned int traceback_next;
+uint32_t traceback_next;
 
 bool step_by_step = false;
 bool exec_finish = false;
@@ -55,7 +55,7 @@ int exec(Memory entry_p)
   Instruction insn;
   unsigned long clk = 0;
 
-  unsigned int cmod;
+  uint32_t cmod;
   int memfd;
 
   unsigned int i;

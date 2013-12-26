@@ -9,7 +9,8 @@ void print_instruction(Instruction insn)
 
 void print_registers(void)
 {
-  unsigned int i;  
+  int i;
+
   printf("PSR: %08x IDT: %08x PDT: %08x TID: %08x\n",
 	 PSR, IDTR, PDTR, TIDR);
   printf("KSP: %08x USP: %08x\n",
@@ -24,7 +25,8 @@ void print_registers(void)
 
 void print_stack(Memory sp)
 {
-  unsigned int i, data;
+  unsigned int i;
+  uint32_t data;
 
   printf("---- Stack ----\n");
   for(i = sp; i - sp < 40; i += 4) {

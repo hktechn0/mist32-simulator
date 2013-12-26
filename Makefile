@@ -2,6 +2,7 @@ CC = cc
 CFLAGS = -std=gnu99 -Wall -O3
 #CFLAGS += -g
 #CFLAGS += -pg
+#CFLAGS += -fno-inline
 
 OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o interrupt.o io.o dps.o gci.o monitor.o
 FIFO = sci_txd sci_rxd gci_display_char

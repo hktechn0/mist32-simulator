@@ -19,7 +19,7 @@ bool MONITOR = false;
 bool DEBUG_LD = false, DEBUG_ST = false, DEBUG_JMP = false;
 bool DEBUG_HW = false;
 
-unsigned int breakp[100];
+Memory breakp[100];
 unsigned int breakp_next = 0;
 
 int main(int argc, char **argv)
