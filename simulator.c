@@ -27,6 +27,9 @@ unsigned int TIDR;
 unsigned long long FRCR;
 unsigned int FI0R, FI1R;
 
+unsigned int prefetch_insn[PREFETCH_SIZE];
+Memory prefetch_pc;
+
 Memory traceback[TRACEBACK_MAX];
 unsigned int traceback_next;
 
@@ -50,7 +53,6 @@ int exec(Memory entry_p)
   OpcodeTable opcode_t;
 
   Instruction insn;
-  Memory phypc;
   unsigned long clk = 0;
 
   unsigned int cmod;
@@ -73,6 +75,7 @@ int exec(Memory entry_p)
   traceback_next = 0;
   memory_is_fault = 0;
   memory_io_writeback = 0;
+  instruction_prefetch_flush();
 
   /* opcode table init */
   opcode_t = opcode_table_init();
@@ -100,19 +103,17 @@ int exec(Memory entry_p)
     }
 
     /* instruction fetch */
-    phypc = memory_addr_virt2phy(PCR, false, true);
+#if CACHE_L1_I_ENABLE
+    insn.value = instruction_fetch_cache();
+#else
+    insn.value = instruction_fetch();
+#endif
 
     if(memory_is_fault) {
       /* fault fetch */
       DEBUGINT("[FAULT] Instruction fetch: %08x\n", PCR);
       goto fault;
     }
-
-#if CACHE_L1_I_ENABLE
-    insn.value = memory_cache_l1_read(phypc, 1);
-#else
-    insn.value = *(unsigned int *)memory_addr_phy2vm(phypc, false);
-#endif
 
     /* decode */
     if(opcode_t[insn.base.opcode] == NULL) {

@@ -31,6 +31,8 @@
 #define STACK_DEFAULT MEMORY_MAX_ADDR
 #define OPCODE_MAX 1024
 
+#define NOP_INSN (0x100 << 21)
+
 #define msb(word) (!!((word) & 0x80000000))
 #define NOT(reg) (reg = ~reg)
 #define SIGN_EXT8(n) ((n & 0x80) ? (n | 0xffffff00) : (n & 0xff))
@@ -130,3 +132,4 @@ int exec(Memory entry);
 /* FIXME: include */
 #include "memory.h"
 #include "io.h"
+#include "fetch.h"

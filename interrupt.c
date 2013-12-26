@@ -36,10 +36,6 @@ void interrupt_entry(unsigned int num)
     return;
   }
 
-  if(PPDTR != PDTR) {
-    memory_tlb_flush();
-  }
-
   PFLAGR = FLAGR;
   PPCR = PCR;
   PPSR = PSR;
@@ -57,6 +53,11 @@ void interrupt_entry(unsigned int num)
 
 void interrupt_exit(void)
 {
+  if(PPDTR != PDTR || (PPSR & PSR_MMUMOD_MASK) != (PSR & PSR_MMUMOD_MASK)) {
+    memory_tlb_flush();
+    instruction_prefetch_flush();
+  }
+
   FLAGR = PFLAGR;
   next_PCR = PPCR;
   PSR = PPSR;

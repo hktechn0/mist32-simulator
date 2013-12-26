@@ -608,6 +608,8 @@ void i_b(Instruction insn)
     next_PCR = src_jo1_jui16(insn);
   }
 
+  /* instruction_prefetch_flush(); */
+
   /* for traceback */
   if(!insn.jo1.is_immediate && insn.jo1.operand1 == GR_RET) {
     if(traceback > 0) {
@@ -728,6 +730,9 @@ void i_srpdtw(Instruction insn)
 {
   PDTR = GR[insn.o1.operand1];
   DEBUGMMU("[MMU] SRPDTW: 0x%08x\n", PDTR);
+
+  memory_tlb_flush();
+  instruction_prefetch_flush();
 }
 
 void i_srieiw(Instruction insn)
@@ -752,6 +757,9 @@ void i_srmmuw(Instruction insn)
 {
   PSR = (PSR & ~PSR_MMUMOD_MASK) | (src_o1_i11(insn) & PSR_MMUMOD_MASK);
   DEBUGMMU("[MMU] SRMMUW: MMUMOD %d\n", PSR & PSR_MMUMOD_MASK);
+
+  memory_tlb_flush();
+  instruction_prefetch_flush();
 }
 
 void i_srppsw(Instruction insn)
@@ -776,7 +784,6 @@ void i_sruspw(Instruction insn)
 void i_srppdtw(Instruction insn)
 {
   PPDTR = (Memory)GR[insn.o1.operand1];
-  memory_tlb_flush();
 }
 
 void i_srptidw(Instruction insn)
@@ -792,6 +799,11 @@ void i_sridtw(Instruction insn)
 
 void i_srpsw(Instruction insn)
 {
+  if((GR[insn.o1.operand1] & PSR_MMUMOD_MASK) != (PSR & PSR_MMUMOD_MASK)) {
+    memory_tlb_flush();
+    instruction_prefetch_flush();
+  }
+
   PSR = GR[insn.o1.operand1];
   DEBUGMMU("[MMU] SRPSW: MMUMOD %d MMUPS %d\n", PSR_MMUMOD, PSR_MMUPS);
 
