@@ -5,10 +5,8 @@
 #define DEBUG_TRACE 0
 #define DEBUG_STACK 0
 #define DEBUG_MON 1
-#define DEBUG_INT 1
 #define DEBUG_IO 1
 #define DEBUG_DPS 0
-#define DEBUG_MMU 1
 #define DEBUG_EXIT_B0 0
 
 #define DPUTS if(DEBUG || step_by_step) printf
@@ -80,7 +78,7 @@ typedef void (*pOpcodeFunc) (Instruction);
 typedef pOpcodeFunc* OpcodeTable;
 
 /* Debug flags */
-extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW;
+extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_INT, DEBUG_MMU;
 extern bool MONITOR;
 extern bool step_by_step, exec_finish;
 

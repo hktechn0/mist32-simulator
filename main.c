@@ -17,6 +17,7 @@
 bool DEBUG = false;
 bool MONITOR = false;
 bool DEBUG_LD = false, DEBUG_ST = false, DEBUG_JMP = false;
+bool DEBUG_INT = false, DEBUG_MMU = false;
 bool DEBUG_HW = false;
 
 Memory breakp[100];
@@ -53,6 +54,8 @@ int main(int argc, char **argv)
       DEBUG_LD = true;
       DEBUG_ST = true;
       DEBUG_JMP = true;
+      DEBUG_MMU = true;
+      DEBUG_INT = true;
       break;
     case 'h':
       /* print load / store to compare RTL simulation */
