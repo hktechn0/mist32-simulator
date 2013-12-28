@@ -15,14 +15,14 @@ static inline uint32_t instruction_fetch(void)
   }
 
   /* instruction fetch */
-  phypc = memory_addr_virt2phy(PCR, false, true);
+  phypc = memory_addr_virt2phy(PCR & PREFETCH_TAG, false, true);
 
   if(memory_is_fault) {
     return NOP_INSN;
   }
 
   /* prefetch */
-  memcpy(prefetch_insn, memory_addr_phy2vm(phypc & PREFETCH_TAG, false), PREFETCH_SIZE);
+  memcpy(prefetch_insn, memory_addr_phy2vm(phypc, false), PREFETCH_SIZE);
   prefetch_pc = PCR & PREFETCH_TAG;
 
   return prefetch_insn[(PCR & PREFETCH_MASK) >> 2];
@@ -47,7 +47,7 @@ static inline uint32_t instruction_fetch_cache(void)
 
 static inline void instruction_prefetch_flush(void)
 {
-#if CACHE_L1_I_ENABLE
+#if !CACHE_L1_I_ENABLE
   prefetch_pc = 0xffffffff;
 #endif
 }
