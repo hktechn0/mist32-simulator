@@ -10,10 +10,11 @@
 #include "interrupt.h"
 #include "monitor.h"
 
-Memory mem;
+/* Opcode Table */
+pOpcodeFunc opcode_t[OPCODE_MAX] __attribute__ ((aligned(64)));
 
 /* General Register */
-int32_t GR[32];
+int32_t GR[32] __attribute__ ((aligned(64)));
 
 /* System Register */
 FLAGS FLAGR;
@@ -27,14 +28,14 @@ uint32_t TIDR;
 uint64_t FRCR;
 uint32_t FI0R, FI1R;
 
-uint32_t prefetch_insn[PREFETCH_SIZE];
+bool step_by_step;
+bool exec_finish;
+
 Memory prefetch_pc;
+uint32_t prefetch_insn[PREFETCH_N] __attribute__ ((aligned(64)));
 
 Memory traceback[TRACEBACK_MAX];
 uint32_t traceback_next;
-
-bool step_by_step = false;
-bool exec_finish = false;
 
 void signal_on_sigint(int signo)
 {
@@ -50,8 +51,6 @@ void signal_on_sigint(int signo)
 
 int exec(Memory entry_p)
 {
-  OpcodeTable opcode_t;
-
   Instruction insn;
   unsigned long clk = 0;
 
@@ -71,28 +70,32 @@ int exec(Memory entry_p)
   }
   */
 
+  opcode_table_init(opcode_t);
+
+  step_by_step = false;
+  exec_finish = false;
+
   /* initialize internal variable */
   traceback_next = 0;
   memory_is_fault = 0;
   memory_io_writeback = 0;
   instruction_prefetch_flush();
 
-  /* opcode table init */
-  opcode_t = opcode_table_init();
-
   /* setup system registers */
   PSR = 0;
+  cmod = (PSR & PSR_CMOD_MASK);
   PCR = entry_p;
+  next_PCR = ~0;
   KSPR = (Memory)STACK_DEFAULT;
 
   printf("Execution Start: entry = 0x%08x\n", PCR);
 
   do {
-    next_PCR = ~0;
-
     /* choose stack */
+    if(cmod != (PSR & PSR_CMOD_MASK)) {
+      SPR = !cmod ? USPR : KSPR;
+    }
     cmod = (PSR & PSR_CMOD_MASK);
-    SPR = cmod ? USPR : KSPR;
 
     /* break point check */
     for(i = 0; i < breakp_next; i++) {
@@ -104,9 +107,9 @@ int exec(Memory entry_p)
 
     /* instruction fetch */
 #if CACHE_L1_I_ENABLE
-    insn.value = instruction_fetch_cache();
+    insn.value = instruction_fetch_cache(PCR);
 #else
-    insn.value = instruction_fetch();
+    insn.value = instruction_fetch(PCR);
 #endif
 
     if(memory_is_fault) {
@@ -201,6 +204,7 @@ int exec(Memory entry_p)
       }
 
       PCR = next_PCR;
+      next_PCR = ~0;
     }
     else {
       PCR += 4;
@@ -215,8 +219,6 @@ int exec(Memory entry_p)
   puts("---- Program Terminated ----");
   print_instruction(insn);
   print_registers();
-
-  free(opcode_t);
 
   return 0;
 }

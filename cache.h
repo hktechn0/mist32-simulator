@@ -13,13 +13,14 @@
 
 typedef struct _cachelinel1 {
   bool valid;
-  unsigned int miss;
   uint32_t tag;
-  uint32_t line[CACHE_L1_LINE_SIZE];
+  unsigned int miss;
 } CacheLineL1;
 
-extern CacheLineL1 cache_l1i[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
-extern CacheLineL1 cache_l1d[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
+extern CacheLineL1 cache_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
+extern CacheLineL1 cache_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
+extern uint32_t cacheline_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE];
+extern uint32_t cacheline_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE];
 extern unsigned long long cache_l1i_total, cache_l1i_hit;
 extern unsigned long long cache_l1d_total, cache_l1d_hit;
 
@@ -27,7 +28,8 @@ extern unsigned long long cache_l1d_total, cache_l1d_hit;
 
 static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
 {
-  CacheLineL1 (*cache)[CACHE_L1_LINE_PER_WAY];
+  CacheLineL1 (*cache)[CACHE_L1_WAY];
+  uint32_t (*cacheline)[CACHE_L1_WAY][CACHE_L1_LINE_SIZE];
   unsigned int w, i;
   unsigned int tag, index, word;
   unsigned int miss, maxmiss, target;
@@ -39,9 +41,17 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
 
   if(is_icache) {
     cache = cache_l1i;
+    cacheline = cacheline_l1i;
+#if CACHE_L1_PROFILE
+    cache_l1i_total++;
+#endif
   }
   else {
     cache = cache_l1d;
+    cacheline = cacheline_l1d;
+#if CACHE_L1_PROFILE
+    cache_l1d_total++;
+#endif
   }
 
   tag = CACHE_L1_TAG(paddr);
@@ -49,26 +59,24 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
   word = CACHE_L1_WORD(paddr);
 
   for(w = 0; w < CACHE_L1_WAY; w++) {
-    if(cache[w][index].tag == tag && cache[w][index].valid) {
+    if(cache[index][w].tag == tag && cache[index][w].valid) {
       /* hit */
       for(i = 0; i < CACHE_L1_WAY; i++) {
 	/* LRU */
-	cache[i][index].miss++;
+	cache[index][i].miss++;
       }
-      cache[w][index].miss = 0;
+      cache[index][w].miss = 0;
 
 #if CACHE_L1_PROFILE
       if(is_icache) {
-	cache_l1i_total++;
 	cache_l1i_hit++;
       }
       else {
-	cache_l1d_total++;
 	cache_l1d_hit++;
       }
 #endif
 
-      return cache[w][index].line[word];
+      return cacheline[index][w][word];
     }
   }
 
@@ -76,37 +84,28 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
   maxmiss = 0;
   target = 0;
 
-#if CACHE_L1_PROFILE
-      if(is_icache) {
-	cache_l1i_total++;
-      }
-      else {
-	cache_l1d_total++;
-      }
-#endif
-
   /* find victim by LRU */
   for(w = 0; w < CACHE_L1_WAY; w++) {
-    if(!cache[w][index].valid) {
+    if(!cache[index][w].valid) {
       target = w;
       break;
     }
 
-    miss = cache[w][index].miss;
+    miss = cache[index][w].miss;
     if(maxmiss < miss) {
       maxmiss = miss;
       target = w;
     }
   }
 
-  cache[target][index].valid = true;
-  cache[target][index].miss = 0;
-  cache[target][index].tag = tag;
-  memcpy(&cache[target][index].line,
+  cache[index][target].valid = true;
+  cache[index][target].miss = 0;
+  cache[index][target].tag = tag;
+  memcpy(cacheline[index][target],
 	 memory_addr_phy2vm(paddr & CACHE_L1_LINE_MASK, false),
 	 CACHE_L1_LINE_SIZE * sizeof(uint32_t));
 
-  return cache[target][index].line[word];
+  return cacheline[index][target][word];
 }
 
 static inline void memory_cache_l1_write(Memory paddr, uint32_t data)
@@ -127,9 +126,9 @@ static inline void memory_cache_l1_write(Memory paddr, uint32_t data)
 
 #if CACHE_L1_I_ENABLE
   for(w = 0; w < CACHE_L1_WAY; w++) {
-    if(cache_l1i[w][index].tag == tag) {
+    if(cache_l1i[index][w].tag == tag) {
       /* hit */
-      cache_l1i[w][index].valid = false;
+      cache_l1i[index][w].valid = false;
       break;
     }
   }
@@ -142,10 +141,10 @@ static inline void memory_cache_l1_write(Memory paddr, uint32_t data)
   *(uint32_t *)memory_addr_phy2vm(paddr, true) = data;
 
   for(w = 0; w < CACHE_L1_WAY; w++) {
-    if(cache_l1d[w][index].tag == tag && cache_l1d[w][index].valid) {
+    if(cache_l1d[index][w].tag == tag && cache_l1d[index][w].valid) {
       /* hit */
       word = CACHE_L1_WORD(paddr);
-      cache_l1d[w][index].line[word] = data;
+      cacheline_l1d[index][w][word] = data;
 
 #if CACHE_L1_PROFILE
       cache_l1d_total++;
@@ -156,10 +155,11 @@ static inline void memory_cache_l1_write(Memory paddr, uint32_t data)
   }
 
   /* miss */
+  memory_cache_l1_read(paddr, 0);
+
 #if CACHE_L1_PROFILE
   cache_l1d_total++;
 #endif
-  memory_cache_l1_read(paddr, 0);
 #endif
 }
 

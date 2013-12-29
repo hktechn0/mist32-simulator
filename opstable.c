@@ -2,12 +2,8 @@
 #include "common.h"
 #include "instructions.h"
 
-OpcodeTable opcode_table_init(void)
+void opcode_table_init(pOpcodeFunc *opcode_t)
 {
-  OpcodeTable opcode_t;
-
-  opcode_t = calloc(OPCODE_MAX, sizeof(pOpcodeFunc));
-  
   opcode_t[0] = i_add;
   opcode_t[1] = i_sub;
   opcode_t[2] = i_mull;
@@ -124,6 +120,4 @@ OpcodeTable opcode_table_init(void)
   opcode_t[288] = i_swi;
   opcode_t[289] = i_tas;
   opcode_t[290] = i_idts;
-  
-  return opcode_t;
 }

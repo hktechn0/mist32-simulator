@@ -76,7 +76,6 @@ typedef uint32_t Memory;
 
 /* Function pointer void *pOpcodeFunc(Instruction *) */
 typedef void (*pOpcodeFunc) (Instruction);
-typedef pOpcodeFunc* OpcodeTable;
 
 /* Debug flags */
 extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_INT, DEBUG_MMU;
@@ -117,7 +116,7 @@ extern Memory PPDTR;
 extern uint32_t PTIDR;
 
 /* opcode */
-OpcodeTable opcode_table_init(void);
+void opcode_table_init(pOpcodeFunc *opcode_t);
 
 /* utils */
 void print_instruction(Instruction insn);

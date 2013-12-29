@@ -5,17 +5,19 @@
 #include "common.h"
 #include "interrupt.h"
 
-PageEntry page_table[PAGE_ENTRY_NUM];
+PageEntry page_table[PAGE_ENTRY_NUM] __attribute__ ((aligned(64)));
 
-CacheLineL1 cache_l1i[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
-CacheLineL1 cache_l1d[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
+CacheLineL1 cache_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
+CacheLineL1 cache_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
+uint32_t cacheline_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE] __attribute__ ((aligned(64)));
+uint32_t cacheline_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE] __attribute__ ((aligned(64)));
 unsigned long long cache_l1i_total, cache_l1i_hit;
 unsigned long long cache_l1d_total, cache_l1d_hit;
 
 int memory_is_fault;
 Memory memory_io_writeback;
 
-TLB memory_tlb[TLB_ENTRY_MAX];
+TLB memory_tlb[TLB_ENTRY_MAX] __attribute__ ((aligned(64)));
 unsigned long long tlb_access, tlb_hit;
 
 void memory_init(void)
@@ -33,10 +35,10 @@ void memory_init(void)
   cache_l1d_hit = 0;
 
   /* L1 cache flush */
-  for(w = 0; w < CACHE_L1_WAY; w++) {
-    for(i = 0; i < CACHE_L1_LINE_PER_WAY; i++) {
-      cache_l1i[w][i].valid = false;
-      cache_l1d[w][i].valid = false;
+  for(i = 0; i < CACHE_L1_LINE_PER_WAY; i++) {
+    for(w = 0; w < CACHE_L1_WAY; w++) {
+      cache_l1i[i][w].valid = false;
+      cache_l1d[i][w].valid = false;
     }
   }
 
