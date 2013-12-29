@@ -65,7 +65,14 @@ OpcodeTable opcode_table_init(void)
   opcode_t[136] = i_push;
   opcode_t[137] = i_pushpc;
   opcode_t[144] = i_pop;
-  
+
+  opcode_t[154] = i_ld8;  /* ldd8  */
+  opcode_t[155] = i_ld16; /* ldd16 */
+  opcode_t[156] = i_ld32; /* ldd32 */
+  opcode_t[157] = i_st8;  /* std8  */
+  opcode_t[158] = i_st16; /* std16 */
+  opcode_t[159] = i_st32; /* std32 */
+
   opcode_t[160] = i_bur;
   opcode_t[161] = i_br;
   opcode_t[162] = i_b;

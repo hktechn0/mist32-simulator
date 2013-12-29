@@ -414,6 +414,10 @@ void i_ld8(Instruction insn)
 
   ops_o2_ui11(insn, &dest, &src);
 
+  if(!insn.i11.is_immediate) {
+    src += (int)SIGN_EXT6(insn.o2.displacement);
+  }
+
   if(memory_ld8(dest, src)) {
     /* memory fault */
     return;
@@ -435,6 +439,9 @@ void i_ld16(Instruction insn)
   else if(src & 0x1) {
     abort_sim();
     errx(EXIT_FAILURE, "ld16: invalid alignment.");
+  }
+  else {
+    src += (int)(SIGN_EXT6(insn.o2.displacement) << 1);
   }
 
   if(memory_ld16(dest, src)) {
@@ -459,6 +466,9 @@ void i_ld32(Instruction insn)
     abort_sim();
     errx(EXIT_FAILURE, "ld32: invalid alignment.");
   }
+  else {
+    src += (int)(SIGN_EXT6(insn.o2.displacement) << 2);
+  }
 
   if(memory_ld32(dest, src)) {
     /* memory fault */
@@ -474,6 +484,10 @@ void i_st8(Instruction insn)
   uint32_t *dest, src;
 
   ops_o2_ui11(insn, &dest, &src);
+
+  if(!insn.i11.is_immediate) {
+    src += (int)SIGN_EXT6(insn.o2.displacement);
+  }
 
   if(memory_st8(src, (unsigned char)*dest)) {
     /* memory fault */
@@ -497,6 +511,9 @@ void i_st16(Instruction insn)
     abort_sim();
     errx(EXIT_FAILURE, "st16: invalid alignment.");
   }
+  else {
+    src += (int)(SIGN_EXT6(insn.o2.displacement) << 1);
+  }
 
   if(memory_st16(src, (unsigned short)*dest)) {
     /* memory fault */
@@ -519,6 +536,9 @@ void i_st32(Instruction insn)
   else if(src & 0x3) {
     abort_sim();
     errx(EXIT_FAILURE, "st32: invalid alignment.");
+  }
+  else {
+    src += (int)(SIGN_EXT6(insn.o2.displacement) << 2);
   }
 
   if(memory_st32(src, *dest)) {

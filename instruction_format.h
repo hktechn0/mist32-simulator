@@ -25,7 +25,7 @@ struct instruction_i16 {
 struct instruction_o2 {
   unsigned int operand2     : 5;
   unsigned int operand1     : 5;
-  unsigned int _reserve     : 6;
+  unsigned int displacement : 6;
   unsigned int condition    : 4;
   unsigned int is_immediate : 1;
   unsigned int opcode       : 10;
