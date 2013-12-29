@@ -50,7 +50,7 @@ typedef struct _pageentry {
   void *addr;
 } PageEntry;
 
-extern PageEntry *page_table;
+extern PageEntry page_table[PAGE_ENTRY_NUM];
 
 extern int memory_is_fault;
 extern Memory memory_io_writeback;
@@ -63,7 +63,7 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec);
 Memory memory_page_fault(Memory vaddr);
 Memory memory_page_protection_fault(Memory vaddr);
 
-void memory_vm_alloc(Memory paddr, PageEntry *entry);
+void memory_vm_alloc(Memory paddr, unsigned int page_num);
 void memory_vm_convert_endian(void);
 
 static inline bool memory_check_privilege(uint32_t pte, bool is_write, bool is_exec)
@@ -101,7 +101,6 @@ static inline bool memory_check_privilege(uint32_t pte, bool is_write, bool is_e
 /* Physical address to VM memory address */
 static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
 {
-  PageEntry *entry;
   unsigned int page_num;
 
   if(paddr >= MEMORY_MAX_ADDR) {
@@ -111,14 +110,13 @@ static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
 
   /* virtual memory */
   page_num = (paddr >> PAGE_OFFSET_BIT_NUM) & PAGE_NUM_MASK;
-  entry = &page_table[page_num];
 
-  if(!entry->valid) {
+  if(!page_table[page_num].valid) {
     /* VM memory page fault */
-    memory_vm_alloc(paddr, entry);
+    memory_vm_alloc(paddr, page_num);
   }
 
-  return (char *)entry->addr + (paddr & PAGE_OFFSET_MASK);
+  return (char *)page_table[page_num].addr + (paddr & PAGE_OFFSET_MASK);
 }
 
 #include "tlb.h"

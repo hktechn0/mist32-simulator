@@ -5,12 +5,12 @@
 #include "common.h"
 #include "interrupt.h"
 
+PageEntry page_table[PAGE_ENTRY_NUM];
+
 CacheLineL1 cache_l1i[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
 CacheLineL1 cache_l1d[CACHE_L1_WAY][CACHE_L1_LINE_PER_WAY];
 unsigned long long cache_l1i_total, cache_l1i_hit;
 unsigned long long cache_l1d_total, cache_l1d_hit;
-
-PageEntry *page_table;
 
 int memory_is_fault;
 Memory memory_io_writeback;
@@ -21,8 +21,6 @@ unsigned long long tlb_access, tlb_hit;
 void memory_init(void)
 {
   unsigned int i, w;
-
-  page_table = calloc(PAGE_ENTRY_NUM, sizeof(PageEntry));
 
   /* internal virtual memory table flush */
   for(i = 0; i < PAGE_ENTRY_NUM; i++) {
@@ -68,8 +66,6 @@ void memory_free(void)
 #if TLB_PROFILE
   printf("[TLB] hit %lld / %lld\n", tlb_hit, tlb_access);
 #endif
-
-  free(page_table);
 }
 
 void *memory_addr_mmio(Memory paddr, bool is_write)
@@ -183,19 +179,19 @@ Memory memory_page_protection_fault(Memory vaddr)
   return MEMORY_MAX_ADDR;
 }
 
-void memory_vm_alloc(Memory paddr, PageEntry *entry)
+void memory_vm_alloc(Memory paddr, unsigned int page_num)
 {
-  if(!entry || entry->valid) {
+  if(page_table[page_num].valid) {
     errx(EXIT_FAILURE, "page_alloc invalid entry");
   }
-  else if((entry->addr = malloc(PAGE_SIZE)) == NULL) {
+  else if((page_table[page_num].addr = malloc(PAGE_SIZE)) == NULL) {
     err(EXIT_FAILURE, "page_alloc");
   }
 
-  entry->valid = true;
+  page_table[page_num].valid = true;
 
   DPUTS("[Memory] alloc: Virt %p, Real 0x%08x on 0x%08x\n",
-	entry->addr, paddr & PAGE_INDEX_MASK, paddr);
+	page_table[page_num].addr, paddr & PAGE_INDEX_MASK, paddr);
 }
 
 /* convert endian. must pass vm address */
