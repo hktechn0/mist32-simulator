@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <err.h>
@@ -37,6 +38,7 @@
 #define MMU_PTE_CD 0x040
 #define MMU_PTE_G 0x080
 #define MMU_PTE_PE 0x100
+#define MMU_PTE_OBJ 0x800
 
 union union_int32 {
   uint32_t u32;
@@ -98,10 +100,19 @@ static inline bool memory_check_privilege(uint32_t pte, bool is_write, bool is_e
   return false;
 }
 
+#include "flashmmu.h"
+
 /* Physical address to VM memory address */
 static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
 {
   unsigned int page_num;
+
+#if FLASHMMU_ENABLE
+  if(FLASHMMU_START_ADDR <= paddr && paddr < FLASHMMU_START_ADDR + FLASHMMU_AREA_SIZE) {
+    /* Flash MMU */
+    return fmmu_mem + (paddr - FLASHMMU_START_ADDR);
+  }
+#endif
 
   if(paddr >= MEMORY_MAX_ADDR) {
     /* memory mapped I/O */

@@ -49,6 +49,12 @@ void signal_on_sigint(int signo)
   fprintf(stderr, "[System] Keyboard Interrupt.\n");
 }
 
+void signal_on_sigsegv(int signo)
+{
+  abort_sim();
+  errx(EXIT_FAILURE, "segmentation fault.");
+}
+
 int exec(Memory entry_p)
 {
   Instruction insn;
@@ -62,6 +68,9 @@ int exec(Memory entry_p)
 
   if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
     err(EXIT_FAILURE, "signal SIGINT");
+  }
+  if(signal(SIGSEGV, signal_on_sigsegv) == SIG_ERR) {
+    err(EXIT_FAILURE, "signal SIGSEGV");
   }
 
   /*
