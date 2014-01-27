@@ -97,6 +97,8 @@ void opcode_table_init(pOpcodeFunc *opcode_t)
   opcode_t[213] = i_srfrclr;
   opcode_t[214] = i_srfrchr;
   opcode_t[215] = i_srpflagr;
+  opcode_t[216] = i_srfi0r;
+  opcode_t[217] = i_srfi1r;
 
   opcode_t[224] = i_srspw;
   opcode_t[225] = i_srpdtw;

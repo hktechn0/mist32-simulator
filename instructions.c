@@ -731,6 +731,16 @@ void i_srpflagr(Instruction insn)
   GR[insn.o1.operand1] = PFLAGR.flags;
 }
 
+void i_srfi0r(Instruction insn)
+{
+  GR[insn.o1.operand1] = FI0R;
+}
+
+void i_srfi1r(Instruction insn)
+{
+  GR[insn.o1.operand1] = FI1R;
+}
+
 void i_srspw(Instruction insn)
 {
   SPR = GR[insn.o1.operand1];

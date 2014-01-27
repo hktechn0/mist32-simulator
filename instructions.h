@@ -82,6 +82,8 @@ void i_srfrcr(Instruction insn);
 void i_srfrclr(Instruction insn);
 void i_srfrchr(Instruction insn);
 void i_srpflagr(Instruction insn);
+void i_srfi0r(Instruction insn);
+void i_srfi1r(Instruction insn);
 
 void i_srspw(Instruction insn);
 void i_srpdtw(Instruction insn);
