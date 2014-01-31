@@ -74,8 +74,8 @@ typedef union {
 
 typedef uint32_t Memory;
 
-/* Function pointer void *pOpcodeFunc(Instruction *) */
-typedef void (*pOpcodeFunc) (Instruction);
+/* Function pointer void *pOpcodeFunc(Instruction) */
+typedef void (*pOpcodeFunc) (const Instruction);
 
 /* Debug flags */
 extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_INT, DEBUG_MMU;
