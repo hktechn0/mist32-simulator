@@ -64,7 +64,7 @@ void interrupt_exit(void)
   PDTR = PPDTR;
   TIDR = PTIDR;
 
-  if(PSR_MMUPS != PSR_MMUPS_4KB) {
+  if(PSR_MMUMOD && PSR_MMUPS != PSR_MMUPS_4KB) {
     abort_sim();
     errx(EXIT_FAILURE, "MMU page size (%d) not supported.", PSR_MMUPS);
   }
