@@ -14,7 +14,7 @@
 typedef struct _cachelinel1 {
   bool valid;
   uint32_t tag;
-  unsigned int miss;
+  unsigned int last_access;
 } CacheLineL1;
 
 extern CacheLineL1 cache_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
@@ -24,15 +24,16 @@ extern uint32_t cacheline_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE
 extern unsigned long long cache_l1i_total, cache_l1i_hit;
 extern unsigned long long cache_l1d_total, cache_l1d_hit;
 
+unsigned int cache_tick;
+
 #if CACHE_L1_I_ENABLE || CACHE_L1_D_ENABLE
 
 static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
 {
   CacheLineL1 (*cache)[CACHE_L1_WAY];
   uint32_t (*cacheline)[CACHE_L1_WAY][CACHE_L1_LINE_SIZE];
-  unsigned int w, i;
-  unsigned int tag, index, word;
-  unsigned int miss, maxmiss, target;
+  unsigned int w, tag, index, word;
+  unsigned int last, oldest, target;
 
   if(paddr >= MEMORY_MAX_ADDR) {
     /* non-cache area */
@@ -61,11 +62,7 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
   for(w = 0; w < CACHE_L1_WAY; w++) {
     if(cache[index][w].tag == tag && cache[index][w].valid) {
       /* hit */
-      for(i = 0; i < CACHE_L1_WAY; i++) {
-	/* LRU */
-	cache[index][i].miss++;
-      }
-      cache[index][w].miss = 0;
+      cache[index][w].last_access = cache_tick++;
 
 #if CACHE_L1_PROFILE
       if(is_icache) {
@@ -81,7 +78,7 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
   }
 
   /* miss */
-  maxmiss = 0;
+  oldest = 0;
   target = 0;
 
   /* find victim by LRU */
@@ -91,15 +88,15 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
       break;
     }
 
-    miss = cache[index][w].miss;
-    if(maxmiss < miss) {
-      maxmiss = miss;
+    last = cache_tick - cache[index][w].last_access;
+    if(last > oldest) {
+      oldest = last;
       target = w;
     }
   }
 
   cache[index][target].valid = true;
-  cache[index][target].miss = 0;
+  cache[index][target].last_access = cache_tick++;
   cache[index][target].tag = tag;
   memcpy(cacheline[index][target],
 	 memory_addr_phy2vm(paddr & CACHE_L1_LINE_MASK, false),

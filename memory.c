@@ -29,6 +29,7 @@ void memory_init(void)
     page_table[i].valid = false;
   }
 
+  cache_tick = 0;
   cache_l1i_total = 0;
   cache_l1i_hit = 0;
   cache_l1d_total = 0;
