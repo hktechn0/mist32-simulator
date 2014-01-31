@@ -16,6 +16,7 @@ gci_hub_node *gci_hub_nodes;
 gci_node gci_nodes[4];
 
 gci_mmcc *mmcc;
+char *gci_mmcc_image = NULL;
 
 unsigned char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 unsigned int fifo_scancode_start, fifo_scancode_end;
@@ -71,10 +72,16 @@ void gci_init(void)
   gci_hub->space_size += gci_hub_nodes[GCI_DISPLAY_NUM].size;
 
   /* STD-MMCC */
-  fd_mmcc = open(GCI_MMCC_IMAGE_FILE, O_RDWR);
-
-  if(fd_mmcc == -1) {
+  if(gci_mmcc_image == NULL) {
+    fd_mmcc = -1;
     DEBUGIO("[I/O] No MMC Image File\n");
+  }
+  else {
+    fd_mmcc = open(gci_mmcc_image, O_RDWR);
+    if(fd_mmcc == -1) {
+      errx(EXIT_FAILURE, "Can't read MMC image file. %s\n", gci_mmcc_image);
+    }
+    DEBUGIO("[I/O] MMC Image '%s'\n", gci_mmcc_image);
   }
 
   gci_nodes[GCI_MMCC_NUM].node_info = calloc(1, GCI_NODE_SIZE);
@@ -115,7 +122,9 @@ void gci_close(void)
   }
 
   close(fd_dispchar);
-  close(fd_mmcc);
+  if(fd_mmcc != -1) {
+    close(fd_mmcc);
+  }
 
   free((void *)gci_hub);
 }
@@ -272,7 +281,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
 void gci_mmcc_read(Memory addr, Memory offset, void *mem)
 {
   if(offset == GCI_MMCC_INIT_COMMAND) {
-    errx(EXIT_FAILURE, "MMCC INIT_COMMAND not writable.");
+    errx(EXIT_FAILURE, "MMCC INIT_COMMAND not readable.");
   }
 }
 
@@ -281,7 +290,7 @@ void gci_mmcc_write(Memory addr, Memory offset, void *mem)
   void *buf;
 
   if(fd_mmcc == -1) {
-    errx(EXIT_FAILURE, "no MMC image");
+    errx(EXIT_FAILURE, "No MMC image.");
   }
 
   buf = ((char *)mmcc + MMCC_BUFFER_OFFSET);

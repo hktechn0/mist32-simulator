@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
   void *allocp;
 
-  while ((opt = getopt(argc, argv, "dvhmb:")) != -1) {
+  while ((opt = getopt(argc, argv, "dvhmbc:")) != -1) {
     switch (opt) {
     case 'd':
       /* debug mode */
@@ -69,8 +69,15 @@ int main(int argc, char **argv)
       /* break point */
       breakp[breakp_next++] = strtol(optarg, NULL, 0);
       break;
+    case 'c':
+      /* MMC image file */
+      if(gci_mmcc_image == NULL) {
+	gci_mmcc_image = malloc(strlen(optarg) * sizeof(char) + 1);
+	strcpy(gci_mmcc_image, optarg);
+      }
+      break;
     default: /* '?' */
-      fprintf(stderr, "Usage: %s [-d] [-i] [-m] file\n",
+      fprintf(stderr, "Usage: %s [-b <breakpoint,>] [-d] [-v] [-m] [-c <mmc.img>] file\n",
 	      argv[0]);
       exit(EXIT_FAILURE);
     }
@@ -202,6 +209,10 @@ int main(int argc, char **argv)
 
   elf_end(elf);
   close(elf_fd);
+
+  if(gci_mmcc_image != NULL) {
+    free(gci_mmcc_image);
+  }
 
   return 0;
 }

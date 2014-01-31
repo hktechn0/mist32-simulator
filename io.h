@@ -112,9 +112,6 @@
 #define FIFO_SCI_RXD "./sci_rxd"
 #define FIFO_DISPLAY_CHAR "./gci_display_char"
 
-/* MMC image */
-#define GCI_MMCC_IMAGE_FILE "./mmc.img"
-
 typedef volatile struct _gci_hub_info {
   uint32_t total;
   uint32_t space_size;
@@ -170,6 +167,7 @@ extern void *dps;
 extern gci_hub_info *gci_hub;
 extern gci_hub_node *gci_hub_nodes;
 extern gci_node gci_nodes[4];
+extern char *gci_mmcc_image;
 
 extern unsigned char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 extern unsigned int fifo_scancode_start, fifo_scancode_end;
