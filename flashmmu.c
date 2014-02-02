@@ -78,7 +78,7 @@ void flashmmu_fetch_objcache(unsigned int objid)
     victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
     victim->flags |= FLASHMMU_FLAGS_DIRTY;
 
-    printf("[FLASHMMU] writeback %d\n", victim_id);
+    //printf("[FLASHMMU] writeback %x\n", victim_id);
   }
 
   victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
@@ -95,7 +95,7 @@ void flashmmu_fetch_objcache(unsigned int objid)
   victim->buf_index = 0;
   fmmu_pagebuf_entry[victim_buf] = FLASHMMU_ADDR(objid) | FLASHMMU_FLAGS_VALID;
 
-  printf("[FLASHMMU] fetch IN %d %x OUT %d %x\n",
+  printf("[FLASHMMU] fetch IN %x %x OUT %x %x\n",
 	 objid, obj->cache_offset, victim_id, victim->cache_offset);
 }
 
@@ -110,13 +110,14 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
   obj = FLASHMMU_OBJ(objid);
   obj->ref = fmmu_refcount++;
 
+  if(!(obj->flags & FLASHMMU_FLAGS_VALID)) {
+    /* protection error */
+    errx(EXIT_FAILURE, "FlashMMU: invalid object.");
+  }
+
   if(obj->size < offset) {
     /* protection error */
     errx(EXIT_FAILURE, "FlashMMU: protection error.");
-  }
-
-  if(is_write) {
-    obj->flags |= FLASHMMU_FLAGS_DIRTYBUF;
   }
 
   /* is object on page buffer? */
@@ -132,8 +133,12 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
     }
   }
 
-  printf("[FLASHMMU] access %x %p size:%x buf:%x cache:%x ref:%x flags:%x\n",
-	 objid, obj, obj->size, obj->buf_index, obj->cache_offset, obj->ref, obj->flags);
+  if(is_write) {
+    obj->flags |= FLASHMMU_FLAGS_DIRTYBUF;
+  }
+
+  printf("[FLASHMMU] access %x size:%x buf:%x cache:%x ref:%x flags:%x\n",
+	 objid, obj->size, obj->buf_index, obj->cache_offset, obj->ref, obj->flags);
 
   /* return pagebuf physical address */
   return (FLASHMMU_PAGEBUF_ADDR + (obj->buf_index << 12)) | offset;
