@@ -5,8 +5,9 @@
 #define DEBUG_TRACE 0
 #define DEBUG_STACK 0
 #define DEBUG_MON 1
-#define DEBUG_IO 1
+#define DEBUG_IO 0
 #define DEBUG_DPS 0
+#define DEBUG_FLASH 0
 #define DEBUG_EXIT_B0 0
 
 #define DPUTS if(DEBUG || step_by_step) printf
@@ -19,6 +20,7 @@
 #define DEBUGINT if(DEBUG_INT || step_by_step) printf
 #define DEBUGIO if(DEBUG_IO || step_by_step) printf
 #define DEBUGMMU if(DEBUG_MMU || step_by_step) printf
+#define DEBUGFLASH if(DEBUG_FLASH || step_by_step) printf
 
 #define TRACEBACK_MAX 1024
 #define MONITOR_RECV_INTERVAL_MASK (0x1000 - 1)

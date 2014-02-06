@@ -16,7 +16,6 @@ void flashmmu_init(void)
 
   fmmu_refcount = false;
 
-  printf("flashmmu size: 0x%lx\n", FLASHMMU_AREA_SIZE);
   //p = malloc(FLASHMMU_AREA_SIZE);
   p = valloc(FLASHMMU_AREA_SIZE);
 
@@ -78,7 +77,7 @@ void flashmmu_fetch_objcache(unsigned int objid)
     victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
     victim->flags |= FLASHMMU_FLAGS_DIRTY;
 
-    //printf("[FLASHMMU] writeback %x\n", victim_id);
+    //DEBUGFLASH("[FLASHMMU] writeback %x\n", victim_id);
   }
 
   victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
@@ -95,8 +94,8 @@ void flashmmu_fetch_objcache(unsigned int objid)
   victim->buf_index = 0;
   fmmu_pagebuf_entry[victim_buf] = FLASHMMU_ADDR(objid) | FLASHMMU_FLAGS_VALID;
 
-  printf("[FLASHMMU] fetch IN %x %x OUT %x %x\n",
-	 objid, obj->cache_offset, victim_id, victim->cache_offset);
+  DEBUGFLASH("[FLASHMMU] fetch IN %x %x OUT %x %x\n",
+	     objid, obj->cache_offset, victim_id, victim->cache_offset);
 }
 
 Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
@@ -128,7 +127,7 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
     }
     else {
       /* fault, fetch from flash */
-      printf("[FLASHMMU] page fault %08x\n", vaddr);
+      DEBUGFLASH("[FLASHMMU] page fault %08x\n", vaddr);
       return memory_page_fault(vaddr);
     }
   }
@@ -137,8 +136,8 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
     obj->flags |= FLASHMMU_FLAGS_DIRTYBUF;
   }
 
-  printf("[FLASHMMU] access %x size:%x buf:%x cache:%x ref:%x flags:%x\n",
-	 objid, obj->size, obj->buf_index, obj->cache_offset, obj->ref, obj->flags);
+  DEBUGFLASH("[FLASHMMU] access %x size:%x buf:%x cache:%x ref:%x flags:%x\n",
+	     objid, obj->size, obj->buf_index, obj->cache_offset, obj->ref, obj->flags);
 
   /* return pagebuf physical address */
   return (FLASHMMU_PAGEBUF_ADDR + (obj->buf_index << 12)) | offset;
