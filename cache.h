@@ -23,8 +23,7 @@ extern uint32_t cacheline_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE
 extern uint32_t cacheline_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE];
 extern unsigned long long cache_l1i_total, cache_l1i_hit;
 extern unsigned long long cache_l1d_total, cache_l1d_hit;
-
-unsigned int cache_tick;
+extern unsigned int cache_tick;
 
 #if CACHE_L1_I_ENABLE || CACHE_L1_D_ENABLE
 

@@ -131,4 +131,3 @@ int exec(Memory entry);
 /* FIXME: include */
 #include "memory.h"
 #include "io.h"
-#include "fetch.h"
