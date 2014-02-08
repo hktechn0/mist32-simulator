@@ -1,98 +1,118 @@
 #include <stdio.h>
 #include "common.h"
 
-char *fmmu_mem;
-char *fmmu_pagebuf;
-char *fmmu_objcache;
+char *flashmmu_mem;
 
-uint32_t *fmmu_pagebuf_entry;
-FLASHMMU_Object *fmmu_objects;
+char *flashmmu_pagebuf;
+char *flashmmu_objcache;
+FLASHMMU_Object *flashmmu_objects;
 
-unsigned long fmmu_refcount;
+static FLASHMMU_PagebufTag flashmmu_pagebuf_tag[FLASHMMU_PAGEBUF_PER_WAY];
+static unsigned long flashmmu_tick;
 
 void flashmmu_init(void)
 {
   char *p;
 
-  fmmu_refcount = false;
+  flashmmu_tick = 0;
 
   //p = malloc(FLASHMMU_AREA_SIZE);
   p = valloc(FLASHMMU_AREA_SIZE);
 
-  fmmu_mem = p;
+  flashmmu_mem = p;
 
-  fmmu_pagebuf = p;
+  flashmmu_pagebuf = p;
   p += FLASHMMU_PAGEBUF_SIZE;
-  fmmu_objcache = p;
+  flashmmu_objcache = p;
   p += FLASHMMU_OBJCACHE_SIZE;
-  fmmu_pagebuf_entry = (uint32_t *)p;
-  p += FLASHMMU_PAGEBUF_MAX * sizeof(uint32_t);
-  fmmu_objects = (FLASHMMU_Object *)p;
+  flashmmu_objects = (FLASHMMU_Object *)p;
 }
 
-uint16_t flashmmu_lru_victim(void)
+static inline int flashmmu_lru_victim(unsigned int objid)
 {
-  uint32_t oldref = 0;
-  uint32_t entry;
-  uint16_t victim, i;
-  unsigned int ref;
+  uint32_t tag, hash;
+  unsigned int i;
+  unsigned int last, oldest, victim_way;
 
-  for(i = 0; i < FLASHMMU_PAGEBUF_MAX; i++) {
-    entry = fmmu_pagebuf_entry[i];
+  hash = FLASHMMU_PAGEBUF_HASH(objid);
+  oldest = 0;
+  victim_way = 0;
 
-    if(!FLASHMMU_PAGEBUF_FLAGS(entry)) {
-      /* invalid buf */
-      victim = i;
-      break;
+  for(i = 0; i < FLASHMMU_PAGEBUF_WAY; i++) {
+    tag = flashmmu_pagebuf_tag[hash].tag[i];
+
+    if(!(FLASHMMU_PAGEBUF_FLAGS(tag) & FLASHMMU_FLAGS_VALID)) {
+      /* invalid page buffer */
+      return i;
+    }
+    else if(FLASHMMU_OBJID(tag) == objid){
+      /* FIXME: cannot free pagebuf when obj_free */
+      return i;
     }
 
-    ref = fmmu_refcount - fmmu_objects[FLASHMMU_OBJID(entry)].ref;
+    last = flashmmu_tick - flashmmu_pagebuf_tag[hash].last_access[i];
 
-    if(ref > oldref) {
-      oldref = ref;
-      victim = i;
+    if(last > oldest) {
+      oldest = last;
+      victim_way = i;
     }
   }
 
-  return victim;
+  return victim_way;
 }
 
-void flashmmu_fetch_objcache(unsigned int objid)
+static inline int flashmmu_pagebuf_read(unsigned int objid)
+{
+  uint32_t tag, hash;
+  unsigned int i;
+
+  hash = FLASHMMU_PAGEBUF_HASH(objid);
+
+  for(i = 0; i < FLASHMMU_PAGEBUF_WAY; i++) {
+    tag = flashmmu_pagebuf_tag[hash].tag[i];
+
+    if(FLASHMMU_OBJID(tag) == objid &&
+       (FLASHMMU_PAGEBUF_FLAGS(tag) & FLASHMMU_FLAGS_VALID)) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+static void flashmmu_fetch_objcache(unsigned int objid)
 {
   FLASHMMU_Object *victim, *obj;
-  uint16_t victim_buf;
-  uint32_t victim_entry, victim_id;
+  unsigned int hash, victim_id, victim_way;
 
-  victim_buf = flashmmu_lru_victim();
-  victim_entry = fmmu_pagebuf_entry[victim_buf];
-  victim_id = FLASHMMU_OBJID(victim_entry);
+  hash = FLASHMMU_PAGEBUF_HASH(objid);
 
-  victim = &fmmu_objects[victim_id];
+  /* find victim */
+  victim_way = flashmmu_lru_victim(objid);
+  victim_id = FLASHMMU_OBJID(flashmmu_pagebuf_tag[hash].tag[victim_way]);
+  victim = &flashmmu_objects[victim_id];
 
   /* writeback victim object */
   if(victim->flags & FLASHMMU_FLAGS_DIRTYBUF) {
-    memcpy(FLASHMMU_OBJCACHE_OBJ(fmmu_objcache, victim->cache_offset),
-	   FLASHMMU_PAGEBUF_OBJ(fmmu_pagebuf, victim_buf), (size_t)victim->size);
+    memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
+	   FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way), (size_t)victim->size);
+
+    //DEBUGFLASH("[FLASHMMU] writeback %x\n", victim_id);
 
     victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
     victim->flags |= FLASHMMU_FLAGS_DIRTY;
-
-    //DEBUGFLASH("[FLASHMMU] writeback %x\n", victim_id);
   }
 
   victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
 
   /* fetch object */
-  obj = FLASHMMU_OBJ(objid);
+  obj = &flashmmu_objects[objid];
+  flashmmu_pagebuf_tag[hash].tag[victim_way] = FLASHMMU_ADDR(objid) | FLASHMMU_FLAGS_VALID;
 
-  memcpy(FLASHMMU_PAGEBUF_OBJ(fmmu_pagebuf, victim_buf),
-	 FLASHMMU_OBJCACHE_OBJ(fmmu_objcache, obj->cache_offset), (size_t)obj->size);
+  memcpy(FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way),
+	 FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, obj->cache_offset), (size_t)obj->size);
 
   obj->flags |= FLASHMMU_FLAGS_PAGEBUF;
-
-  obj->buf_index = victim_buf;
-  victim->buf_index = 0;
-  fmmu_pagebuf_entry[victim_buf] = FLASHMMU_ADDR(objid) | FLASHMMU_FLAGS_VALID;
 
   DEBUGFLASH("[FLASHMMU] fetch IN %x %x OUT %x %x\n",
 	     objid, obj->cache_offset, victim_id, victim->cache_offset);
@@ -100,14 +120,16 @@ void flashmmu_fetch_objcache(unsigned int objid)
 
 Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
 {
-  unsigned int objid, offset;
+  unsigned int objid, offset, index, way;
   FLASHMMU_Object *obj;
 
   objid = FLASHMMU_OBJID(pte);
   offset = FLASHMMU_OFFSET(vaddr);
 
-  obj = FLASHMMU_OBJ(objid);
-  obj->ref = fmmu_refcount++;
+  obj = &flashmmu_objects[objid];
+
+  DEBUGFLASH("[FLASHMMU] access %x size:%x cache:%x flags:%x\n",
+	     objid, obj->size, obj->cache_offset, obj->flags);
 
   if(!(obj->flags & FLASHMMU_FLAGS_VALID)) {
     /* protection error */
@@ -136,9 +158,10 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
     obj->flags |= FLASHMMU_FLAGS_DIRTYBUF;
   }
 
-  DEBUGFLASH("[FLASHMMU] access %x size:%x buf:%x cache:%x ref:%x flags:%x\n",
-	     objid, obj->size, obj->buf_index, obj->cache_offset, obj->ref, obj->flags);
+  way = flashmmu_pagebuf_read(objid);
+  flashmmu_pagebuf_tag[FLASHMMU_PAGEBUF_HASH(objid)].last_access[way] = flashmmu_tick++;
 
   /* return pagebuf physical address */
-  return (FLASHMMU_PAGEBUF_ADDR + (obj->buf_index << 12)) | offset;
+  index = FLASHMMU_PAGEBUF_PER_WAY * way + FLASHMMU_PAGEBUF_HASH(objid);
+  return FLASHMMU_PAGEBUF_ADDR + ((index << 12) | offset);
 }
