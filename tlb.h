@@ -1,5 +1,5 @@
 /* simulator TLB settings */
-#define TLB_ENABLE 0
+#define TLB_ENABLE 1
 #define TLB_PROFILE 1
 
 #define TLB_ENTRY_MAX 16  /* must be 2^n */

@@ -159,17 +159,17 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
     return memory_page_protection_fault(vaddr);
   }
 
-#if TLB_ENABLE
-  /* add TLB */
-  memory_tlb[TLB_INDEX(vaddr)].page_num = vaddr;
-  memory_tlb[TLB_INDEX(vaddr)].page_entry = pte;
-#endif
-
 #if FLASHMMU_ENABLE
   if(pte & MMU_PTE_OBJ) {
     /* flash mmu */
     return flashmmu_access(pte, vaddr, is_write);
   }
+#endif
+
+#if TLB_ENABLE
+  /* add TLB */
+  memory_tlb[TLB_INDEX(vaddr)].page_num = vaddr;
+  memory_tlb[TLB_INDEX(vaddr)].page_entry = pte;
 #endif
 
   offset = vaddr & MMU_PAGE_OFFSET;
