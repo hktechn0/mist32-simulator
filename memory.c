@@ -11,6 +11,7 @@ CacheLineL1 cache_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
 CacheLineL1 cache_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY];
 uint32_t cacheline_l1i[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE] __attribute__ ((aligned(64)));
 uint32_t cacheline_l1d[CACHE_L1_LINE_PER_WAY][CACHE_L1_WAY][CACHE_L1_LINE_SIZE] __attribute__ ((aligned(64)));
+unsigned int cache_tick;
 unsigned long long cache_l1i_total, cache_l1i_hit;
 unsigned long long cache_l1d_total, cache_l1d_hit;
 

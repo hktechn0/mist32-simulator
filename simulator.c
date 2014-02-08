@@ -9,9 +9,10 @@
 #include "common.h"
 #include "interrupt.h"
 #include "monitor.h"
+#include "fetch.h"
 
 /* Opcode Table */
-pOpcodeFunc opcode_t[OPCODE_MAX] __attribute__ ((aligned(64)));
+static pOpcodeFunc opcode_t[OPCODE_MAX] __attribute__ ((aligned(64)));
 
 /* General Register */
 int32_t GR[32] __attribute__ ((aligned(64)));

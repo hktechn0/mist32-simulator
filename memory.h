@@ -184,6 +184,7 @@ static inline int memory_ld16(unsigned int *dest, Memory vaddr)
 {
   union union_int32 tmp;
   int e;
+  /* FIXME: no error if byte access to MMIO area */
   if(!(e = memory_ld32(&tmp.u32, vaddr & 0xfffffffc))) {
     /* trick for little endian */
     *dest = tmp.u16[(~vaddr >> 1) & 1];
@@ -195,6 +196,7 @@ static inline int memory_ld8(unsigned int *dest, Memory vaddr)
 {
   union union_int32 tmp;
   int e;
+  /* FIXME: no error if byte access to MMIO area */
   if(!(e = memory_ld32(&tmp.u32, vaddr & 0xfffffffc))) {
     /* trick for little endian */
     *dest = tmp.u8[~vaddr & 3];
@@ -231,6 +233,7 @@ static inline int memory_st16(Memory vaddr, unsigned int src)
 
   tmp.u32 = *(unsigned int *)memory_addr_phy2vm(paddr & 0xfffffffc, false);
   tmp.u16[(~vaddr >> 1) & 1] = (unsigned short)src;
+  /* FIXME: no error if byte access to MMIO area */
   memory_cache_l1_write(paddr & 0xfffffffc, tmp.u32);
 #else
 #if CACHE_L1_I_ENABLE
@@ -255,6 +258,7 @@ static inline int memory_st8(Memory vaddr, unsigned int src)
 
   tmp.u32 = *(unsigned int *)memory_addr_phy2vm(paddr & 0xfffffffc, false);
   tmp.u8[~vaddr & 3] = (unsigned char)src;
+  /* FIXME: no error if byte access to MMIO area */
   memory_cache_l1_write(paddr & 0xfffffffc, tmp.u32);
 #else
 #if CACHE_L1_I_ENABLE

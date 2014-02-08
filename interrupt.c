@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "fetch.h"
 #include "interrupt.h"
 
 idt_entry idt_cache[IDT_ENTRY_MAX];

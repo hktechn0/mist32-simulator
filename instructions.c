@@ -4,6 +4,7 @@
 #include <err.h>
 
 #include "common.h"
+#include "fetch.h"
 #include "interrupt.h"
 #include "instructions.h"
 #include "operands.h"
