@@ -159,6 +159,9 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
     return memory_page_protection_fault(vaddr);
   }
 
+  pte |= MMU_PTE_R | (is_write ? MMU_PTE_D : 0);
+  pt[index_l2] = pte;
+
 #if FLASHMMU_ENABLE
   if(pte & MMU_PTE_OBJ) {
     /* flash mmu */
