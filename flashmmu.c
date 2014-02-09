@@ -128,8 +128,8 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
 
   obj = &flashmmu_objects[objid];
 
-  DEBUGFLASH("[FLASHMMU] access %x size:%x cache:%x flags:%x\n",
-	     objid, obj->size, obj->cache_offset, obj->flags);
+  DEBUGFLASH("[FLASHMMU] access %08x size:%04x cache:%04x flags:%04x PC:%08x\n",
+	     objid, obj->size, obj->cache_offset, obj->flags, PCR);
 
   if(!(obj->flags & FLASHMMU_FLAGS_VALID)) {
     /* protection error */
@@ -154,6 +154,7 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
     }
   }
 
+  obj->flags |= FLASHMMU_FLAGS_ACCESS;
   if(is_write) {
     obj->flags |= FLASHMMU_FLAGS_DIRTYBUF;
   }
