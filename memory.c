@@ -162,7 +162,7 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
   pte |= MMU_PTE_R | (is_write ? MMU_PTE_D : 0);
   pt[index_l2] = pte;
 
-#if FLASHMMU_ENABLE
+#if FLASHMMU_ENABLE && !FLASHMMU_SSDALLOC
   if(pte & MMU_PTE_OBJ) {
     /* flash mmu */
     return flashmmu_access(pte, vaddr, is_write);
