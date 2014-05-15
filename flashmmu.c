@@ -83,27 +83,33 @@ static inline int flashmmu_pagebuf_read(unsigned int objid)
 static void flashmmu_fetch_objcache(unsigned int objid)
 {
   FLASHMMU_Object *victim, *obj;
-  unsigned int hash, victim_id, victim_way;
+  unsigned int hash, pagebuf_tag, victim_id, victim_way;
 
   hash = FLASHMMU_PAGEBUF_HASH(objid);
 
   /* find victim */
   victim_way = flashmmu_lru_victim(objid);
-  victim_id = FLASHMMU_OBJID(flashmmu_pagebuf_tag[hash].tag[victim_way]);
-  victim = &flashmmu_objects[victim_id];
+  pagebuf_tag = flashmmu_pagebuf_tag[hash].tag[victim_way];
 
-  /* writeback victim object */
-  if(victim->flags & FLASHMMU_FLAGS_DIRTYBUF) {
-    memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
-	   FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way), (size_t)victim->size);
+  if(FLASHMMU_PAGEBUF_FLAGS(pagebuf_tag) & FLASHMMU_FLAGS_VALID) {
+    victim_id = FLASHMMU_OBJID(pagebuf_tag);
+    victim = &flashmmu_objects[victim_id];
 
-    //DEBUGFLASH("[FLASHMMU] writeback %x\n", victim_id);
+    DEBUGFLASH("[FLASHMMU] PAGEBUF OUT %x %x %x\n",
+	       victim_id, victim->cache_offset,
+	       victim->flags & FLASHMMU_FLAGS_DIRTYBUF);
 
-    victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
-    victim->flags |= FLASHMMU_FLAGS_DIRTY;
+    /* writeback victim object */
+    if(victim->flags & FLASHMMU_FLAGS_DIRTYBUF) {
+      memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
+	     FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way), (size_t)victim->size);
+
+      victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
+      victim->flags |= FLASHMMU_FLAGS_DIRTY;
+    }
+
+    victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
   }
-
-  victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
 
   /* fetch object */
   obj = &flashmmu_objects[objid];
@@ -114,8 +120,7 @@ static void flashmmu_fetch_objcache(unsigned int objid)
 
   obj->flags |= FLASHMMU_FLAGS_PAGEBUF;
 
-  DEBUGFLASH("[FLASHMMU] fetch IN %x %x OUT %x %x\n",
-	     objid, obj->cache_offset, victim_id, victim->cache_offset);
+  DEBUGFLASH("[FLASHMMU] PAGEBUF IN %x %x\n", objid, obj->cache_offset);
 }
 
 Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
