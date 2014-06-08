@@ -104,6 +104,10 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
   uint32_t *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset;
 
+  if(vaddr == 0) {
+    printf("[NOTICE] NULL POINTER ACCESS %08x\n", PCR);
+  }
+
   /* Level 1 */
   pdt = memory_addr_phy2vm(PDTR, false);
   index_l1 = (vaddr & MMU_PAGE_INDEX_L1) >> 22;

@@ -564,7 +564,7 @@ void i_push(const Instruction insn)
     return;
   }
 
-  DEBUGST("[Push] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, src, PCR);
+  DEBUGST("[Push ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, src, PCR);
   DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, src);
 }
 
@@ -589,7 +589,7 @@ void i_pop(const Instruction insn)
     return;
   }
 
-  DEBUGLD("[Pop] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *dest, PCR);
+  DEBUGLD("[Pop  ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *dest, PCR);
   DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *dest);
 
   SPR += 4;
