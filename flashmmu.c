@@ -42,11 +42,11 @@ static inline int flashmmu_lru_victim(unsigned int objid)
     tag = flashmmu_pagebuf_tag[hash].tag[i];
 
     if(!(FLASHMMU_PAGEBUF_FLAGS(tag) & FLASHMMU_FLAGS_VALID)) {
-      /* invalid page buffer */
+      /* invalid (free) page buffer */
       return i;
     }
-    else if(FLASHMMU_OBJID(tag) == objid){
-      /* FIXME: cannot free pagebuf when obj_free */
+    else if(FLASHMMU_PAGEBUF_OBJID(tag) == objid) {
+      /* FIXME: cannot free Page Buffer entry when obj_free */
       return i;
     }
 
@@ -61,6 +61,7 @@ static inline int flashmmu_lru_victim(unsigned int objid)
   return victim_way;
 }
 
+// return Page Buffer way
 static inline int flashmmu_pagebuf_read(unsigned int objid)
 {
   uint32_t tag, hash;
@@ -80,47 +81,50 @@ static inline int flashmmu_pagebuf_read(unsigned int objid)
   return -1;
 }
 
+// refill Page Buffer from RAM Object Cache
 static void flashmmu_fetch_objcache(unsigned int objid)
 {
   FLASHMMU_Object *victim, *obj;
-  unsigned int hash, pagebuf_tag, victim_id, victim_way;
+  unsigned int hash, victim_tag, victim_id, victim_way;
 
   hash = FLASHMMU_PAGEBUF_HASH(objid);
 
   /* find victim */
   victim_way = flashmmu_lru_victim(objid);
-  pagebuf_tag = flashmmu_pagebuf_tag[hash].tag[victim_way];
+  victim_tag = flashmmu_pagebuf_tag[hash].tag[victim_way];
 
-  if(FLASHMMU_PAGEBUF_FLAGS(pagebuf_tag) & FLASHMMU_FLAGS_VALID) {
-    victim_id = FLASHMMU_OBJID(pagebuf_tag);
+  if(FLASHMMU_PAGEBUF_FLAGS(victim_tag) & FLASHMMU_FLAGS_VALID) {
+    victim_id = FLASHMMU_PAGEBUF_OBJID(victim_tag);
     victim = &flashmmu_objects[victim_id];
 
-    DEBUGFLASH("[FLASHMMU] PAGEBUF OUT %x %x %x\n",
-	       victim_id, victim->cache_offset,
-	       victim->flags & FLASHMMU_FLAGS_DIRTYBUF);
+    if(victim->flags & FLASHMMU_FLAGS_VALID) {
+      DEBUGFLASH("[FLASHMMU] PAGEBUF OUT %05x %05x %x\n",
+		 victim_id, victim->cache_offset,
+		 !!(victim->flags & FLASHMMU_FLAGS_DIRTYBUF));
+      
+      /* writeback victim object */
+      if(victim->flags & FLASHMMU_FLAGS_DIRTYBUF) {
+	memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
+	       FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way), (size_t)victim->size);
+	
+	victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
+	victim->flags |= FLASHMMU_FLAGS_DIRTY;
+      }
 
-    /* writeback victim object */
-    if(victim->flags & FLASHMMU_FLAGS_DIRTYBUF) {
-      memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
-	     FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way), (size_t)victim->size);
-
-      victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
-      victim->flags |= FLASHMMU_FLAGS_DIRTY;
+      victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
     }
-
-    victim->flags &= ~FLASHMMU_FLAGS_PAGEBUF;
   }
 
   /* fetch object */
   obj = &flashmmu_objects[objid];
-  flashmmu_pagebuf_tag[hash].tag[victim_way] = FLASHMMU_ADDR(objid) | FLASHMMU_FLAGS_VALID;
+  flashmmu_pagebuf_tag[hash].tag[victim_way] = FLASHMMU_PAGEBUF_TAG(objid, FLASHMMU_FLAGS_VALID);
 
   memcpy(FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way),
 	 FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, obj->cache_offset), (size_t)obj->size);
 
   obj->flags |= FLASHMMU_FLAGS_PAGEBUF;
 
-  DEBUGFLASH("[FLASHMMU] PAGEBUF IN %x %x\n", objid, obj->cache_offset);
+  DEBUGFLASH("[FLASHMMU] PAGEBUF IN  %05x %05x\n", objid, obj->cache_offset);
 }
 
 Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
@@ -133,15 +137,16 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
 
   obj = &flashmmu_objects[objid];
 
-  DEBUGFLASH("[FLASHMMU] access %08x size:%04x cache:%04x flags:%04x PC:%08x\n",
-	     objid, obj->size, obj->cache_offset, obj->flags, PCR);
+  DEBUGFLASH("[FLASHMMU] access %05x %03x size:%03x cache:%04x flags:%03x PC:%08x\n",
+	     objid, offset, obj->size, obj->cache_offset, obj->flags, PCR);
 
   if(!(obj->flags & FLASHMMU_FLAGS_VALID)) {
     /* protection error */
     errx(EXIT_FAILURE, "FlashMMU: invalid object.");
   }
 
-  if(obj->size < offset) {
+  //if(obj->size < offset) {
+  if(obj->size < offset && is_write) {
     /* protection error */
     errx(EXIT_FAILURE, "FlashMMU: protection error.");
   }
