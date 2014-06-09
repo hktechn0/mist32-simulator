@@ -11,6 +11,9 @@ static inline uint32_t instruction_fetch(Memory pc)
 {
   Memory phypc;
 
+  uint32_t *dest;
+  const uint32_t *src;
+
   if((pc & PREFETCH_TAG) == prefetch_pc) {
     return prefetch_insn[(pc & PREFETCH_MASK) >> 2];
   }
@@ -22,8 +25,13 @@ static inline uint32_t instruction_fetch(Memory pc)
     return NOP_INSN;
   }
 
-  /* prefetch */
-  memcpy(prefetch_insn, memory_addr_phy2vm(phypc, false), PREFETCH_SIZE);
+  /* prefetch, DO NOT USE memcpy() for endian mistake */
+  dest = prefetch_insn;
+  src = memory_addr_phy2vm(phypc, false);
+  while(dest < prefetch_insn + PREFETCH_N) {
+    *dest++ = *src++;
+  }
+
   prefetch_pc = pc & PREFETCH_TAG;
 
   return prefetch_insn[(pc & PREFETCH_MASK) >> 2];

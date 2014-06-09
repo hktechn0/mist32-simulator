@@ -1,8 +1,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 #include <err.h>
+
+#define MEMORY_CALLOC 1
 
 /* simulator virtual memory construct (not MMU VM) */
 #define PAGE_SIZE (16384)        /* 2 ^ 14 */
@@ -66,6 +67,9 @@ Memory memory_page_fault(Memory vaddr);
 Memory memory_page_protection_fault(Memory vaddr);
 
 void memory_vm_alloc(Memory paddr, unsigned int page_num);
+void *memory_vm_memcpy(void *dest, const void *src, size_t n);
+int memory_vm_memcmp(const void *s1, const void *s2, size_t n);
+//void memory_vm_page_convert_endian(uint32_t *page);
 void memory_vm_convert_endian(void);
 
 static inline bool memory_check_privilege(uint32_t pte, bool is_write, bool is_exec)

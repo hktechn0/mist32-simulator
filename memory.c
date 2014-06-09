@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <err.h>
 
 #include "common.h"
@@ -106,6 +107,10 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
   uint32_t *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset;
 
+  if(vaddr == 0) {
+    printf("[NOTICE] NULL POINTER ACCESS %08x\n", PCR);
+  }
+
   /* Level 1 */
   pdt = memory_addr_phy2vm(PDTR, false);
   index_l1 = (vaddr & MMU_PAGE_INDEX_L1) >> 22;
@@ -200,7 +205,11 @@ void memory_vm_alloc(Memory paddr, unsigned int page_num)
   if(page_table[page_num].valid) {
     errx(EXIT_FAILURE, "page_alloc invalid entry");
   }
+#if MEMORY_CALLOC
+  else if((page_table[page_num].addr = calloc(1, PAGE_SIZE)) == NULL) {
+#else
   else if((page_table[page_num].addr = malloc(PAGE_SIZE)) == NULL) {
+#endif
     err(EXIT_FAILURE, "page_alloc");
   }
 
@@ -210,8 +219,39 @@ void memory_vm_alloc(Memory paddr, unsigned int page_num)
 	page_table[page_num].addr, paddr & PAGE_INDEX_MASK, paddr);
 }
 
+void *memory_vm_memcpy(void *dest, const void *src, size_t n)
+{
+  unsigned int i;
+
+  memcpy(dest, src, n & (~3));
+
+  for(i = n & (~3); i < n; i++) {
+    ((char *)dest)[i ^ 2] = ((char *)src)[i ^ 2];
+  }
+
+  return dest;
+}
+
+int memory_vm_memcmp(const void *s1, const void *s2, size_t n)
+{
+  int cmp;
+  unsigned int i;
+
+  if((cmp = memcmp(s1, s2, n & (~3)))) {
+    return cmp;
+  }
+
+  for(i = n & (~3); i < n; i++) {
+    if(((char *)s1)[i ^ 2] != ((char *)s2)[i ^ 2]) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 /* convert endian. must pass vm address */
-void memory_vm_page_convert_endian(uint32_t *page)
+static inline void memory_vm_page_convert_endian(uint32_t *page)
 {
   unsigned int i;
   uint32_t *value;
