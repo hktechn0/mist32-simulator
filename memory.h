@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <err.h>
 
+#define MEMORY_CALLOC 1
+
 /* simulator virtual memory construct (not MMU VM) */
 #define PAGE_SIZE (16384)        /* 2 ^ 14 */
 #define PAGE_ENTRY_NUM (262144)  /* 2 ^ 18 */

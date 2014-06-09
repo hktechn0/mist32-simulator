@@ -196,7 +196,11 @@ void memory_vm_alloc(Memory paddr, unsigned int page_num)
   if(page_table[page_num].valid) {
     errx(EXIT_FAILURE, "page_alloc invalid entry");
   }
+#if MEMORY_CALLOC
+  else if((page_table[page_num].addr = calloc(1, PAGE_SIZE)) == NULL) {
+#else
   else if((page_table[page_num].addr = malloc(PAGE_SIZE)) == NULL) {
+#endif
     err(EXIT_FAILURE, "page_alloc");
   }
 
