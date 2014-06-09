@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "common.h"
 #include "fetch.h"
@@ -95,7 +94,7 @@ void interrupt_dispatch_nonmask(unsigned int num)
 
 void interrupt_idt_store(void)
 {
-  memcpy((void *)idt_cache, memory_addr_phy2vm(IDTR, false), IDT_ENTRY_MAX * sizeof(idt_entry));
+  memory_vm_memcpy((void *)idt_cache, memory_addr_phy2vm(IDTR, false), IDT_ENTRY_MAX * sizeof(idt_entry));
 
   DEBUGINT("[INTERRUPT] IDT Store\n");
 }
