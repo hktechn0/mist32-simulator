@@ -112,7 +112,7 @@ static inline void *memory_addr_phy2vm(Memory paddr, bool is_write)
   unsigned int page_num;
 
 #if FLASHMMU_ENABLE
-  if(FLASHMMU_START_ADDR <= paddr && paddr < FLASHMMU_START_ADDR + FLASHMMU_AREA_SIZE) {
+  if(FLASHMMU_START_ADDR <= paddr && paddr < (FLASHMMU_START_ADDR + FLASHMMU_AREA_SIZE)) {
     /* Flash MMU */
     return flashmmu_mem + (paddr - FLASHMMU_START_ADDR);
   }

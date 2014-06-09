@@ -1,5 +1,6 @@
 #define FLASHMMU_ENABLE 1
 #define FLASHMMU_SSDALLOC 0
+
 #define FLASHMMU_START_ADDR 0x80000000
 #define FLASHMMU_AREA_SIZE (					     \
   FLASHMMU_PAGEBUF_SIZE						     \
@@ -33,7 +34,7 @@
 #define FLASHMMU_FLAGS_PAGEBUF 0x4
 #define FLASHMMU_FLAGS_ACCESS 0x8
 #define FLASHMMU_FLAGS_DIRTY 0x10
-#define FLASHMMU_FLAGS_DIRTYBUF 0x20 /* FIXME: dirtybuf flag should have pagebuf tag. */
+#define FLASHMMU_FLAGS_DIRTYBUF 0x20 /* FIXME: pagebuf tag should has dirtybuf flag, not object. */
 
 #define FLASHMMU_OBJID(paddr) ((paddr) >> 12)
 #define FLASHMMU_OFFSET(paddr) ((paddr) & 0xfff)
@@ -41,7 +42,8 @@
 #define FLASHMMU_SECTOR(objid) (((objid) << 12) >> 9)
 #define FLASHMMU_BLOCKS(size) (((size) + 511) >> 9)
 
-#define FLASHMMU_PAGEBUF_OBJ(pagebuf, hash, way) ((char *)(pagebuf) + ((FLASHMMU_PAGEBUF_PER_WAY * (way) + (hash)) << 12))
+#define FLASHMMU_PAGEBUF_OBJ(pagebuf, hash, way) \
+  ((char *)(pagebuf) + ((FLASHMMU_PAGEBUF_PER_WAY * (way) + (hash)) << 12))
 #define FLASHMMU_OBJCACHE_OBJ(objcache, offset) ((char *)(objcache) + ((offset) << 9))
 
 /* Total: 64bit */

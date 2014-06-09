@@ -3,9 +3,9 @@
 
 char *flashmmu_mem;
 
-char *flashmmu_pagebuf;
-char *flashmmu_objcache;
-FLASHMMU_Object *flashmmu_objects;
+static char *flashmmu_pagebuf;
+static char *flashmmu_objcache;
+static FLASHMMU_Object *flashmmu_objects;
 
 static FLASHMMU_PagebufTag flashmmu_pagebuf_tag[FLASHMMU_PAGEBUF_PER_WAY];
 static unsigned long flashmmu_tick;
@@ -16,7 +16,7 @@ void flashmmu_init(void)
 
   flashmmu_tick = 0;
 
-  //p = malloc(FLASHMMU_AREA_SIZE);
+  /* must be page aligned */
   p = valloc(FLASHMMU_AREA_SIZE);
 
   flashmmu_mem = p;
@@ -104,9 +104,10 @@ static void flashmmu_fetch_objcache(unsigned int objid)
       
       /* writeback victim object */
       if(victim->flags & FLASHMMU_FLAGS_DIRTYBUF) {
-	memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
-	       FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way), (size_t)victim->size);
-	
+	memory_vm_memcpy(FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, victim->cache_offset),
+			 FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way),
+			 (size_t)victim->size);
+
 	victim->flags &= ~FLASHMMU_FLAGS_DIRTYBUF;
 	victim->flags |= FLASHMMU_FLAGS_DIRTY;
       }
@@ -119,8 +120,9 @@ static void flashmmu_fetch_objcache(unsigned int objid)
   obj = &flashmmu_objects[objid];
   flashmmu_pagebuf_tag[hash].tag[victim_way] = FLASHMMU_PAGEBUF_TAG(objid, FLASHMMU_FLAGS_VALID);
 
-  memcpy(FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way),
-	 FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, obj->cache_offset), (size_t)obj->size);
+  memory_vm_memcpy(FLASHMMU_PAGEBUF_OBJ(flashmmu_pagebuf, hash, victim_way),
+		   FLASHMMU_OBJCACHE_OBJ(flashmmu_objcache, obj->cache_offset),
+		   (size_t)obj->size);
 
   obj->flags |= FLASHMMU_FLAGS_PAGEBUF;
 
@@ -129,7 +131,7 @@ static void flashmmu_fetch_objcache(unsigned int objid)
 
 Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
 {
-  unsigned int objid, offset, index, way;
+  unsigned int objid, offset, index, way, hash;
   FLASHMMU_Object *obj;
 
   objid = FLASHMMU_OBJID(pte);
@@ -170,9 +172,12 @@ Memory flashmmu_access(uint32_t pte, Memory vaddr, bool is_write)
   }
 
   way = flashmmu_pagebuf_read(objid);
-  flashmmu_pagebuf_tag[FLASHMMU_PAGEBUF_HASH(objid)].last_access[way] = flashmmu_tick++;
+  hash = FLASHMMU_PAGEBUF_HASH(objid);
+
+  /* increment LRU tag */
+  flashmmu_pagebuf_tag[hash].last_access[way] = flashmmu_tick++;
 
   /* return pagebuf physical address */
-  index = FLASHMMU_PAGEBUF_PER_WAY * way + FLASHMMU_PAGEBUF_HASH(objid);
+  index = FLASHMMU_PAGEBUF_PER_WAY * way + hash;
   return FLASHMMU_PAGEBUF_ADDR + ((index << 12) | offset);
 }
