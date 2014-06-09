@@ -34,6 +34,9 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
   unsigned int w, tag, index, word;
   unsigned int last, oldest, target;
 
+  uint32_t *dest;
+  const uint32_t *src;
+
   if(paddr >= MEMORY_MAX_ADDR) {
     /* non-cache area */
     return *(uint32_t *)memory_addr_phy2vm(paddr, false);
@@ -97,9 +100,13 @@ static inline uint32_t memory_cache_l1_read(Memory paddr, int is_icache)
   cache[index][target].valid = true;
   cache[index][target].last_access = cache_tick++;
   cache[index][target].tag = tag;
-  memcpy(cacheline[index][target],
-	 memory_addr_phy2vm(paddr & CACHE_L1_LINE_MASK, false),
-	 CACHE_L1_LINE_SIZE * sizeof(uint32_t));
+
+  /* refill, DO NOT USE memcpy() for endian mistake */
+  dest = cacheline[index][target];
+  src = memory_addr_phy2vm(paddr & CACHE_L1_LINE_MASK, false);
+  while(dest < cacheline[index][target + 1]) {
+    *dest++ = *src++;
+  }
 
   return cacheline[index][target][word];
 }
