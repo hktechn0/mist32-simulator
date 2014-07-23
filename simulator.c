@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <err.h>
 
 #include "common.h"
@@ -12,15 +9,15 @@
 #include "fetch.h"
 
 /* Opcode Table */
-static pOpcodeFunc opcode_t[OPCODE_MAX] __attribute__ ((aligned(64)));
+#include "opstable.h"
 
 /* General Register */
 int32_t GR[32] __attribute__ ((aligned(64)));
 
 /* System Register */
-FLAGS FLAGR;
 Memory PCR, next_PCR;
 Memory SPR, KSPR, USPR;
+FLAGS FLAGR;
 uint32_t PSR;
 Memory IOSR;
 Memory PDTR;
@@ -33,7 +30,6 @@ bool step_by_step;
 bool exec_finish;
 
 Memory prefetch_pc;
-uint32_t prefetch_insn[PREFETCH_N] __attribute__ ((aligned(64)));
 
 Memory traceback[TRACEBACK_MAX];
 uint32_t traceback_next;
@@ -56,10 +52,8 @@ int exec(Memory entry_p)
   unsigned long clk = 0;
 
   uint32_t cmod;
-  int memfd;
 
   unsigned int i;
-  char c;
 
   if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
     err(EXIT_FAILURE, "signal SIGINT");
@@ -70,8 +64,6 @@ int exec(Memory entry_p)
     printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
   }
   */
-
-  opcode_table_init(opcode_t);
 
   step_by_step = false;
   exec_finish = false;
@@ -119,16 +111,16 @@ int exec(Memory entry_p)
       goto fault;
     }
 
+    if(DEBUG || step_by_step) {
+      puts("---");
+      print_instruction(insn);
+    }
+
     /* decode */
     if(opcode_t[insn.base.opcode] == NULL) {
       print_instruction(insn);
       abort_sim();
       errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, insn.base.opcode);
-    }
-
-    if(DEBUG || step_by_step) {
-      puts("---");
-      print_instruction(insn);
     }
 
     /* execution */
@@ -158,26 +150,7 @@ int exec(Memory entry_p)
     }
 
     if(step_by_step) {
-      print_registers();
-      print_traceback();
-      // print_stack(SPR);
-      // dps_info();
-
-      printf("> ");
-
-      while((c = getchar()) == -1);
-
-      if(c == 'c') {
-	step_by_step = false;
-      }
-      else if(c == 'q') {
-	exec_finish = true;
-      }
-      else if(c == 'm') {
-	memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
-	write(memfd, memory_addr_phy2vm(memory_addr_virt2phy(0, false, false), 0x1000), false);
-	close(memfd);
-      }
+      step_by_step_pause();
     }
     else {
       if(DEBUG_REG) { print_registers(); }

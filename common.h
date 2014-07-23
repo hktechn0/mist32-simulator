@@ -28,11 +28,11 @@
 
 #define EM_MIST32 0x1032
 #define STACK_DEFAULT MEMORY_MAX_ADDR
-#define OPCODE_MAX 1024
 
 #define NOP_INSN (0x100 << 21)
 
-#define msb(word) (!!((word) & 0x80000000))
+#define msb(word) ((word) >> 31)
+#define msb64(word) ((word) >> 63)
 #define NOT(reg) (reg = ~reg)
 #define SIGN_EXT6(n) ((n & 0x20) ? (n | 0xffffffc0) : (n & 0x3f))
 #define SIGN_EXT8(n) ((n & 0x80) ? (n | 0xffffff00) : (n & 0xff))
@@ -124,6 +124,7 @@ void print_registers(void);
 void print_stack(Memory sp);
 void print_traceback(void);
 void abort_sim(void);
+void step_by_step_pause(void);
 
 /* simulator */
 int exec(Memory entry);

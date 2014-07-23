@@ -5,28 +5,26 @@ static inline void clr_flags(void)
 }
 
 /* set flags */
-static inline void set_flags(int32_t value)
+static inline void set_flags(const uint32_t value)
 {
   FLAGR.zero = !value;
-  FLAGR.parity = !(value & 0x00000001);
-  FLAGR.sign = (value < 0);
+  FLAGR.parity = ~(value & 1);
+  FLAGR.sign = msb(value);
 }
 
-static inline void set_flags_add(uint32_t result, uint32_t dest, uint32_t src)
+static inline void set_flags_add(const uint32_t result, const uint32_t dest, const uint32_t src)
 {
   clr_flags();
 
+  FLAGR.carry = ((uint64_t)dest + (uint64_t)src) >> 32;
+  //FLAGR.carry = msb((dest & src) | (~result & (dest | src)));
   FLAGR.overflow = msb(~(dest ^ src) & (dest ^ result));
-  FLAGR.carry = msb((dest & src) | (~result & (dest | src)));
 
   set_flags(result);
 }
 
-static inline void set_flags_sub(uint32_t result, uint32_t dest, uint32_t src)
+static inline void set_flags_sub(const uint32_t result, const uint32_t dest, const uint32_t src)
 {
   set_flags_add(result, dest, (uint32_t)(-((int32_t)src)));
-
-  if(src == 0) {
-    FLAGR.carry = 1;
-  }
+  FLAGR.carry |= !src;
 }

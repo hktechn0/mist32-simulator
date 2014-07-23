@@ -4,7 +4,7 @@ CFLAGS = -std=gnu99 -Wall -O3
 #CFLAGS += -pg
 #CFLAGS += -fno-inline
 
-OBJS = simulator.o opstable.o instructions.o utils.o main.o memory.o interrupt.o io.o dps.o gci.o monitor.o
+OBJS = simulator.o instructions.o utils.o main.o memory.o interrupt.o io.o dps.o gci.o monitor.o
 FIFO = sci_txd sci_rxd gci_display_char
 
 mist32_simulator: $(OBJS) $(FIFO)

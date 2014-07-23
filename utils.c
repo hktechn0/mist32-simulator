@@ -1,4 +1,8 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "common.h"
 
 void print_instruction(Instruction insn)
@@ -56,4 +60,31 @@ void abort_sim(void)
   printf("---- !!!! ABORT !!!! ----\n");
   printf("PCR: %08x SPR: %08x\n", PCR, SPR);
   print_registers();
+}
+
+void step_by_step_pause(void)
+{
+  int memfd;
+  char c;
+
+  print_registers();
+  print_traceback();
+  // print_stack(SPR);
+  // dps_info();
+
+  printf("> ");
+
+  while((c = getchar()) == -1);
+
+  if(c == 'c') {
+    step_by_step = false;
+  }
+  else if(c == 'q') {
+    exec_finish = true;
+  }
+  else if(c == 'm') {
+    memfd = open("memory.dump", O_WRONLY | O_CREAT, S_IRWXU);
+    write(memfd, memory_addr_phy2vm(memory_addr_virt2phy(0, false, false), 0x1000), false);
+    close(memfd);
+  }
 }

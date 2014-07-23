@@ -110,7 +110,10 @@ class Monitor(object):
         for i in self.watchtag:
             GLib.source_remove(i)
 
-        self.sock.shutdown(socket.SHUT_RDWR)
+        try:
+            self.sock.shutdown(socket.SHUT_RDWR)
+        except Exception, e:
+            print e
 
         self.fsock.close()
         self.sock.close()

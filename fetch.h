@@ -4,15 +4,15 @@
 #define PREFETCH_TAG 0xffffffc0
 #define PREFETCH_MASK 0x0000003f
 
-extern uint32_t prefetch_insn[PREFETCH_N];
 extern Memory prefetch_pc;
 
 static inline uint32_t instruction_fetch(Memory pc)
 {
+  static uint32_t prefetch_insn[PREFETCH_N] __attribute__ ((aligned(64)));
   Memory phypc;
 
-  uint32_t *dest;
-  const uint32_t *src;
+  uint64_t *dest;
+  const uint64_t *src;
 
   if((pc & PREFETCH_TAG) == prefetch_pc) {
     return prefetch_insn[(pc & PREFETCH_MASK) >> 2];
@@ -26,11 +26,14 @@ static inline uint32_t instruction_fetch(Memory pc)
   }
 
   /* prefetch, DO NOT USE memcpy() for endian mistake */
-  dest = prefetch_insn;
+  dest = (uint64_t *)prefetch_insn;
   src = memory_addr_phy2vm(phypc, false);
-  while(dest < prefetch_insn + PREFETCH_N) {
+  while(dest < (uint64_t *)(prefetch_insn + PREFETCH_N)) {
     *dest++ = *src++;
   }
+
+  /* FIXME: why is needing? */
+  asm volatile(" ");
 
   prefetch_pc = pc & PREFETCH_TAG;
 
