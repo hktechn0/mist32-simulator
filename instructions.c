@@ -424,8 +424,7 @@ void i_ld8(const Instruction insn)
     return;
   }
 
-  DEBUGLD("[Load ] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, *dest, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
+  debug_load16(src, (unsigned char)*dest);
 }
 
 void i_ld16(const Instruction insn)
@@ -450,8 +449,7 @@ void i_ld16(const Instruction insn)
     return;
   }
 
-  DEBUGLD("[Load ] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, *dest, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
+  debug_load16(src, (unsigned short)*dest);
 }
 
 void i_ld32(const Instruction insn)
@@ -476,8 +474,7 @@ void i_ld32(const Instruction insn)
     return;
   }
 
-  DEBUGLD("[Load ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
+  debug_load32(src, *dest);
 }
 
 void i_st8(const Instruction insn)
@@ -495,8 +492,7 @@ void i_st8(const Instruction insn)
     return;
   }
 
-  DEBUGST("[Store] Addr: 0x%08x, Data:       0x%02x, PC: 0x%08x\n", src, (unsigned char)*dest, PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned char)*dest);
+  debug_store8(src, (unsigned char)*dest);
 }
 
 void i_st16(const Instruction insn)
@@ -521,8 +517,7 @@ void i_st16(const Instruction insn)
     return;
   }
 
-  DEBUGST("[Store] Addr: 0x%08x, Data:     0x%04x, PC: 0x%08x\n", src, (unsigned short)*dest, PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, (unsigned short)*dest);
+  debug_store16(src, (unsigned short)*dest);
 }
 
 void i_st32(const Instruction insn)
@@ -547,8 +542,7 @@ void i_st32(const Instruction insn)
     return;
   }
 
-  DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", src, *dest, PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, src, *dest);
+  debug_store32(src, *dest);
 }
 
 /* Stack */
@@ -565,7 +559,7 @@ void i_push(const Instruction insn)
   }
 
   DEBUGST("[Push ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, src, PCR);
-  DEBUGSTHW("[S], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, src);
+  debug_store_hw(SPR, src);
 }
 
 void i_pushpc(const Instruction insn)
@@ -589,10 +583,10 @@ void i_pop(const Instruction insn)
     return;
   }
 
-  DEBUGLD("[Pop  ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, *dest, PCR);
-  DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, SPR, *dest);
-
   SPR += 4;
+
+  DEBUGLD("[Pop  ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR - 4, *dest, PCR);
+  debug_load_hw(SPR - 4, *dest);
 }
 
 /* Branch */

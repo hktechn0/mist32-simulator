@@ -18,7 +18,7 @@ bool DEBUG = false;
 bool MONITOR = false;
 bool DEBUG_LD = false, DEBUG_ST = false, DEBUG_JMP = false;
 bool DEBUG_INT = false, DEBUG_MMU = false;
-bool DEBUG_HW = false;
+bool DEBUG_HW = false, DEBUG_PHY = false;
 
 Memory breakp[100];
 unsigned int breakp_next = 0;
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 
   void *allocp;
 
-  while ((opt = getopt(argc, argv, "dvhmbc:")) != -1) {
+  while ((opt = getopt(argc, argv, "dvhpmbc:")) != -1) {
     switch (opt) {
     case 'd':
       /* debug mode */
@@ -60,6 +60,10 @@ int main(int argc, char **argv)
     case 'h':
       /* print load / store to compare RTL simulation */
       DEBUG_HW = true;
+      break;
+    case 'p':
+      /* print load / store with physical address */
+      DEBUG_PHY = true;
       break;
     case 'm':
       /* use monitor client */

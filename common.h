@@ -14,6 +14,8 @@
 #define DEBUGST if(DEBUG_ST || step_by_step) printf
 #define DEBUGLDHW if(DEBUG_HW) printf
 #define DEBUGSTHW if(DEBUG_HW) printf
+#define DEBUGLDPHY if(DEBUG_PHY) printf
+#define DEBUGSTPHY if(DEBUG_PHY) printf
 #define DEBUGJMP if(DEBUG_JMP || step_by_step) printf
 #define DEBUGMON if(DEBUG_MON || step_by_step) printf
 #define DEBUGINT if(DEBUG_INT || step_by_step) printf
@@ -78,7 +80,7 @@ typedef uint32_t Memory;
 typedef void (*pOpcodeFunc) (const Instruction);
 
 /* Debug flags */
-extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_INT, DEBUG_MMU;
+extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_PHY, DEBUG_INT, DEBUG_MMU;
 extern bool MONITOR;
 extern bool step_by_step, exec_finish;
 
