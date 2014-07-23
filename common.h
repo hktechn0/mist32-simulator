@@ -1,14 +1,20 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define DEBUG_REG 0
-#define DEBUG_TRACE 0
-#define DEBUG_STACK 0
-#define DEBUG_MON 1
-#define DEBUG_IO 1
-#define DEBUG_DPS 0
-#define DEBUG_EXIT_B0 0
+#define NO_DEBUG 1
 
+#define DEBUG_TRUE (1 && !NO_DEBUG)
+#define DEBUG_FALSE 0
+
+#define DEBUG_REG DEBUG_FALSE
+#define DEBUG_TRACE DEBUG_FALSE
+#define DEBUG_STACK DEBUG_FALSE
+#define DEBUG_MON DEBUG_TRUE
+#define DEBUG_IO DEBUG_TRUE
+#define DEBUG_DPS DEBUG_FALSE
+#define DEBUG_EXIT_B0 DEBUG_FALSE
+
+#if !NO_DEBUG
 #define DPUTS if(DEBUG || step_by_step) printf
 #define DEBUGLD if(DEBUG_LD || step_by_step) printf
 #define DEBUGST if(DEBUG_ST || step_by_step) printf
@@ -21,6 +27,20 @@
 #define DEBUGINT if(DEBUG_INT || step_by_step) printf
 #define DEBUGIO if(DEBUG_IO || step_by_step) printf
 #define DEBUGMMU if(DEBUG_MMU || step_by_step) printf
+#else
+#define DPUTS if(0) printf
+#define DEBUGLD if(0) printf
+#define DEBUGST if(0) printf
+#define DEBUGLDHW if(0) printf
+#define DEBUGSTHW if(0) printf
+#define DEBUGLDPHY if(0) printf
+#define DEBUGSTPHY if(0) printf
+#define DEBUGJMP if(0) printf
+#define DEBUGMON if(0) printf
+#define DEBUGINT if(0) printf
+#define DEBUGIO if(0) printf
+#define DEBUGMMU if(0) printf
+#endif
 
 #define TRACEBACK_MAX 1024
 #define MONITOR_RECV_INTERVAL_MASK (0x1000 - 1)

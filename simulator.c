@@ -53,14 +53,12 @@ int exec(Memory entry_p)
 
   uint32_t cmod;
 
-  unsigned int i;
-
   if(signal(SIGINT, signal_on_sigint) == SIG_ERR) {
     err(EXIT_FAILURE, "signal SIGINT");
   }
 
   /*
-  for(i = 0; i < breakp_next; i++) {
+  for(unsigned int i = 0; i < breakp_next; i++) {
     printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
   }
   */
@@ -90,13 +88,15 @@ int exec(Memory entry_p)
     }
     cmod = (PSR & PSR_CMOD_MASK);
 
+#if !NO_DEBUG
     /* break point check */
-    for(i = 0; i < breakp_next; i++) {
+    for(unsigned int i = 0; i < breakp_next; i++) {
       if(PCR == breakp[i]) {
 	step_by_step = true;
 	break;
       }
     }
+#endif
 
     /* instruction fetch */
 #if CACHE_L1_I_ENABLE
@@ -111,10 +111,12 @@ int exec(Memory entry_p)
       goto fault;
     }
 
+#if !NO_DEBUG
     if(DEBUG || step_by_step) {
       puts("---");
       print_instruction(insn);
     }
+#endif
 
     /* decode */
     if(opcode_t[insn.base.opcode] == NULL) {
@@ -149,6 +151,7 @@ int exec(Memory entry_p)
       KSPR = SPR;
     }
 
+#if !NO_DEBUG
     if(step_by_step) {
       step_by_step_pause();
     }
@@ -158,6 +161,7 @@ int exec(Memory entry_p)
       if(DEBUG_STACK) { print_stack(SPR); }
       if(DEBUG_DPS) { dps_info(); }
     }
+#endif
 
     if(!(clk & MONITOR_RECV_INTERVAL_MASK)) {
       if((PSR & PSR_IM_ENABLE) && IDT_ISENABLE(IDT_DPS_LS_NUM)) {
