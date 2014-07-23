@@ -102,7 +102,7 @@ extern Memory PCR, next_PCR;
 extern Memory SPR, KSPR, USPR;
 extern uint32_t PSR;
 extern Memory IOSR;
-extern Memory PDTR;
+extern Memory PDTR, KPDTR;
 extern Memory IDTR;
 extern uint32_t TIDR;
 extern uint64_t FRCR;

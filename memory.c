@@ -110,7 +110,13 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
   }
 
   /* Level 1 */
-  pdt = memory_addr_phy2vm(PDTR, false);
+  if((PSR & PSR_CMOD_MASK) == PSR_CMOD_USER) {
+    pdt = memory_addr_phy2vm(PDTR, false);
+  }
+  else{
+    pdt = memory_addr_phy2vm(KPDTR, false);
+  }
+
   index_l1 = (vaddr & MMU_PAGE_INDEX_L1) >> 22;
   pte = pdt[index_l1];
 
@@ -179,6 +185,8 @@ Memory memory_page_fault(Memory vaddr)
 {
   memory_is_fault = IDT_PAGEFAULT_NUM;
   FI0R = vaddr;
+  /* FIXME: must be set fault factor */
+  FI1R = 0;
 
   return MEMORY_MAX_ADDR;
 }

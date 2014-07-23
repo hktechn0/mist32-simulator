@@ -644,6 +644,11 @@ void i_srpdtr(const Instruction insn)
   GR[insn.o1.operand1] = PDTR;
 }
 
+void i_srkpdtr(const Instruction insn)
+{
+  GR[insn.o1.operand1] = KPDTR;
+}
+
 void i_srpidr(const Instruction insn)
 {
   /* FIXME: not implemented */
@@ -756,6 +761,15 @@ void i_srpdtw(const Instruction insn)
   instruction_prefetch_flush();
 }
 
+void i_srkpdtw(const Instruction insn)
+{
+  KPDTR = GR[insn.o1.operand1];
+  DEBUGMMU("[MMU] SRKPDTW: 0x%08x\n", KPDTR);
+
+  memory_tlb_flush();
+  instruction_prefetch_flush();
+}
+
 void i_srieiw(const Instruction insn)
 {
   if(src_o1_i11(insn) & 1) {
@@ -820,7 +834,8 @@ void i_sridtw(const Instruction insn)
 
 void i_srpsw(const Instruction insn)
 {
-  if((GR[insn.o1.operand1] & PSR_MMUMOD_MASK) != (PSR & PSR_MMUMOD_MASK)) {
+  if(((GR[insn.o1.operand1] & PSR_MMUMOD_MASK) != (PSR & PSR_MMUMOD_MASK)) ||
+     ((GR[insn.o1.operand1] & PSR_CMOD_MASK) != (PSR & PSR_CMOD_MASK))) {
     memory_tlb_flush();
     instruction_prefetch_flush();
   }

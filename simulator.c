@@ -20,7 +20,7 @@ Memory SPR, KSPR, USPR;
 FLAGS FLAGR;
 uint32_t PSR;
 Memory IOSR;
-Memory PDTR;
+Memory PDTR, KPDTR;
 Memory IDTR;
 uint32_t TIDR;
 uint64_t FRCR;

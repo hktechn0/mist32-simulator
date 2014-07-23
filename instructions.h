@@ -68,7 +68,7 @@ void i_srcidr(const Instruction insn);
 void i_srmoder(const Instruction insn);
 void i_srieir(const Instruction insn);
 /* void i_srtisr(const Instruction insn); */
-/* void i_srkpdtr(const Instruction insn); */
+void i_srkpdtr(const Instruction insn);
 void i_srmmur(const Instruction insn);
 void i_sriosr(const Instruction insn);
 void i_srtidr(const Instruction insn);
@@ -89,7 +89,7 @@ void i_srspw(const Instruction insn);
 void i_srpdtw(const Instruction insn);
 void i_srieiw(const Instruction insn);
 /* void i_srtisw(const Instruction insn); */
-/* void i_srkpdtw(const Instruction insn); */
+void i_srkpdtw(const Instruction insn);
 void i_srmmuw(const Instruction insn);
 void i_srppsw(const Instruction insn);
 void i_srppcw(const Instruction insn);
