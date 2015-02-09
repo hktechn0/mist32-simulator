@@ -18,7 +18,8 @@ static inline void set_flags_add(const uint32_t result, const uint32_t dest, con
 
   FLAGR.carry = ((uint64_t)dest + (uint64_t)src) >> 32;
   //FLAGR.carry = msb((dest & src) | (~result & (dest | src)));
-  FLAGR.overflow = msb(~(dest ^ src) & (dest ^ result));
+  //FLAGR.overflow = msb(~(dest ^ src) & (dest ^ result));
+  FLAGR.overflow = msb((dest ^ result) & (src ^ result));
 
   set_flags(result);
 }
