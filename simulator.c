@@ -76,7 +76,7 @@ int exec(Memory entry_p)
   PSR = 0;
   cmod = (PSR & PSR_CMOD_MASK);
   PCR = entry_p;
-  next_PCR = ~0;
+  next_PCR = 0xffffffff;
   KSPR = (Memory)STACK_DEFAULT;
 
   printf("Execution Start: entry = 0x%08x\n", PCR);
@@ -174,7 +174,7 @@ int exec(Memory entry_p)
     }
 
     /* next */
-    if(next_PCR != ~0) {
+    if(next_PCR != 0xffffffff) {
       /* alignment check */
       if(next_PCR & 0x3) {
 	abort_sim();
@@ -182,7 +182,7 @@ int exec(Memory entry_p)
       }
 
       PCR = next_PCR;
-      next_PCR = ~0;
+      next_PCR = 0xffffffff;
     }
     else {
       PCR += 4;
