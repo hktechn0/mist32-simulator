@@ -8,8 +8,8 @@
 #include "monitor.h"
 #include "fetch.h"
 
-/* Opcode Table */
-#include "opstable.h"
+#include "instructions.h"
+#include "dispatch.h"     /* see opsgen.py */
 
 /* General Register */
 int32_t GR[32] __attribute__ ((aligned(64)));
@@ -118,15 +118,8 @@ int exec(Memory entry_p)
     }
 #endif
 
-    /* decode */
-    if(opcode_t[insn.base.opcode] == NULL) {
-      print_instruction(insn);
-      abort_sim();
-      errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, insn.base.opcode);
-    }
-
     /* execution */
-    (*(opcode_t[insn.base.opcode]))(insn);
+    insn_dispatch(insn);
 
   fault:
     if(memory_is_fault) {

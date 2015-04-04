@@ -92,12 +92,9 @@ typedef union {
 } FLAGS;
 
 /* Instruction format */
-#include "instruction_format.h"
+#include "insn_format.h"
 
 typedef uint32_t Memory;
-
-/* Function pointer void *pOpcodeFunc(Instruction) */
-typedef void (*pOpcodeFunc) (const Instruction);
 
 /* Debug flags */
 extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_PHY, DEBUG_INT, DEBUG_MMU;
@@ -136,9 +133,6 @@ extern Memory PPCR;
 extern uint32_t PPSR;
 extern Memory PPDTR;
 extern uint32_t PTIDR;
-
-/* opcode */
-void opcode_table_init(pOpcodeFunc *opcode_t);
 
 /* utils */
 void print_instruction(Instruction insn);
