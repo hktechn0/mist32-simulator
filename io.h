@@ -107,9 +107,8 @@
 #define SCI_FIFO_TX_SIZE (16 + 1)
 #define KMC_FIFO_SCANCODE_SIZE 128
 
-/* FIFO files */
-#define FIFO_SCI_TXD "./sci_txd"
-#define FIFO_SCI_RXD "./sci_rxd"
+/* SCI Scoket / Display FIFO */
+#define SOCKET_SCI "./sci.sock"
 #define FIFO_DISPLAY_CHAR "./gci_display_char"
 
 typedef volatile struct _gci_hub_info {

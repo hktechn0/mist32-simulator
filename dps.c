@@ -9,6 +9,9 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 #include "common.h"
 #include "interrupt.h"
@@ -26,15 +29,16 @@ timer_t utim64a_timer[4], utim64b_timer[4];
 bool utim64a_enable[4], utim64b_enable[4];
 struct itimerspec utim64a_its[4], utim64b_its[4];
 
+int sci_sock;
 unsigned char fifo_sci_rx[SCI_FIFO_RX_SIZE];
 unsigned int fifo_sci_rx_start, fifo_sci_rx_end;
-int fd_scitxd, fd_scirxd;
 
 bool dps_lsflags_clear, utim64_flags_clear;
 
 void dps_init(void)
 {
   struct sigaction sa;
+  struct sockaddr_un sockaddr = { 0 };
 
   uint32_t *p;
   int i;
@@ -63,8 +67,18 @@ void dps_init(void)
   sci = (void *)((char *)dps + DPS_SCI);
   fifo_sci_rx_start = 0;
   fifo_sci_rx_end = 0;
-  fd_scitxd = open(FIFO_SCI_TXD, O_WRONLY);
-  fd_scirxd = open(FIFO_SCI_RXD, O_RDONLY | O_NONBLOCK);
+
+  /* Create SCI Socket */
+  sci_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+  if(sci_sock == -1) {
+    err(EXIT_FAILURE, "SCI socket");
+  }
+  sockaddr.sun_family = AF_UNIX;
+  strcpy(sockaddr.sun_path, SOCKET_SCI);
+
+  if(connect(sci_sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr_un)) == -1) {
+    err(EXIT_FAILURE, "SCI connect");
+  }
 
   /* MI */
   p = (void *)((char *)dps + DPS_MIMSR);
@@ -87,9 +101,7 @@ void dps_close(void)
     timer_delete(utim64b_timer[i]);
   }
 
-  close(fd_scitxd);
-  close(fd_scirxd);
-
+  close(sci_sock);
   free(dps);
 }
 
@@ -332,7 +344,9 @@ void dps_sci_txd_write(Memory addr, Memory offset)
 
   if(sci->cfg & SCICFG_TEN) {
     c = sci->txd & 0xff;
-    write(fd_scitxd, &c, 1);
+    if(write(sci_sock, &c, 1) == -1) {
+      err(EXIT_FAILURE, "SCI write");
+    }
     /* DEBUGIO("[I/O] DPS SCI TXD 0x%02x\n", c); */
   }
 }
@@ -366,7 +380,7 @@ bool dps_sci_recv(void)
   request = SCI_FIFO_RX_SIZE - length - 1;
 
   /* read input */
-  received = read(fd_scirxd, buf, request);
+  received = recv(sci_sock, buf, request, MSG_DONTWAIT);
 
   if(received > 0) {
     for(i = 0; i < received; i++) {
@@ -384,7 +398,7 @@ bool dps_sci_recv(void)
   else if(received == -1) {
     if(errno != EAGAIN && errno != EWOULDBLOCK) {
       /* error */
-      err(EXIT_FAILURE, "sci_rxd");
+      err(EXIT_FAILURE, "SCI recv");
     }
     else {
       /* no data received */
