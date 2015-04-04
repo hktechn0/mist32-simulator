@@ -23,7 +23,7 @@ void i_add(const Instruction insn)
   *dest = result;
 }
 
-inline void i_sub(const Instruction insn)
+void i_sub(const Instruction insn)
 {
   int32_t *dest;
   int32_t src, result;
@@ -103,11 +103,13 @@ void i_umod(const Instruction insn)
 
 void i_cmp(const Instruction insn)
 {
-  int32_t dest;
-  
-  dest = GR[insn.o2.operand1];
-  i_sub(insn);
-  GR[insn.o2.operand1] = dest;
+  int32_t *dest;
+  int32_t src, result;
+
+  ops_o2_i11(insn, &dest, &src);
+
+  result = (*dest) - src;
+  set_flags_sub(result, *dest, src);
 }
 
 void i_div(const Instruction insn)
@@ -616,11 +618,13 @@ void i_b(const Instruction insn)
   /* instruction_prefetch_flush(); */
 
   /* for traceback */
+#if !NO_DEBUG
   if(!insn.jo1.is_immediate && insn.jo1.operand1 == GR_RET) {
     if(traceback > 0) {
       traceback_next--;
     }
   }
+#endif
 }
 
 void i_ib(const Instruction insn)
@@ -876,11 +880,13 @@ void i_movepc(const Instruction insn)
   *dest = PCR + (src << 2);
 
   /* for traceback */
+#if !NO_DEBUG
   if(insn.o2.operand1 == GR_RET) {
     if(traceback_next < TRACEBACK_MAX) {
       traceback[traceback_next++] = PCR + 4;
     }
   }
+#endif
 }
 
 void i_swi(const Instruction insn)
