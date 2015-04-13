@@ -3,8 +3,8 @@
 #include <time.h>
 #include <err.h>
 
-#include "operands.h"
 #include "flags.h"
+#include "operands.h"
 #include "insn_debug.h"
 
 /* Arithmetic */
@@ -16,7 +16,7 @@ void i_add(const Instruction insn)
   ops_o2_i11(insn, &dest, &src);
   
   result = (*dest) + src;
-  set_flags_add(result, *dest, src);
+  FLAGR = make_flags_add(result, *dest, src);
   *dest = result;
 }
 
@@ -28,7 +28,7 @@ void i_sub(const Instruction insn)
   ops_o2_i11(insn, &dest, &src);
   
   result = (*dest) - src;
-  set_flags_sub(result, *dest, src);
+  FLAGR = make_flags_sub(result, *dest, src);
   *dest = result;
 }
 
@@ -41,8 +41,8 @@ void i_mull(const Instruction insn)
   
   *dest = *dest * src;
 
-  clr_flags();
   /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
 }
 
 void i_mulh(const Instruction insn)
@@ -56,8 +56,8 @@ void i_mulh(const Instruction insn)
   result = (int64_t)(*dest) * (int64_t)src;
   *dest = result >> 32;
 
-  clr_flags();
   /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
 }
 
 void i_udiv(const Instruction insn)
@@ -75,8 +75,8 @@ void i_udiv(const Instruction insn)
 
   *dest = *dest / src;
   
-  clr_flags();
   /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
 }
 
 void i_umod(const Instruction insn)
@@ -94,8 +94,8 @@ void i_umod(const Instruction insn)
 
   *dest = *dest % src;
   
-  clr_flags();
   /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
 }
 
 void i_cmp(const Instruction insn)
@@ -106,7 +106,7 @@ void i_cmp(const Instruction insn)
   ops_o2_i11(insn, &dest, &src);
 
   result = (*dest) - src;
-  set_flags_sub(result, *dest, src);
+  FLAGR = make_flags_sub(result, *dest, src);
 }
 
 void i_div(const Instruction insn)
@@ -124,8 +124,8 @@ void i_div(const Instruction insn)
 
   *dest = *dest / src;
 
-  clr_flags();
   /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
 }
 
 void i_mod(const Instruction insn)
@@ -143,61 +143,56 @@ void i_mod(const Instruction insn)
 
   *dest = *dest % src;
   
-  clr_flags();
   /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
 }
 
 void i_neg(const Instruction insn)
 {
+  FLAGS flags;
+
   GR[insn.o2.operand1] = -GR[insn.o2.operand2];
-  set_flags(GR[insn.o2.operand1]);
-  if(GR[insn.o2.operand1] == 0x80000000) { FLAGR.overflow = 1; }
+
+  flags = make_flags(GR[insn.o2.operand1]);
+  // if GR[insn.o2.operand1] == 0x80000000 then overflow
+  flags.overflow = ((uint32_t)GR[insn.o2.operand1] >> 31) & 1;
+  FLAGR = flags;
 }
 
 void i_addc(const Instruction insn)
 {
   int32_t *dest;
   int32_t src, result;
-  
+  FLAGS flags;
+
   ops_o2_i11(insn, &dest, &src);
   
   result = (*dest) + src;
-  set_flags_add(result, *dest, src);
-  *dest = FLAGR.carry;
+
+  flags = make_flags_add(result, *dest, src);
+  FLAGR = flags;
+
+  *dest = flags.carry;
 }
 
 void i_inc(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src, result;
-  
-  dest = &GR[insn.o2.operand1];
-  src = GR[insn.o2.operand2];
-  
-  result = src + 1;
-  set_flags_add(result, src, 1);
-  *dest = result;
+  GR[insn.o2.operand1] = GR[insn.o2.operand2] + 1;
+  FLAGR = make_flags_add(GR[insn.o2.operand1], GR[insn.o2.operand2], 1);
 }
 
 void i_dec(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src, result;
-  
-  dest = &GR[insn.o2.operand1];
-  src = GR[insn.o2.operand2];
-  
-  result = src - 1;
-  set_flags_sub(result, src, 1);
-  *dest = result;
+  GR[insn.o2.operand1] = GR[insn.o2.operand2] - 1;
+  FLAGR = make_flags_sub(GR[insn.o2.operand1], GR[insn.o2.operand2], 1);
 }
 
-void i_sext8(const Instruction insn)
+static inline void i_sext8(const Instruction insn)
 {
   GR[insn.o2.operand1] = SIGN_EXT8((uint32_t)GR[insn.o2.operand2]);
 }
 
-void i_sext16(const Instruction insn)
+static inline void i_sext16(const Instruction insn)
 {
   GR[insn.o2.operand1] = SIGN_EXT16((uint32_t)GR[insn.o2.operand2]);
 }
@@ -205,83 +200,99 @@ void i_sext16(const Instruction insn)
 /* Shift, Rotate */
 void i_shl(const Instruction insn)
 {
-  uint32_t *dest, n;
-  
+  uint32_t *dest, n, result;
+  FLAGS flags;
+
   ops_o2_ui11(insn, &dest, &n);
-  
-  clr_flags();
-  FLAGR.carry = (*dest) >> (32 - n);
-  *dest = (*dest) << n;
-  set_flags(*dest);
+
+  result = (*dest) << n;
+
+  flags = make_flags(*dest);
+  flags.carry = (*dest) >> (32 - n);
+  FLAGR = flags;
+
+  *dest = result;
 }
 
 void i_shr(const Instruction insn)
 {
-  uint32_t *dest, n;
+  uint32_t *dest, n, result;
+  FLAGS flags;
   
   ops_o2_ui11(insn, &dest, &n);
   
-  clr_flags();
-  FLAGR.carry = (*dest >> (n - 1)) & 0x00000001;
-  *dest = (*dest) >> n;
-  set_flags(*dest);
+  result = (*dest) >> n;
+
+  flags = make_flags(*dest);
+  flags.carry = (*dest >> (n - 1)) & 0x00000001;
+  FLAGR = flags;
+
+  *dest = result;
 }
 
 void i_sar(const Instruction insn)
 {
-  int32_t *dest;
+  int32_t *dest, result;
   uint32_t n;
+  FLAGS flags;
 
   ops_o2_i11(insn, &dest, (int *)&n);
 
-  clr_flags();
-  FLAGR.carry = ((*dest) >> (n - 1)) & 0x00000001;
-  *dest = (*dest) >> n;
-  set_flags(*dest);
+  result = (*dest) >> n;
+
+  flags = make_flags(*dest);
+  flags.carry = ((*dest) >> (n - 1)) & 0x00000001;
+  FLAGR = flags;
+
+  *dest = result;
 }
 
 void i_rol(const Instruction insn)
 {
-  uint32_t *dest, n;
-  
+  uint32_t *dest, n, result;
+  FLAGS flags;
+
   ops_o2_ui11(insn, &dest, &n);
-  
-  *dest = ((*dest) << n) | ((*dest) >> (32 - n));
-  
-  clr_flags();
-  set_flags(*dest);
-  FLAGR.carry = !!(*dest & 0x00000001);
+
+  result = ((*dest) << n) | ((*dest) >> (32 - n));
+
+  flags = make_flags(*dest);
+  flags.carry = !!(*dest & 0x00000001);
+  FLAGR = flags;
+
+  *dest = result;
 }
 
 void i_ror(const Instruction insn)
 {
-  uint32_t *dest, n;
-  
+  uint32_t *dest, n, result;
+  FLAGS flags;
+
   ops_o2_ui11(insn, &dest, &n);
+
+  result = ((*dest) << (32 - n));
   
-  *dest = ((*dest) << (32 - n));
-  
-  clr_flags();
-  set_flags(*dest);
-  FLAGR.carry = !!(*dest & 0x80000000);
+  flags = make_flags(*dest);
+  flags.carry = !!(*dest & 0x80000000);
+  FLAGR = flags;
+
+  *dest = result;
 }
 
 /* Logic */
 void i_and(const Instruction insn)
 {
   GR[insn.o2.operand1] &= GR[insn.o2.operand2];
-  clr_flags();
-  set_flags(GR[insn.o2.operand1]);
+  FLAGR = make_flags(GR[insn.o2.operand1]);
 }
 
 void i_or(const Instruction insn)
 {
   GR[insn.o2.operand1] |= GR[insn.o2.operand2];
-  clr_flags();
-  set_flags(GR[insn.o2.operand1]);
+  FLAGR = make_flags(GR[insn.o2.operand1]);
 }
 
-void i_not(const Instruction insn)
+static inline void i_not(const Instruction insn)
 {
   GR[insn.o2.operand1] = ~GR[insn.o2.operand2];
 }
@@ -289,73 +300,62 @@ void i_not(const Instruction insn)
 void i_xor(const Instruction insn)
 {
   GR[insn.o2.operand1] ^= GR[insn.o2.operand2];
-  clr_flags();
-  set_flags(GR[insn.o2.operand1]);
+  FLAGR = make_flags(GR[insn.o2.operand1]);
 }
 
 void i_nand(const Instruction insn)
 {
-  i_and(insn);
-  NOT(GR[insn.o2.operand1]);
-
-  clr_flags();
-  set_flags(GR[insn.o2.operand1]);
+  GR[insn.o2.operand1] = ~(GR[insn.o2.operand1] & GR[insn.o2.operand2]);
+  FLAGR = make_flags(GR[insn.o2.operand1]);
 }
 
 void i_nor(const Instruction insn)
 {
-  i_or(insn);
-  NOT(GR[insn.o2.operand1]);
-
-  clr_flags();
-  set_flags(GR[insn.o2.operand1]);
+  GR[insn.o2.operand1] = ~(GR[insn.o2.operand1] | GR[insn.o2.operand2]);
+  FLAGR = make_flags(GR[insn.o2.operand1]);
 }
 
 void i_xnor(const Instruction insn)
 {
-  i_xor(insn);
-  NOT(GR[insn.o2.operand1]);
-
-  clr_flags();
-  set_flags(GR[insn.o2.operand1]);
+  GR[insn.o2.operand1] = ~(GR[insn.o2.operand1] ^ GR[insn.o2.operand2]);
+  FLAGR = make_flags(GR[insn.o2.operand1]);
 }
 
 void i_test(const Instruction insn)
 {
-  int32_t dest;
-  
-  dest = GR[insn.o2.operand1];
-  i_and(insn);
-  GR[insn.o2.operand1] = dest;
+  uint32_t result;
+
+  result = GR[insn.o2.operand1] & GR[insn.o2.operand2];
+  FLAGR = make_flags(result);
 }
 
 /* Register operations */
-void i_wl16(const Instruction insn)
+static inline void i_wl16(const Instruction insn)
 {
   GR[insn.i16.operand] = ((uint32_t)GR[insn.i16.operand] & 0xffff0000) | (immediate_i16(insn) & 0xffff);
 }
 
-void i_wh16(const Instruction insn)
+static inline void i_wh16(const Instruction insn)
 {
   GR[insn.i16.operand] = ((uint32_t)GR[insn.i16.operand] & 0xffff) | ((immediate_i16(insn) & 0xffff) << 16);
 }
 
-void i_clrb(const Instruction insn)
+static inline void i_clrb(const Instruction insn)
 {
   GR[insn.i11.operand] &= ~((uint32_t)0x01 << immediate_i11(insn));
 }
 
-void i_setb(const Instruction insn)
+static inline void i_setb(const Instruction insn)
 {
   GR[insn.i11.operand] |= (uint32_t)0x01 << immediate_i11(insn);
 }
 
-void i_clr(const Instruction insn)
+static inline void i_clr(const Instruction insn)
 {
   GR[insn.o1.operand1] = 0x00000000;
 }
 
-void i_set(const Instruction insn)
+static inline void i_set(const Instruction insn)
 {
   GR[insn.o1.operand1] = (uint32_t)0xffffffff;
 }
@@ -392,17 +392,17 @@ void i_get8(const Instruction insn)
   *dest = ((*dest) >> (src * 4)) & 0xff;
 }
 
-void i_lil(const Instruction insn)
+static inline void i_lil(const Instruction insn)
 {
   GR[insn.i16.operand] = immediate_i16(insn);
 }
 
-void i_lih(const Instruction insn)
+static inline void i_lih(const Instruction insn)
 {
   GR[insn.i16.operand] = (uint32_t)immediate_ui16(insn) << 16;
 }
 
-void i_ulil(const Instruction insn)
+static inline void i_ulil(const Instruction insn)
 {
   GR[insn.i16.operand] = immediate_ui16(insn);
 }
@@ -629,17 +629,17 @@ void i_ib(const Instruction insn)
   interrupt_exit();
 }
 
-void i_srspr(const Instruction insn)
+static inline void i_srspr(const Instruction insn)
 {
   GR[insn.o1.operand1] = SPR;
 }
 
-void i_srpdtr(const Instruction insn)
+static inline void i_srpdtr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PDTR;
 }
 
-void i_srkpdtr(const Instruction insn)
+static inline void i_srkpdtr(const Instruction insn)
 {
   GR[insn.o1.operand1] = KPDTR;
 }
@@ -662,87 +662,87 @@ void i_srmoder(const Instruction insn)
   GR[insn.o1.operand1] = 0;
 }
 
-void i_srieir(const Instruction insn)
+static inline void i_srieir(const Instruction insn)
 {
   GR[insn.o1.operand1] = (PSR & PSR_IM_ENABLE) >> 2;
 }
 
-void i_srmmur(const Instruction insn)
+static inline void i_srmmur(const Instruction insn)
 {
   GR[insn.o1.operand1] = (PSR & PSR_MMUMOD_MASK);
 }
 
-void i_sriosr(const Instruction insn)
+static inline void i_sriosr(const Instruction insn)
 {
   GR[insn.o1.operand1] = IOSR;
 }
 
-void i_srtidr(const Instruction insn)
+static inline void i_srtidr(const Instruction insn)
 {
   GR[insn.o1.operand1] = TIDR;
 }
 
-void i_srppsr(const Instruction insn)
+static inline void i_srppsr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PPSR;
 }
 
-void i_srppcr(const Instruction insn)
+static inline void i_srppcr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PPCR;
 }
 
-void i_sruspr(const Instruction insn)
+static inline void i_sruspr(const Instruction insn)
 {
   GR[insn.o1.operand1] = USPR;
 }
 
-void i_srppdtr(const Instruction insn)
+static inline void i_srppdtr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PPDTR;
 }
 
-void i_srptidr(const Instruction insn)
+static inline void i_srptidr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PTIDR;
 }
 
-void i_srpsr(const Instruction insn)
+static inline void i_srpsr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PSR;
 }
 
-void i_srfrcr(const Instruction insn)
+static inline void i_srfrcr(const Instruction insn)
 {
   FRCR = (unsigned long long)clock();
 }
 
-void i_srfrclr(const Instruction insn)
+static inline void i_srfrclr(const Instruction insn)
 {
   GR[insn.o1.operand1] = (uint32_t)(FRCR & 0xffffffff);
 }
 
-void i_srfrchr(const Instruction insn)
+static inline void i_srfrchr(const Instruction insn)
 {
   GR[insn.o1.operand1] = (uint32_t)(FRCR >> 32);
 }
 
-void i_srpflagr(const Instruction insn)
+static inline void i_srpflagr(const Instruction insn)
 {
   GR[insn.o1.operand1] = PFLAGR.flags;
 }
 
-void i_srfi0r(const Instruction insn)
+static inline void i_srfi0r(const Instruction insn)
 {
   GR[insn.o1.operand1] = FI0R;
 }
 
-void i_srfi1r(const Instruction insn)
+static inline void i_srfi1r(const Instruction insn)
 {
   GR[insn.o1.operand1] = FI1R;
 }
 
-void i_srspw(const Instruction insn)
+static inline void i_srspw(const Instruction insn)
 {
   SPR = GR[insn.o1.operand1];
 }
@@ -792,7 +792,7 @@ void i_srmmuw(const Instruction insn)
   instruction_prefetch_flush();
 }
 
-void i_srppsw(const Instruction insn)
+static inline void i_srppsw(const Instruction insn)
 {
   PPSR = (Memory)GR[insn.o1.operand1];
 }
@@ -806,22 +806,22 @@ void i_srppcw(const Instruction insn)
   }
 }
 
-void i_sruspw(const Instruction insn)
+static inline void i_sruspw(const Instruction insn)
 {
   USPR = (Memory)GR[insn.o1.operand1];
 }
 
-void i_srppdtw(const Instruction insn)
+static inline void i_srppdtw(const Instruction insn)
 {
   PPDTR = (Memory)GR[insn.o1.operand1];
 }
 
-void i_srptidw(const Instruction insn)
+static inline void i_srptidw(const Instruction insn)
 {
   PTIDR = (Memory)GR[insn.o1.operand1];
 }
 
-void i_sridtw(const Instruction insn)
+static inline void i_sridtw(const Instruction insn)
 {
   IDTR = (Memory)GR[insn.o1.operand1];
   DEBUGINT("[INTERRUPT] SRIDTW: idtr <= 0x%08x\n", IDTR);
@@ -844,17 +844,17 @@ void i_srpsw(const Instruction insn)
   }
 }
 
-void i_srpflagw(const Instruction insn)
+static inline void i_srpflagw(const Instruction insn)
 {
   PFLAGR.flags = GR[insn.o1.operand1];
 }
 
-void i_srspadd(const Instruction insn)
+static inline void i_srspadd(const Instruction insn)
 {
   SPR += (int)SIGN_EXT16(insn.c.immediate << 2);
 }
 
-void i_nop(const Instruction insn)
+static inline void i_nop(const Instruction insn)
 {
   return;
 }
@@ -864,7 +864,7 @@ void i_halt(const Instruction insn)
   exit(EXIT_FAILURE);
 }
 
-void i_move(const Instruction insn)
+static inline void i_move(const Instruction insn)
 {
   GR[insn.o2.operand1] = GR[insn.o2.operand2];
 }

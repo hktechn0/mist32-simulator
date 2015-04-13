@@ -1,31 +1,34 @@
-/* clear flags */
-static inline void clr_flags(void)
+/* make generic FLAGS */
+static inline FLAGS make_flags(const uint32_t value)
 {
-  FLAGR.flags = 0;
+  FLAGS f = { .flags = 0 };
+
+  f.zero = !value;
+  f.parity = ~(value & 1);
+  f.sign = msb(value);
+
+  return f;
 }
 
-/* set flags */
-static inline void set_flags(const uint32_t value)
+/* make FLAGS for add */
+static inline FLAGS make_flags_add(const uint32_t result, const uint32_t dest, const uint32_t src)
 {
-  FLAGR.zero = !value;
-  FLAGR.parity = ~(value & 1);
-  FLAGR.sign = msb(value);
+  FLAGS f;
+
+  f = make_flags(result);
+  f.overflow = msb((dest ^ result) & (src ^ result));
+  f.carry = ((uint64_t)dest + (uint64_t)src) >> 32;
+
+  return f;
 }
 
-static inline void set_flags_add(const uint32_t result, const uint32_t dest, const uint32_t src)
+/* make FLAGS for sub */
+static inline FLAGS make_flags_sub(const uint32_t result, const uint32_t dest, const uint32_t src)
 {
-  clr_flags();
+  FLAGS f;
 
-  FLAGR.carry = ((uint64_t)dest + (uint64_t)src) >> 32;
-  //FLAGR.carry = msb((dest & src) | (~result & (dest | src)));
-  //FLAGR.overflow = msb(~(dest ^ src) & (dest ^ result));
-  FLAGR.overflow = msb((dest ^ result) & (src ^ result));
+  f = make_flags_add(result, dest, (uint32_t)(-((int32_t)src)));
+  f.carry |= !src;
 
-  set_flags(result);
-}
-
-static inline void set_flags_sub(const uint32_t result, const uint32_t dest, const uint32_t src)
-{
-  set_flags_add(result, dest, (uint32_t)(-((int32_t)src)));
-  FLAGR.carry |= !src;
+  return f;
 }
