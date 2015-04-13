@@ -1,3 +1,20 @@
+/*
+  CAUTION: These macro is using dengerous scheme.
+  It is code generation marco, rather than function like macro.
+  THINK BEFORE YOU USE.
+*/
+#define DECODE_O2_I11(insn, destptr, dest, src) { \
+    destptr = dest_o2_i11_ptr(insn);		  \
+    dest = *destptr;				  \
+    src = src_o2_i11(insn);			  \
+}
+
+#define DECODE_O2_UI11(insn, destptr, dest, src) {	\
+    destptr = (uint32_t *)dest_o2_i11_ptr(insn);	\
+    dest = *destptr;					\
+    src = src_o2_ui11(insn);				\
+}
+
 /* fetch immediate for i11 format */
 static inline uint32_t immediate_ui11(const Instruction insn)
 {
@@ -22,32 +39,16 @@ static inline int32_t immediate_i16(const Instruction insn)
   return ((int32_t)immediate_ui16(insn) << 16) >> 16;
 }
 
-/* fetch o2 or i11 format operand
-  insn: Instruction struct,
-  op1:  store operand1 pointer (writable, directly to register),
-  op2:  store operand2 (read only) */
-static inline void ops_o2_i11(const Instruction insn, int32_t **op1, int32_t *op2)
+/* return destination operand value (I11, O2 format) */
+static inline int32_t dest_o2_i11(const Instruction insn)
 {
-  if(insn.i11.is_immediate) {
-    *op1 = &(GR[insn.i11.operand]);
-    *op2 = immediate_i11(insn);
-  }
-  else {
-    *op1 = &(GR[insn.o2.operand1]);
-    *op2 = GR[insn.o2.operand2];
-  }
+  return GR[insn.o2.operand1];
 }
 
-static inline void ops_o2_ui11(const Instruction insn, uint32_t **op1, uint32_t *op2)
+/* return **pointer** to destination register (I11, O2 format) */
+static inline int32_t *dest_o2_i11_ptr(const Instruction insn)
 {
-  if(insn.i11.is_immediate) {
-    *op1 = (uint32_t *)&(GR[insn.i11.operand]);
-    *op2 = immediate_ui11(insn);
-  }
-  else {
-    *op1 = (uint32_t *)&(GR[insn.o2.operand1]);
-    *op2 = (uint32_t)GR[insn.o2.operand2];
-  }
+  return &(GR[insn.o2.operand1]);
 }
 
 /* return source operand value (I11, O2 format) */
@@ -58,6 +59,16 @@ static inline int32_t src_o2_i11(const Instruction insn)
   }
   else {
     return GR[insn.o2.operand2];
+  }
+}
+
+static inline uint32_t src_o2_ui11(const Instruction insn)
+{
+  if(insn.i11.is_immediate) {
+    return immediate_ui11(insn);
+  }
+  else {
+    return (uint32_t)GR[insn.o2.operand2];
   }
 }
 

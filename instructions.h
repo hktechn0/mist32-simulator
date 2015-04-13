@@ -10,36 +10,30 @@
 /* Arithmetic */
 void i_add(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src, result;
-  
-  ops_o2_i11(insn, &dest, &src);
-  
-  result = (*dest) + src;
-  FLAGR = make_flags_add(result, *dest, src);
-  *dest = result;
+  int32_t *destptr, dest, src;
+
+  DECODE_O2_I11(insn, destptr, dest, src);
+  *destptr = dest + src;
+
+  FLAGR = make_flags_add(*destptr, dest, src);
 }
 
 void i_sub(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src, result;
-  
-  ops_o2_i11(insn, &dest, &src);
-  
-  result = (*dest) - src;
-  FLAGR = make_flags_sub(result, *dest, src);
-  *dest = result;
+  int32_t *destptr, dest, src;
+
+  DECODE_O2_I11(insn, destptr, dest, src);
+  *destptr = dest - src;
+
+  FLAGR = make_flags_sub(*destptr, dest, src);
 }
 
 void i_mull(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src;
+  int32_t *destptr, dest, src;
 
-  ops_o2_i11(insn, &dest, &src);
-  
-  *dest = *dest * src;
+  DECODE_O2_I11(insn, destptr, dest, src);
+  *destptr = dest * src;
 
   /* FIXME: flags unavailable */
   FLAGR.flags = 0;
@@ -47,14 +41,12 @@ void i_mull(const Instruction insn)
 
 void i_mulh(const Instruction insn)
 { 
-  int32_t *dest;
-  int32_t src;
+  int32_t *destptr, dest, src;
   int64_t result;
 
-  ops_o2_i11(insn, &dest, &src);
-
-  result = (int64_t)(*dest) * (int64_t)src;
-  *dest = result >> 32;
+  DECODE_O2_I11(insn, destptr, dest, src);
+  result = (int64_t)dest * (int64_t)src;
+  *destptr = result >> 32;
 
   /* FIXME: flags unavailable */
   FLAGR.flags = 0;
@@ -62,10 +54,9 @@ void i_mulh(const Instruction insn)
 
 void i_udiv(const Instruction insn)
 {
-  uint32_t *dest;
-  uint32_t src;
+  uint32_t *destptr, dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  DECODE_O2_UI11(insn, destptr, dest, src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -73,18 +64,17 @@ void i_udiv(const Instruction insn)
     return;
   }
 
-  *dest = *dest / src;
-  
+  *destptr = dest / src;
+
   /* FIXME: flags unavailable */
   FLAGR.flags = 0;
 }
 
 void i_umod(const Instruction insn)
 {
-  uint32_t *dest;
-  uint32_t src;
+  uint32_t *destptr, dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  DECODE_O2_UI11(insn, destptr, dest, src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -92,29 +82,26 @@ void i_umod(const Instruction insn)
     return;
   }
 
-  *dest = *dest % src;
-  
+  *destptr = dest % src;
+
   /* FIXME: flags unavailable */
   FLAGR.flags = 0;
 }
 
 void i_cmp(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src, result;
+  int32_t dest, src;
 
-  ops_o2_i11(insn, &dest, &src);
-
-  result = (*dest) - src;
-  FLAGR = make_flags_sub(result, *dest, src);
+  dest = dest_o2_i11(insn);
+  src = src_o2_i11(insn);
+  FLAGR = make_flags_sub(dest - src, dest, src);
 }
 
 void i_div(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src;
+  int32_t *destptr, dest, src;
 
-  ops_o2_i11(insn, &dest, &src);
+  DECODE_O2_I11(insn, destptr, dest, src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -122,7 +109,7 @@ void i_div(const Instruction insn)
     return;
   }
 
-  *dest = *dest / src;
+  *destptr = dest / src;
 
   /* FIXME: flags unavailable */
   FLAGR.flags = 0;
@@ -130,10 +117,9 @@ void i_div(const Instruction insn)
 
 void i_mod(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src;
+  int32_t *destptr, dest, src;
 
-  ops_o2_i11(insn, &dest, &src);
+  DECODE_O2_I11(insn, destptr, dest, src);
 
   if(src == 0) {
     DEBUGINT("[INTERRUPT] Zero division error. PC: %08x\n", PCR);
@@ -141,38 +127,30 @@ void i_mod(const Instruction insn)
     return;
   }
 
-  *dest = *dest % src;
-  
+  *destptr = dest % src;
+
   /* FIXME: flags unavailable */
   FLAGR.flags = 0;
 }
 
 void i_neg(const Instruction insn)
 {
-  FLAGS flags;
-
   GR[insn.o2.operand1] = -GR[insn.o2.operand2];
 
-  flags = make_flags(GR[insn.o2.operand1]);
-  // if GR[insn.o2.operand1] == 0x80000000 then overflow
-  flags.overflow = ((uint32_t)GR[insn.o2.operand1] >> 31) & 1;
-  FLAGR = flags;
+  FLAGR = make_flags(GR[insn.o2.operand1]);
+  // if result == 0x80000000 then overflow
+  FLAGR.overflow = ((uint32_t)GR[insn.o2.operand1] >> 31) & 1;
 }
 
 void i_addc(const Instruction insn)
 {
-  int32_t *dest;
-  int32_t src, result;
-  FLAGS flags;
+  int32_t *destptr, dest, src, result;
 
-  ops_o2_i11(insn, &dest, &src);
-  
-  result = (*dest) + src;
+  DECODE_O2_I11(insn, destptr, dest, src);
+  result = dest + src;
 
-  flags = make_flags_add(result, *dest, src);
-  FLAGR = flags;
-
-  *dest = flags.carry;
+  FLAGR = make_flags_add(result, dest, src);
+  *destptr = FLAGR.carry;
 }
 
 void i_inc(const Instruction insn)
@@ -200,83 +178,58 @@ static inline void i_sext16(const Instruction insn)
 /* Shift, Rotate */
 void i_shl(const Instruction insn)
 {
-  uint32_t *dest, n, result;
-  FLAGS flags;
+  uint32_t *destptr, dest, n;
 
-  ops_o2_ui11(insn, &dest, &n);
+  DECODE_O2_UI11(insn, destptr, dest, n);
+  *destptr= dest << n;
 
-  result = (*dest) << n;
-
-  flags = make_flags(*dest);
-  flags.carry = (*dest) >> (32 - n);
-  FLAGR = flags;
-
-  *dest = result;
+  FLAGR = make_flags(*destptr);
+  FLAGR.carry = dest >> (32 - n);
 }
 
 void i_shr(const Instruction insn)
 {
-  uint32_t *dest, n, result;
-  FLAGS flags;
-  
-  ops_o2_ui11(insn, &dest, &n);
-  
-  result = (*dest) >> n;
+  uint32_t *destptr, dest, n;
 
-  flags = make_flags(*dest);
-  flags.carry = (*dest >> (n - 1)) & 0x00000001;
-  FLAGR = flags;
+  DECODE_O2_UI11(insn, destptr, dest, n);
+  *destptr = dest >> n;
 
-  *dest = result;
+  FLAGR = make_flags(*destptr);
+  FLAGR.carry = (dest >> (n - 1)) & 0x00000001;
 }
 
 void i_sar(const Instruction insn)
 {
-  int32_t *dest, result;
+  int32_t *destptr, dest;
   uint32_t n;
-  FLAGS flags;
 
-  ops_o2_i11(insn, &dest, (int *)&n);
+  DECODE_O2_I11(insn, destptr, dest, n);
+  *destptr = dest >> n;
 
-  result = (*dest) >> n;
-
-  flags = make_flags(*dest);
-  flags.carry = ((*dest) >> (n - 1)) & 0x00000001;
-  FLAGR = flags;
-
-  *dest = result;
+  FLAGR = make_flags(*destptr);
+  FLAGR.carry = (dest >> (n - 1)) & 0x00000001;
 }
 
 void i_rol(const Instruction insn)
 {
-  uint32_t *dest, n, result;
-  FLAGS flags;
+  uint32_t *destptr, dest, n;
 
-  ops_o2_ui11(insn, &dest, &n);
+  DECODE_O2_UI11(insn, destptr, dest, n);
+  *destptr = (dest << n) | (dest >> (32 - n));
 
-  result = ((*dest) << n) | ((*dest) >> (32 - n));
-
-  flags = make_flags(*dest);
-  flags.carry = !!(*dest & 0x00000001);
-  FLAGR = flags;
-
-  *dest = result;
+  FLAGR = make_flags(*destptr);
+  FLAGR.carry = *destptr & 0x00000001;
 }
 
 void i_ror(const Instruction insn)
 {
-  uint32_t *dest, n, result;
-  FLAGS flags;
+  uint32_t *destptr, dest, n;
 
-  ops_o2_ui11(insn, &dest, &n);
-
-  result = ((*dest) << (32 - n));
+  DECODE_O2_UI11(insn, destptr, dest, n);
+  *destptr = (dest >> n) | (dest << (32 - n));
   
-  flags = make_flags(*dest);
-  flags.carry = !!(*dest & 0x80000000);
-  FLAGR = flags;
-
-  *dest = result;
+  FLAGR = make_flags(*destptr);
+  FLAGR.carry = (*destptr & 0x80000000) >> 31;
 }
 
 /* Logic */
@@ -367,13 +320,9 @@ void i_revb(const Instruction insn)
   exit(EXIT_FAILURE);
 }
 
-void i_rev8(const Instruction insn)
+static inline void i_rev8(const Instruction insn)
 {
-  uint32_t *dest, src;
-
-  ops_o2_ui11(insn, &dest, &src);
-
-  *dest = __builtin_bswap32(src);
+  GR[insn.o2.operand1] = __builtin_bswap32(GR[insn.o2.operand2]);
 }
 
 void i_getb(const Instruction insn)
@@ -383,13 +332,12 @@ void i_getb(const Instruction insn)
   exit(EXIT_FAILURE);
 }
 
-void i_get8(const Instruction insn)
+static inline void i_get8(const Instruction insn)
 {
-  uint32_t *dest, src;
+  uint32_t *destptr, dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
-
-  *dest = ((*dest) >> (src * 4)) & 0xff;
+  DECODE_O2_UI11(insn, destptr, dest, src);
+  *destptr = (dest >> (src * 8)) & 0xff;
 }
 
 static inline void i_lil(const Instruction insn)
@@ -412,7 +360,8 @@ void i_ld8(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(!insn.i11.is_immediate) {
     src += (int)SIGN_EXT6(insn.o2.displacement);
@@ -430,7 +379,8 @@ void i_ld16(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(insn.i11.is_immediate) {
     src <<= 1;
@@ -455,7 +405,8 @@ void i_ld32(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(insn.i11.is_immediate) {
     src <<= 2;
@@ -480,7 +431,8 @@ void i_st8(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(!insn.i11.is_immediate) {
     src += (int)SIGN_EXT6(insn.o2.displacement);
@@ -498,7 +450,8 @@ void i_st16(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(insn.i11.is_immediate) {
     src <<= 1;
@@ -523,7 +476,8 @@ void i_st32(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(insn.i11.is_immediate) {
     src <<= 2;
@@ -821,7 +775,7 @@ static inline void i_srptidw(const Instruction insn)
   PTIDR = (Memory)GR[insn.o1.operand1];
 }
 
-static inline void i_sridtw(const Instruction insn)
+void i_sridtw(const Instruction insn)
 {
   IDTR = (Memory)GR[insn.o1.operand1];
   DEBUGINT("[INTERRUPT] SRIDTW: idtr <= 0x%08x\n", IDTR);
@@ -856,7 +810,7 @@ static inline void i_srspadd(const Instruction insn)
 
 static inline void i_nop(const Instruction insn)
 {
-  return;
+  // NOTHING TO DO
 }
 
 void i_halt(const Instruction insn)
@@ -871,10 +825,10 @@ static inline void i_move(const Instruction insn)
 
 void i_movepc(const Instruction insn)
 {
-  int32_t *dest, src;
+  int32_t src;
 
-  ops_o2_i11(insn, &dest, &src);
-  *dest = PCR + (src << 2);
+  src = src_o2_ui11(insn);
+  GR[insn.o2.operand1] = PCR + (src << 2);
 
   /* for traceback */
 #if !NO_DEBUG
@@ -904,7 +858,8 @@ void i_tas(const Instruction insn)
 {
   uint32_t *dest, src;
 
-  ops_o2_ui11(insn, &dest, &src);
+  dest = (uint32_t *)dest_o2_i11_ptr(insn);
+  src = src_o2_ui11(insn);
 
   if(insn.i11.is_immediate) {
     src <<= 2;
