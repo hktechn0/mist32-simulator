@@ -45,6 +45,14 @@ void print_stack(Memory sp)
   }
 }
 
+void abort_sim(void)
+{
+  printf("---- !!!! ABORT !!!! ----\n");
+  printf("PCR: %08x SPR: %08x\n", PCR, SPR);
+  print_registers();
+}
+
+#if !NO_DEBUG
 void print_traceback(void)
 {
   int i, n = 0;
@@ -53,13 +61,6 @@ void print_traceback(void)
   for(i = traceback_next - 1; i >= 0; i--) {
     printf("#%d\t0x%08x\n", n++, traceback[i]);
   }
-}
-
-void abort_sim(void)
-{
-  printf("---- !!!! ABORT !!!! ----\n");
-  printf("PCR: %08x SPR: %08x\n", PCR, SPR);
-  print_registers();
 }
 
 void step_by_step_pause(void)
@@ -88,3 +89,4 @@ void step_by_step_pause(void)
     close(memfd);
   }
 }
+#endif

@@ -26,17 +26,19 @@ uint32_t TIDR;
 uint64_t FRCR;
 uint32_t FI0R, FI1R;
 
-#if !NO_DEBUG
-FLAGS prev_FLAGR;
-#endif
-
 bool step_by_step;
 bool exec_finish;
 
+#if !CACHE_L1_I_ENABLE
 Memory prefetch_pc;
+uint32_t prefetch_insn[PREFETCH_N] __attribute__ ((aligned(64)));
+#endif
 
+#if !NO_DEBUG
+FLAGS prev_FLAGR;
 Memory traceback[TRACEBACK_MAX];
 uint32_t traceback_next;
+#endif
 
 void signal_on_sigint(int signo)
 {
@@ -61,17 +63,10 @@ int exec(Memory entry_p)
     err(EXIT_FAILURE, "signal SIGINT");
   }
 
-#if !NO_DEBUG
-  for(unsigned int i = 0; i < breakp_next; i++) {
-    printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
-  }
-#endif
-
   step_by_step = false;
   exec_finish = false;
 
   /* initialize internal variable */
-  traceback_next = 0;
   memory_is_fault = 0;
   memory_io_writeback = 0;
   instruction_prefetch_flush();
@@ -84,8 +79,15 @@ int exec(Memory entry_p)
   KSPR = (Memory)STACK_DEFAULT;
 
 #if !NO_DEBUG
+  /* internal debug variable */
+  traceback_next = 0;
+
   FLAGR.flags = 0x80000000;
   prev_FLAGR.flags = 0x80000000;
+
+  for(unsigned int i = 0; i < breakp_next; i++) {
+    printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
+  }
 #endif
 
   printf("Execution Start: entry = 0x%08x\n", PCR);
@@ -108,11 +110,7 @@ int exec(Memory entry_p)
 #endif
 
     /* instruction fetch */
-#if CACHE_L1_I_ENABLE
-    insn.value = instruction_fetch_cache(PCR);
-#else
     insn.value = instruction_fetch(PCR);
-#endif
 
     if(memory_is_fault) {
       /* fault fetch */

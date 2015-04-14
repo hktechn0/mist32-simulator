@@ -60,6 +60,8 @@
 #define SIGN_EXT8(n) ((n & 0x80) ? (n | 0xffffff00) : (n & 0xff))
 #define SIGN_EXT16(n) ((n & 0x8000) ? (n | 0xffff0000) : (n & 0xffff))
 
+#define mem_barrier() asm volatile("" ::: "memory")
+
 /* Register constants */
 #define GR_TMP 7
 #define GR_GLOBL 29
