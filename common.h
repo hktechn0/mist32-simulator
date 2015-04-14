@@ -81,7 +81,8 @@
 
 typedef union {
   struct {
-    unsigned int _reserved : 27;
+    unsigned int _invalid    : 1;
+    unsigned int _reserved : 26;
     unsigned int sign      : 1;
     unsigned int overflow  : 1;
     unsigned int carry     : 1;
@@ -126,6 +127,10 @@ extern Memory IDTR;
 extern uint32_t TIDR;
 extern uint64_t FRCR;
 extern uint32_t FI0R, FI1R;
+
+#if !NO_DEBUG
+extern FLAGS prev_FLAGR;
+#endif
 
 /* Previous System Registers */
 extern FLAGS PFLAGR;

@@ -110,6 +110,13 @@ static inline uint32_t src_jo1_jui16(const Instruction insn)
 /* return: true, false */
 static inline bool check_condition(const Instruction insn)
 {
+#if !NO_DEBUG
+  if(prev_FLAGR._invalid && insn.ji16.condition) {
+    abort_sim();
+    errx(EXIT_FAILURE, "invalid FLAGR. %08x", PCR);
+  }
+#endif
+
   switch(insn.ji16.condition) {
   case 0:
     return true;

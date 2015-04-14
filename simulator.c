@@ -26,6 +26,10 @@ uint32_t TIDR;
 uint64_t FRCR;
 uint32_t FI0R, FI1R;
 
+#if !NO_DEBUG
+FLAGS prev_FLAGR;
+#endif
+
 bool step_by_step;
 bool exec_finish;
 
@@ -57,11 +61,11 @@ int exec(Memory entry_p)
     err(EXIT_FAILURE, "signal SIGINT");
   }
 
-  /*
+#if !NO_DEBUG
   for(unsigned int i = 0; i < breakp_next; i++) {
     printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
   }
-  */
+#endif
 
   step_by_step = false;
   exec_finish = false;
@@ -78,6 +82,11 @@ int exec(Memory entry_p)
   PCR = entry_p;
   next_PCR = 0xffffffff;
   KSPR = (Memory)STACK_DEFAULT;
+
+#if !NO_DEBUG
+  FLAGR.flags = 0x80000000;
+  prev_FLAGR.flags = 0x80000000;
+#endif
 
   printf("Execution Start: entry = 0x%08x\n", PCR);
 
@@ -166,13 +175,20 @@ int exec(Memory entry_p)
       }
     }
 
+#if !NO_DEBUG
+    prev_FLAGR.flags = FLAGR.flags;
+    FLAGR._invalid |= 1;
+#endif
+
     /* next */
     if(next_PCR != 0xffffffff) {
+#if !NO_DEBUG
       /* alignment check */
       if(next_PCR & 0x3) {
 	abort_sim();
 	errx(EXIT_FAILURE, "invalid branch addres. %08x", next_PCR);
       }
+#endif
 
       PCR = next_PCR;
       next_PCR = 0xffffffff;
