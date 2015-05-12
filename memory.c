@@ -105,9 +105,11 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
   uint32_t *pdt, *pt, pte;
   unsigned int index_l1, index_l2, offset;
 
+#if !NO_DEBUG
   if(vaddr == 0) {
     printf("[NOTICE] NULL POINTER ACCESS %08x\n", PCR);
   }
+#endif
 
   /* Level 1 */
   if((PSR & PSR_CMOD_MASK) == PSR_CMOD_USER) {

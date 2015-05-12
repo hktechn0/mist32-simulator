@@ -1,17 +1,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define NO_DEBUG 1
+#define NO_DEBUG 0
 
 #define DEBUG_TRUE (1 && !NO_DEBUG)
 #define DEBUG_FALSE 0
 
-#define DEBUG_REG DEBUG_FALSE
-#define DEBUG_TRACE DEBUG_FALSE
-#define DEBUG_STACK DEBUG_FALSE
-#define DEBUG_MON DEBUG_TRUE
-#define DEBUG_IO DEBUG_TRUE
-#define DEBUG_DPS DEBUG_FALSE
+#define DEBUG_REG     DEBUG_TRUE
+#define DEBUG_TRACE   DEBUG_FALSE
+#define DEBUG_STACK   DEBUG_FALSE
+#define DEBUG_MON     DEBUG_TRUE
+#define DEBUG_IO      DEBUG_TRUE
+#define DEBUG_DPS     DEBUG_FALSE
 #define DEBUG_EXIT_B0 DEBUG_FALSE
 
 #if !NO_DEBUG

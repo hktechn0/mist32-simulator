@@ -76,8 +76,13 @@ void dps_init(void)
   sockaddr.sun_family = AF_UNIX;
   strcpy(sockaddr.sun_path, SOCKET_SCI);
 
-  if(connect(sci_sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr_un)) == -1) {
+  while(connect(sci_sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr_un)) == -1) {
+#if !NO_DEBUG
+    DEBUGIO("Waiting SCI...\n");
+    sleep(1);
+#else
     err(EXIT_FAILURE, "SCI connect");
+#endif
   }
 
   /* MI */

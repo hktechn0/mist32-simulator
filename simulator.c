@@ -156,7 +156,7 @@ int exec(Memory entry_p)
       step_by_step_pause();
     }
     else {
-      if(DEBUG_REG) { print_registers(); }
+      if(DEBUG && DEBUG_REG) { print_registers(); }
       if(DEBUG_TRACE) { print_traceback(); }
       if(DEBUG_STACK) { print_stack(SPR); }
       if(DEBUG_DPS) { dps_info(); }
@@ -174,6 +174,7 @@ int exec(Memory entry_p)
     }
 
 #if !NO_DEBUG
+    /* FIXME: BUG IF INTERRUPT */
     prev_FLAGR.flags = FLAGR.flags;
     FLAGR._invalid |= 1;
 #endif
