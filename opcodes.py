@@ -13,6 +13,10 @@ mist32_opcodes = {
     14: 'addc',
     16: 'inc',
     17: 'dec',
+    19: 'max',
+    20: 'min',
+    21: 'umax',
+    22: 'umin',
     28: 'sext8',
     29: 'sext16',
 

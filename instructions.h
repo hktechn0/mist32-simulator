@@ -165,6 +165,38 @@ void i_dec(const Instruction insn)
   FLAGR = make_flags_sub(GR[insn.o2.operand1], GR[insn.o2.operand2], 1);
 }
 
+void i_max(const Instruction insn)
+{
+  int32_t *destptr, dest, src;
+
+  DECODE_O2_I11(insn, destptr, dest, src);
+  *destptr = MAX(dest, src);
+}
+
+void i_min(const Instruction insn)
+{
+  int32_t *destptr, dest, src;
+
+  DECODE_O2_I11(insn, destptr, dest, src);
+  *destptr = MIN(dest, src);
+}
+
+void i_umax(const Instruction insn)
+{
+  uint32_t *destptr, dest, src;
+
+  DECODE_O2_UI11(insn, destptr, dest, src);
+  *destptr = MAX(dest, src);
+}
+
+void i_umin(const Instruction insn)
+{
+  uint32_t *destptr, dest, src;
+
+  DECODE_O2_UI11(insn, destptr, dest, src);
+  *destptr = MIN(dest, src);
+}
+
 static inline void i_sext8(const Instruction insn)
 {
   GR[insn.o2.operand1] = SIGN_EXT8((uint32_t)GR[insn.o2.operand2]);
