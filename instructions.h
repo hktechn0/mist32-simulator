@@ -578,7 +578,7 @@ void i_pop(const Instruction insn)
 void i_bur(const Instruction insn)
 {
   if(check_condition(insn)) {
-    DEBUGJMP("[Branch] URE: 0x%08x, Cond: %X, PC: 0x%08x\n", PCR + src_jo1_jui16(insn), insn.ji16.condition, PCR);
+    DEBUGJMP("[Branch] URE: 0x%08x, Cond: %X,          PC: 0x%08x\n", PCR + src_jo1_jui16(insn), insn.ji16.condition, PCR);
     next_PCR = PCR + src_jo1_jui16(insn);
   }
 }
@@ -586,7 +586,7 @@ void i_bur(const Instruction insn)
 void i_br(const Instruction insn)
 {
   if(check_condition(insn)) {
-    DEBUGJMP("[Branch] REL: 0x%08x, Cond: %X, PC: 0x%08x\n", PCR + src_jo1_ji16(insn), insn.ji16.condition, PCR);
+    DEBUGJMP("[Branch] REL: 0x%08x, Cond: %X,          PC: 0x%08x\n", PCR + src_jo1_ji16(insn), insn.ji16.condition, PCR);
     next_PCR = PCR + src_jo1_ji16(insn);
   }
 }
@@ -594,7 +594,7 @@ void i_br(const Instruction insn)
 void i_b(const Instruction insn)
 {
   if(check_condition(insn)) {
-    DEBUGJMP("[Branch]  D : 0x%08x, Cond: %X, PCR: 0x%08x\n", src_jo1_jui16(insn), insn.ji16.condition, PCR);
+    DEBUGJMP("[Branch]  D : 0x%08x, Cond: %X,          PC: 0x%08x\n", src_jo1_jui16(insn), insn.ji16.condition, PCR);
     next_PCR = src_jo1_jui16(insn);
   }
 
