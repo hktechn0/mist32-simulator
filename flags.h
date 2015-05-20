@@ -26,9 +26,13 @@ static inline FLAGS make_flags_add(const uint32_t result, const uint32_t dest, c
 static inline FLAGS make_flags_sub(const uint32_t result, const uint32_t dest, const uint32_t src)
 {
   FLAGS f;
+  uint32_t neg_src;
 
-  f = make_flags_add(result, dest, (uint32_t)(-((int32_t)src)));
-  f.carry |= !src;
+  neg_src = -((int32_t)src);
+
+  f = make_flags(result);
+  f.overflow = msb((dest ^ result) & (dest ^ src));
+  f.carry = (!src) | (((uint64_t)dest + (uint64_t)neg_src) >> 32);
 
   return f;
 }
