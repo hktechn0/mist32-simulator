@@ -3,7 +3,7 @@
 
 #define NO_DEBUG 0
 
-#define DEBUG_TRUE (1 && !NO_DEBUG)
+#define DEBUG_TRUE (1 && !NO_DEBUG && !QUIET_MODE)
 #define DEBUG_FALSE 0
 
 #define DEBUG_REG     DEBUG_TRUE
@@ -41,6 +41,8 @@
 #define DEBUGIO if(0) printf
 #define DEBUGMMU if(0) printf
 #endif
+
+#define NOTICE if(!QUIET_MODE) printf
 
 #define TRACEBACK_MAX 1024
 #define MONITOR_RECV_INTERVAL_MASK (0x1000 - 1)
@@ -103,8 +105,9 @@ typedef uint32_t Memory;
 
 /* Debug flags */
 extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_PHY, DEBUG_INT, DEBUG_MMU;
-extern bool MONITOR;
+extern bool MONITOR, TESTSUITE_MODE, QUIET_MODE;
 extern bool step_by_step, exec_finish;
+extern int return_code;
 
 /* Break points */
 extern Memory breakp[100];

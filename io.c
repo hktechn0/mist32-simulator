@@ -6,7 +6,7 @@
 
 void io_init(void)
 {
-  printf("[System] I/O Initialize... \n");
+  NOTICE("[System] I/O Initialize... \n");
   IOSR = 0;
   dps_init();
   gci_init();

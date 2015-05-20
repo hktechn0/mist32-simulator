@@ -64,12 +64,12 @@ void memory_free(void)
   }
 
 #if CACHE_L1_PROFILE
-  printf("[Cache] L1 I hit %lld / %lld\n", cache_l1i_hit, cache_l1i_total);
-  printf("[Cache] L1 D hit %lld / %lld\n", cache_l1d_hit, cache_l1d_total);
+  NOTICE("[Cache] L1 I hit %lld / %lld\n", cache_l1i_hit, cache_l1i_total);
+  NOTICE("[Cache] L1 D hit %lld / %lld\n", cache_l1d_hit, cache_l1d_total);
 #endif
 
 #if TLB_PROFILE
-  printf("[TLB] hit %lld / %lld\n", tlb_hit, tlb_access);
+  NOTICE("[TLB] hit %lld / %lld\n", tlb_hit, tlb_access);
 #endif
 }
 
@@ -107,7 +107,7 @@ Memory memory_page_walk_L2(Memory vaddr, bool is_write, bool is_exec)
 
 #if !NO_DEBUG
   if(vaddr == 0) {
-    printf("[NOTICE] NULL POINTER ACCESS %08x\n", PCR);
+    NOTICE("[NOTICE] NULL POINTER ACCESS %08x\n", PCR);
   }
 #endif
 

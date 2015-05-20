@@ -7,7 +7,7 @@
 
 void print_instruction(Instruction insn)
 {
-  printf("PC: 0x%08x Op: 0x%03x(%4d) Insn: 0x%08x SP: 0x%08x\n",
+  NOTICE("PC: 0x%08x Op: 0x%03x(%4d) Insn: 0x%08x SP: 0x%08x\n",
 	 PCR, insn.base.opcode, insn.base.opcode, insn.value, SPR);
 }
 
@@ -15,15 +15,15 @@ void print_registers(void)
 {
   int i;
 
-  printf("PSR: %08x IDT: %08x PDT: %08x TID: %08x\n",
+  NOTICE("PSR: %08x IDT: %08x PDT: %08x TID: %08x\n",
 	 PSR, IDTR, PDTR, TIDR);
-  printf("KSP: %08x USP: %08x\n",
+  NOTICE("KSP: %08x USP: %08x\n",
 	 KSPR, USPR);
-  printf("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
+  NOTICE("ZF: %d, PF: %d, CF: %d, OF: %d, SF %d\n",
 	 FLAGR.zero, FLAGR.parity, FLAGR.carry, FLAGR.overflow, FLAGR.sign);
   for(i = 0; i < 32; i++) {
-    printf("R%2d: 0x%08x (%11d) ", i, GR[i], GR[i]);
-    if(!((i + 1) % 2)) { printf("\n"); }
+    NOTICE("R%2d: 0x%08x (%11d) ", i, GR[i], GR[i]);
+    if(!((i + 1) % 2)) { NOTICE("\n"); }
   }
 }
 
@@ -41,7 +41,7 @@ void print_stack(Memory sp)
       break;
     }
 
-    printf("0x%08x: 0x%08x (%11d)\n", i, data, data);
+    NOTICE("0x%08x: 0x%08x (%11d)\n", i, data, data);
   }
 }
 
@@ -57,9 +57,9 @@ void print_traceback(void)
 {
   int i, n = 0;
 
-  printf("---- Traceback ----\n");
+  NOTICE("---- Traceback ----\n");
   for(i = traceback_next - 1; i >= 0; i--) {
-    printf("#%d\t0x%08x\n", n++, traceback[i]);
+    NOTICE("#%d\t0x%08x\n", n++, traceback[i]);
   }
 }
 

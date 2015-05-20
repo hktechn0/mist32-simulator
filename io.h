@@ -162,6 +162,7 @@ typedef volatile struct _gci_mmcc {
 } gci_mmcc;
 
 extern void *dps;
+extern char *sci_sock_file;
 
 extern gci_hub_info *gci_hub;
 extern gci_hub_node *gci_hub_nodes;

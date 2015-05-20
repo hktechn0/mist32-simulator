@@ -136,14 +136,14 @@ void gci_info(void)
 
   addr = IOSR + DPS_SIZE;
 
-  printf("---- GCI ----\n");
-  printf("[IOSR      ] 0x%08x\n", IOSR);
-  printf("[GCI Hub   ] 0x%08x Size: %08x, Total: %d\n", addr, gci_hub->space_size, gci_hub->total);
+  DEBUGIO("---- GCI ----\n");
+  DEBUGIO("[IOSR      ] 0x%08x\n", IOSR);
+  DEBUGIO("[GCI Hub   ] 0x%08x Size: %08x, Total: %d\n", addr, gci_hub->space_size, gci_hub->total);
 
   addr += GCI_HUB_SIZE;
 
   for(i = 0; i < gci_hub->total; i++) {
-    printf("[GCI Node %d] 0x%08x Size: %08x, Priority: %u\n", i, addr, gci_hub_nodes[i].size, gci_hub_nodes[i].priority);
+    DEBUGIO("[GCI Node %d] 0x%08x Size: %08x, Priority: %u\n", i, addr, gci_hub_nodes[i].size, gci_hub_nodes[i].priority);
     addr += gci_hub_nodes[i].size;
   }
 }
@@ -206,12 +206,12 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
       chr = c & 0x7f;
 
       if(isprint(chr)) {
-	printf("[I/O] DISPLAY CHAR: '%c' (%02x) at %dx%d\n", chr, chr,
-	       offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
+	DEBUGIO("[I/O] DISPLAY CHAR: '%c' (%02x) at %dx%d\n", chr, chr,
+		offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
       }
       else {
-	printf("[I/O] DISPLAY CHAR: ??? (%02x) at %dx%d\n", chr,
-	       offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
+	DEBUGIO("[I/O] DISPLAY CHAR: ??? (%02x) at %dx%d\n", chr,
+		offset % (DISPLAY_CHAR_WIDTH * 4), offset / (DISPLAY_CHAR_WIDTH * 4));
       }
     }
 

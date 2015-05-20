@@ -15,10 +15,15 @@
 #include "monitor.h"
 
 bool DEBUG = false;
-bool MONITOR = false;
 bool DEBUG_LD = false, DEBUG_ST = false, DEBUG_JMP = false;
 bool DEBUG_INT = false, DEBUG_MMU = false;
 bool DEBUG_HW = false, DEBUG_PHY = false;
+
+bool MONITOR = false;
+bool TESTSUITE_MODE = false;
+bool QUIET_MODE = false;
+
+int return_code = 0;
 
 Memory breakp[100];
 unsigned int breakp_next = 0;
@@ -44,7 +49,7 @@ int main(int argc, char **argv)
 
   void *allocp;
 
-  while ((opt = getopt(argc, argv, "dvhpmbc:")) != -1) {
+  while ((opt = getopt(argc, argv, "dvhpmb:c:s:Tq")) != -1) {
     switch (opt) {
     case 'd':
       /* debug mode */
@@ -80,8 +85,28 @@ int main(int argc, char **argv)
 	strcpy(gci_mmcc_image, optarg);
       }
       break;
+    case 's':
+      /* SCI socket file */
+      sci_sock_file = malloc(strlen(optarg) * sizeof(char) + 1);
+      strcpy(sci_sock_file, optarg);
+      break;
+    case 'T':
+      /* testsuite mode */
+      TESTSUITE_MODE = true;
+      break;
+    case'q':
+      /* quiet mode */
+      QUIET_MODE = true;
+      DEBUG_LD = false;
+      DEBUG_ST = false;
+      DEBUG_JMP = false;
+      DEBUG_INT = false;
+      DEBUG_MMU = false;
+      DEBUG_HW = false;
+      DEBUG_PHY = false;
+      break;
     default: /* '?' */
-      fprintf(stderr, "Usage: %s [-b <breakpoint,>] [-d] [-v] [-m] [-c <mmc.img>] file\n",
+      fprintf(stderr, "Usage: %s [-b <breakpoint,>] [-d] [-v] [-m] [-c <mmc.img>] [-s <sock>] file\n",
 	      argv[0]);
       exit(EXIT_FAILURE);
     }
@@ -110,7 +135,7 @@ int main(int argc, char **argv)
   /* set first section */
   section = 0;
 
-  printf("---- Loading ELF ----\n");
+  NOTICE("---- Loading ELF ----\n");
 
   elf_version(EV_CURRENT);
 
@@ -142,8 +167,8 @@ int main(int argc, char **argv)
       if(phdr.p_vaddr != phdr.p_paddr) {
 	vaddr = phdr.p_vaddr;
 	paddr = phdr.p_paddr;
-	printf("virtual:  0x%08x\n", vaddr);
-	printf("physical: 0x%08x\n", paddr);
+	NOTICE("virtual:  0x%08x\n", vaddr);
+	NOTICE("physical: 0x%08x\n", paddr);
       }
     }
   }
@@ -157,13 +182,13 @@ int main(int argc, char **argv)
       section_addr = section_header->sh_addr;
       buffer_addr = paddr + (section_addr - vaddr);
 
-      printf("section: %s at 0x%08x on 0x%08x\n", 
+      NOTICE("section: %s at 0x%08x on 0x%08x\n", 
 	     elf_strptr(elf, header->e_shstrndx, section_header->sh_name), section_addr, buffer_addr);
 
       /* Load section data */
       data = NULL;
       while((data = elf_getdata(section, data)) != NULL) {
-	printf("d_off: 0x%08x (%8d), d_size: 0x%08x (%8d)\n",
+	NOTICE("d_off: 0x%08x (%8d), d_size: 0x%08x (%8d)\n",
 	       (unsigned int)data->d_off, (int)data->d_off,
 	       (unsigned int)data->d_size, (int)data->d_size);
 
@@ -198,7 +223,7 @@ int main(int argc, char **argv)
   /* mist32 binary is big endian */
   memory_vm_convert_endian();
 
-  printf("---- Start ----\n");
+  NOTICE("---- Start ----\n");
 
   /* Execute */
   exec((Memory)header->e_entry);
@@ -217,6 +242,9 @@ int main(int argc, char **argv)
   if(gci_mmcc_image != NULL) {
     free(gci_mmcc_image);
   }
+  if(sci_sock_file != NULL) {
+    free(sci_sock_file);
+  }
 
-  return 0;
+  return return_code;
 }

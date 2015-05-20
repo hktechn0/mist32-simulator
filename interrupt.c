@@ -23,7 +23,8 @@ void interrupt_entry(unsigned int num)
     DEBUGINT("[INTERRUPT] IRQ %x: invalid vector.\n", num);
 
     if(num == IDT_DOUBLEFAULT_NUM) {
-      printf("[INTERRUPT] Invalid double fault vector.\n");
+      NOTICE("[INTERRUPT] Invalid double fault vector.\n");
+      return_code = EXIT_FAILURE;
       exec_finish = true;
     }
     else if(num == IDT_INVALID_IDT_NUM) {
@@ -75,6 +76,14 @@ void interrupt_exit(void)
 
 void interrupt_dispatch_nonmask(unsigned int num)
 {
+  if (TESTSUITE_MODE && num == IDT_SWIRQ_START_NUM) {
+    /* SYS_exit */
+    NOTICE("[INTERRUPT] SWI: SYS_exit (0x%x)\n", GR[2]);
+    return_code = GR[2];
+    exec_finish = true;
+    return;
+  }
+
   if(!IDT_ISVALID(num)) {
     /* invalid idt */
     interrupt_nmi = IDT_INVALID_IDT_NUM;

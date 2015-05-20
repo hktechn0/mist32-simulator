@@ -43,6 +43,7 @@ uint32_t traceback_next;
 void signal_on_sigint(int signo)
 {
   /* EXIT */
+  return_code = EXIT_FAILURE;
   exec_finish = true;
 
   if(MONITOR) {
@@ -86,11 +87,11 @@ int exec(Memory entry_p)
   prev_FLAGR.flags = 0x80000000;
 
   for(unsigned int i = 0; i < breakp_next; i++) {
-    printf("Break point[%d]: 0x%08x\n", i, breakp[i]);
+    NOTICE("Break point[%d]: 0x%08x\n", i, breakp[i]);
   }
 #endif
 
-  printf("Execution Start: entry = 0x%08x\n", PCR);
+  NOTICE("Execution Start: entry = 0x%08x\n", PCR);
 
   do {
     /* choose stack */
@@ -202,7 +203,7 @@ int exec(Memory entry_p)
   } while(!(PCR == 0 && GR[31] == 0 && DEBUG_EXIT_B0) && !exec_finish);
   /* DEBUG_EXIT_B0: exit if b rret && rret == 0 */
 
-  puts("---- Program Terminated ----");
+  NOTICE("---- Program Terminated ----\n");
   print_instruction(insn);
   print_registers();
 
