@@ -9,6 +9,8 @@ mist32_opcodes = {
     7: 'div',
     8: 'mod',
     9: 'neg',
+    #10: 'umull',
+    11: 'umulh',
 
     14: 'addc',
     16: 'inc',

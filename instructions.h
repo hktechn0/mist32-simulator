@@ -46,6 +46,19 @@ void i_mulh(const Instruction insn)
 
   DECODE_O2_I11(insn, destptr, dest, src);
   result = (int64_t)dest * (int64_t)src;
+  *destptr = (uint64_t)result >> 32;
+
+  /* FIXME: flags unavailable */
+  FLAGR.flags = 0;
+}
+
+void i_umulh(const Instruction insn)
+{
+  uint32_t *destptr, dest, src;
+  uint64_t result;
+
+  DECODE_O2_UI11(insn, destptr, dest, src);
+  result = (uint64_t)dest * (uint64_t)src;
   *destptr = result >> 32;
 
   /* FIXME: flags unavailable */
