@@ -1,8 +1,20 @@
+#ifndef MIST32_FETCH_H
+#define MIST32_FETCH_H
+
+#include "common.h"
+#include "mmu.h"
+#include "vm.h"
+#include "memory.h"
+#include "cache.h"
+#include "utils.h"
+
 /* PREFETCH_SIZE must be below page size */
 #define PREFETCH_SIZE 64
 #define PREFETCH_N (PREFETCH_SIZE >> 2)
 #define PREFETCH_TAG 0xffffffc0
 #define PREFETCH_MASK 0x0000003f
+
+#define NOP_INSN (0x100 << 21)
 
 #if CACHE_L1_I_ENABLE
 static inline uint32_t instruction_fetch(Memory pc)
@@ -69,3 +81,5 @@ static inline void instruction_prefetch_flush(void)
   prefetch_pc = 0xffffffff;
 }
 #endif
+
+#endif /* MIST32_FETCH_H */

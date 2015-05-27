@@ -1,8 +1,11 @@
-CC = cc
-CFLAGS = -std=gnu99 -Wall -O3
+CC = gcc
+CFLAGS = -std=gnu99 -Wall
+CFLAGS += -O3
+#CFLAGS += -march=native
 #CFLAGS += -g
 #CFLAGS += -pg
 #CFLAGS += -fno-inline
+#CFLAGS += -fprofile-arcs -ftest-coverage
 
 OBJS = simulator.o utils.o main.o memory.o interrupt.o io.o dps.o gci.o monitor.o
 SCI_SOCKET = sci.sock
@@ -16,11 +19,9 @@ mist32_simulator: $(OBJS) $(FIFO)
 dispatch.h: opsgen.py opcodes.py
 	python opsgen.py dispatch.h
 
-common.h: memory.h instruction_format.h io.h
-
-simulator.o: instructions.h dispatch.h
-io.o monitor.o: monitor.h
-interrupt.o: interrupt.h
+# FIXME
+common.h: memory.h mmu.h vm.h dps.h sci.h utils.h debug.h registers.h
+simulator.o: instructions.h insn_format.h dispatch.h fetch.h tlb.h
 
 install: mist32_simulator
 	cp mist32_simulator /usr/local/bin/

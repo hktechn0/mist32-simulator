@@ -1,15 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <err.h>
 
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "memory.h"
+#include "fetch.h"
+#include "cache.h"
+#include "dps.h"
+#include "gci.h"
+#include "io.h"
 #include "interrupt.h"
 #include "monitor.h"
-#include "fetch.h"
+#include "utils.h"
 
 #include "instructions.h"
 #include "dispatch.h"     /* see opsgen.py */
+
+#define MONITOR_RECV_INTERVAL_MASK (0x1000 - 1)
 
 /* General Register */
 int32_t GR[32] __attribute__ ((aligned(64)));
@@ -51,6 +62,34 @@ void signal_on_sigint(int signo)
   }
 
   fprintf(stderr, "[System] Keyboard Interrupt.\n");
+}
+
+/* check interrupt coming in */
+static inline void interrupt_dispatcher(void)
+{
+  if(interrupt_nmi != -1) {
+    /* Non-maskable interrupt */
+    interrupt_entry(interrupt_nmi);
+    interrupt_nmi = -1;
+  }
+
+  if(!(PSR & PSR_IM_ENABLE)) {
+    /* interrupt disabled */
+    return;
+  }
+
+  if(IDT_ISENABLE(IDT_DPS_UTIM64_NUM) && dps_utim64_interrupt()) {
+    /* DPS UTIM64 */
+    interrupt_entry(IDT_DPS_UTIM64_NUM);
+  }
+  else if(IDT_ISENABLE(IDT_GCI_KMC_NUM) && gci_kmc_interrupt()) {
+    /* GCI KMC */
+    interrupt_entry(IDT_GCI_KMC_NUM);
+  }
+  else if(IDT_ISENABLE(IDT_DPS_LS_NUM) && dps_sci_interrupt()) {
+    /* DPS LS */
+    interrupt_entry(IDT_DPS_LS_NUM);
+  }
 }
 
 int exec(Memory entry_p)

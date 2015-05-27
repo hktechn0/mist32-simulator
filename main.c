@@ -12,6 +12,10 @@
 #include <gelf.h>
 
 #include "common.h"
+#include "debug.h"
+#include "vm.h"
+#include "memory.h"
+#include "io.h"
 #include "monitor.h"
 
 bool DEBUG = false;
@@ -27,6 +31,9 @@ int return_code = 0;
 
 Memory breakp[100];
 unsigned int breakp_next = 0;
+
+char *gci_mmcc_image_file = NULL;
+char *sci_sock_file = NULL;
 
 int main(int argc, char **argv)
 {
@@ -80,9 +87,9 @@ int main(int argc, char **argv)
       break;
     case 'c':
       /* MMC image file */
-      if(gci_mmcc_image == NULL) {
-	gci_mmcc_image = malloc(strlen(optarg) * sizeof(char) + 1);
-	strcpy(gci_mmcc_image, optarg);
+      if(gci_mmcc_image_file == NULL) {
+	gci_mmcc_image_file = malloc(strlen(optarg) * sizeof(char) + 1);
+	strcpy(gci_mmcc_image_file, optarg);
       }
       break;
     case 's':
@@ -239,8 +246,8 @@ int main(int argc, char **argv)
   elf_end(elf);
   close(elf_fd);
 
-  if(gci_mmcc_image != NULL) {
-    free(gci_mmcc_image);
+  if(gci_mmcc_image_file != NULL) {
+    free(gci_mmcc_image_file);
   }
   if(sci_sock_file != NULL) {
     free(sci_sock_file);

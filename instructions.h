@@ -1,7 +1,18 @@
+#ifndef MIST32_INSTRUCTIONS_H
+#define MIST32_INSTRUCTIONS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <err.h>
+
+#include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "load_store.h"
+#include "tlb.h"
+#include "fetch.h"
+#include "interrupt.h"
 
 #include "flags.h"
 #include "operands.h"
@@ -946,3 +957,5 @@ void i_invalid(const Instruction insn)
   abort_sim();
   errx(EXIT_FAILURE, "invalid opcode. (pc:%08x op:%x)", PCR, insn.base.opcode);
 }
+
+#endif /* MIST32_INSTRUCTIONS_H */

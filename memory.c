@@ -1,10 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <err.h>
 
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "vm.h"
+#include "mmu.h"
+#include "tlb.h"
+#include "cache.h"
+#include "io.h"
 #include "interrupt.h"
+#include "utils.h"
 
 PageEntry page_table[PAGE_ENTRY_NUM] __attribute__ ((aligned(64)));
 

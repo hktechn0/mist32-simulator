@@ -1,3 +1,6 @@
+#ifndef MIST32_FLAGS_H
+#define MIST32_FLAGS_H
+
 /* make generic FLAGS */
 static inline FLAGS make_flags(const uint32_t value)
 {
@@ -36,3 +39,5 @@ static inline FLAGS make_flags_sub(const uint32_t result, const uint32_t dest, c
 
   return f;
 }
+
+#endif /* MIST32_FLAGS_H */

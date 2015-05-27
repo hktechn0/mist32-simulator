@@ -1,6 +1,12 @@
-mist32_simulator
 *.o
+*.gcno
+*.gcda
+*.gcov
+*.pyc
+
+dispatch.h
+
+mist32_simulator
 mmc.img
-sci_txd
-sci_rxd
+sci.sock
 gci_display_char

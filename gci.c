@@ -9,6 +9,11 @@
 #include <sys/mman.h>
 
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "io.h"
+#include "dps.h"
+#include "gci.h"
 #include "monitor.h"
 
 gci_hub_info *gci_hub;
@@ -16,7 +21,6 @@ gci_hub_node *gci_hub_nodes;
 gci_node gci_nodes[4];
 
 gci_mmcc *mmcc;
-char *gci_mmcc_image = NULL;
 
 unsigned char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 unsigned int fifo_scancode_start, fifo_scancode_end;
@@ -54,7 +58,8 @@ void gci_init(void)
   gci_hub->space_size += gci_hub_nodes[GCI_KMC_NUM].size;
 
   /* STD-DISPLAY */
-  fd_dispchar = open(FIFO_DISPLAY_CHAR, O_WRONLY);
+  fd_dispchar = open(FIFO_DISPLAY_CHAR_DEFAULT, O_WRONLY);
+  /* FIXME: error check */
 
   gci_nodes[GCI_DISPLAY_NUM].node_info = calloc(1, GCI_NODE_SIZE);
   gci_nodes[GCI_DISPLAY_NUM].device_area = calloc(1, GCI_DISPLAY_AREA_SIZE);
@@ -72,16 +77,16 @@ void gci_init(void)
   gci_hub->space_size += gci_hub_nodes[GCI_DISPLAY_NUM].size;
 
   /* STD-MMCC */
-  if(gci_mmcc_image == NULL) {
+  if(gci_mmcc_image_file == NULL) {
     fd_mmcc = -1;
     DEBUGIO("[I/O] No MMC Image File\n");
   }
   else {
-    fd_mmcc = open(gci_mmcc_image, O_RDWR);
+    fd_mmcc = open(gci_mmcc_image_file, O_RDWR);
     if(fd_mmcc == -1) {
-      errx(EXIT_FAILURE, "Can't read MMC image file. %s\n", gci_mmcc_image);
+      errx(EXIT_FAILURE, "Can't read MMC image file. %s\n", gci_mmcc_image_file);
     }
-    DEBUGIO("[I/O] MMC Image '%s'\n", gci_mmcc_image);
+    DEBUGIO("[I/O] MMC Image '%s'\n", gci_mmcc_image_file);
   }
 
   gci_nodes[GCI_MMCC_NUM].node_info = calloc(1, GCI_NODE_SIZE);

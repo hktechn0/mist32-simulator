@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
@@ -14,6 +15,10 @@
 #include <sys/un.h>
 
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "io.h"
+#include "dps.h"
 #include "interrupt.h"
 
 #define UTIM64_NAME(t) ((t == utim64a) ? 'A' : 'B')
@@ -29,7 +34,6 @@ timer_t utim64a_timer[4], utim64b_timer[4];
 bool utim64a_enable[4], utim64b_enable[4];
 struct itimerspec utim64a_its[4], utim64b_its[4];
 
-char *sci_sock_file = NULL;
 int sci_sock;
 unsigned char fifo_sci_rx[SCI_FIFO_RX_SIZE];
 unsigned int fifo_sci_rx_start, fifo_sci_rx_end;
@@ -79,7 +83,8 @@ void dps_init(void)
     strcpy(sockaddr.sun_path, sci_sock_file);
   }
   else {
-    strcpy(sockaddr.sun_path, SOCKET_SCI);
+    /* socket file is not specified, use default */
+    strcpy(sockaddr.sun_path, SOCKET_SCI_DEFAULT);
   }
 
   while(connect(sci_sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr_un)) == -1) {

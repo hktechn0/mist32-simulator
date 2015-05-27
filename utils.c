@@ -3,7 +3,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "vm.h"
+#include "load_store.h"
+#include "insn_format.h"
 
 void print_instruction(Instruction insn)
 {

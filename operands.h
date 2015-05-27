@@ -1,3 +1,8 @@
+#ifndef MIST32_OPERANDS_H
+#define MIST32_OPERANDS_H
+
+#include "debug.h"
+
 /*
   CAUTION: These macro is using dengerous scheme.
   It is code generation marco, rather than function like macro.
@@ -172,3 +177,5 @@ static inline bool check_condition(const Instruction insn)
   
   return false;
 }
+
+#endif /* MIST32_OPERANDS_H */

@@ -2,6 +2,11 @@
 #include <stdlib.h>
 
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "vm.h"
+#include "mmu.h"
+#include "tlb.h"
 #include "fetch.h"
 #include "interrupt.h"
 

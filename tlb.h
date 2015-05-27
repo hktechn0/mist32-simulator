@@ -1,3 +1,6 @@
+#ifndef MIST32_TLB_H
+#define MIST32_TLB_H
+
 /* simulator TLB settings */
 #define TLB_ENABLE 1
 #define TLB_PROFILE 1
@@ -74,3 +77,5 @@ static inline Memory memory_tlb_get(Memory vaddr, bool is_write, bool is_exec)
 
   return paddr;
 }
+
+#endif /* MIST32_TLB_H */

@@ -1,3 +1,6 @@
+#ifndef MIST32_INSN_DEBUG_H
+#define MIST32_INSN_DEBUG_H
+
 static inline void debug_load_hw(Memory addr, unsigned int data)
 {
   DEBUGLDHW("[L], %08x, %08x, %08x, %08x\n", PCR, SPR, addr, data);
@@ -51,3 +54,5 @@ static inline void debug_store32(Memory addr, unsigned int data)
   DEBUGST("[Store] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", addr, data, PCR);
   debug_store_hw(addr, data);
 }
+
+#endif /* MIST32_INSN_DEBUG_H */

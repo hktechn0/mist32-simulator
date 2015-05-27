@@ -3,6 +3,10 @@
 #include <err.h>
 
 #include "common.h"
+#include "debug.h"
+#include "registers.h"
+#include "dps.h"
+#include "gci.h"
 
 void io_init(void)
 {

@@ -1,3 +1,9 @@
+#ifndef MIST32_CACHE_H
+#define MIST32_CACHE_H
+
+#include "mmu.h"
+#include "vm.h"
+
 /* L1 Cache */
 #define CACHE_L1_I_ENABLE 1
 #define CACHE_L1_D_ENABLE 1
@@ -167,3 +173,5 @@ static inline void memory_cache_l1_write(Memory paddr, uint32_t data)
 }
 
 #endif
+
+#endif /* MIST32_CACHE_H */

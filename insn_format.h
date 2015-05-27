@@ -1,3 +1,6 @@
+#ifndef MIST32_INSN_FORMAT_H
+#define MIST32_INSN_FORMAT_H
+
 struct instruction_base {
   unsigned int payload : 21;
   unsigned int opcode  : 10;
@@ -79,3 +82,5 @@ typedef union _instruction {
   struct instruction_ji16 ji16;
   struct instruction_jo1  jo1;
 } Instruction;
+
+#endif /* MIST32_INSN_FORMAT_H */

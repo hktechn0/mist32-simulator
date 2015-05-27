@@ -13,6 +13,8 @@
 #include <msgpack.h>
 
 #include "common.h"
+#include "debug.h"
+#include "gci.h"
 #include "monitor.h"
 
 int sock, sock_listen;
