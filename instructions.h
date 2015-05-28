@@ -13,6 +13,7 @@
 #include "tlb.h"
 #include "fetch.h"
 #include "interrupt.h"
+#include "insn_format.h"
 
 #include "flags.h"
 #include "operands.h"

@@ -16,6 +16,7 @@
 #include "interrupt.h"
 #include "monitor.h"
 #include "utils.h"
+#include "insn_format.h"
 
 #include "instructions.h"
 #include "dispatch.h"     /* see opsgen.py */
@@ -213,12 +214,6 @@ int exec(Memory entry_p)
       }
     }
 
-#if !NO_DEBUG
-    /* FIXME: BUG IF INTERRUPT */
-    prev_FLAGR.flags = FLAGR.flags;
-    FLAGR._invalid |= 1;
-#endif
-
     /* next */
     if(next_PCR != 0xffffffff) {
 #if !NO_DEBUG
@@ -236,7 +231,16 @@ int exec(Memory entry_p)
       PCR += 4;
     }
 
+    /* interrupt check */
     interrupt_dispatcher();
+
+#if !NO_DEBUG
+    /* for invalid flags checking */
+    prev_FLAGR.flags = FLAGR.flags;
+    FLAGR._invalid |= 1;
+#endif
+
+    /* next cycle */
     clk++;
 
   } while(!(PCR == 0 && GR[31] == 0 && DEBUG_EXIT_B0) && !exec_finish);
