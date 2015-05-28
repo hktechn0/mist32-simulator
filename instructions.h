@@ -17,7 +17,6 @@
 
 #include "flags.h"
 #include "operands.h"
-#include "insn_debug.h"
 
 /* Arithmetic */
 void i_add(const Instruction insn)
@@ -429,7 +428,7 @@ void i_ld8(const Instruction insn)
     return;
   }
 
-  debug_load16(src, (unsigned char)*dest);
+  if(DEBUG_MEM) debug_load16(src, (unsigned char)*dest);
 }
 
 void i_ld16(const Instruction insn)
@@ -442,10 +441,12 @@ void i_ld16(const Instruction insn)
   if(insn.i11.is_immediate) {
     src <<= 1;
   }
+#if !NO_DEBUG
   else if(src & 0x1) {
     abort_sim();
     errx(EXIT_FAILURE, "ld16: invalid alignment.");
   }
+#endif
   else {
     src += (int)(SIGN_EXT6(insn.o2.displacement) << 1);
   }
@@ -455,7 +456,7 @@ void i_ld16(const Instruction insn)
     return;
   }
 
-  debug_load16(src, (unsigned short)*dest);
+  if(DEBUG_MEM) debug_load16(src, (unsigned short)*dest);
 }
 
 void i_ld32(const Instruction insn)
@@ -468,10 +469,12 @@ void i_ld32(const Instruction insn)
   if(insn.i11.is_immediate) {
     src <<= 2;
   }
+#if !NO_DEBUG
   else if(src & 0x3) {
     abort_sim();
     errx(EXIT_FAILURE, "ld32: invalid alignment.");
   }
+#endif
   else {
     src += (int)(SIGN_EXT6(insn.o2.displacement) << 2);
   }
@@ -481,7 +484,7 @@ void i_ld32(const Instruction insn)
     return;
   }
 
-  debug_load32(src, *dest);
+  if(DEBUG_MEM) debug_load32(src, *dest);
 }
 
 void i_st8(const Instruction insn)
@@ -500,7 +503,7 @@ void i_st8(const Instruction insn)
     return;
   }
 
-  debug_store8(src, (unsigned char)*dest);
+  if(DEBUG_MEM) debug_store8(src, (unsigned char)*dest);
 }
 
 void i_st16(const Instruction insn)
@@ -513,10 +516,12 @@ void i_st16(const Instruction insn)
   if(insn.i11.is_immediate) {
     src <<= 1;
   }
+#if !NO_DEBUG
   else if(src & 0x1) {
     abort_sim();
     errx(EXIT_FAILURE, "st16: invalid alignment.");
   }
+#endif
   else {
     src += (int)(SIGN_EXT6(insn.o2.displacement) << 1);
   }
@@ -526,7 +531,7 @@ void i_st16(const Instruction insn)
     return;
   }
 
-  debug_store16(src, (unsigned short)*dest);
+  if(DEBUG_MEM) debug_store16(src, (unsigned short)*dest);
 }
 
 void i_st32(const Instruction insn)
@@ -539,10 +544,12 @@ void i_st32(const Instruction insn)
   if(insn.i11.is_immediate) {
     src <<= 2;
   }
+#if !NO_DEBUG
   else if(src & 0x3) {
     abort_sim();
     errx(EXIT_FAILURE, "st32: invalid alignment.");
   }
+#endif
   else {
     src += (int)(SIGN_EXT6(insn.o2.displacement) << 2);
   }
@@ -552,7 +559,7 @@ void i_st32(const Instruction insn)
     return;
   }
 
-  debug_store32(src, *dest);
+  if(DEBUG_MEM) debug_store32(src, *dest);
 }
 
 /* Stack */
@@ -568,8 +575,7 @@ void i_push(const Instruction insn)
     return;
   }
 
-  DEBUGST("[Push ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR, src, PCR);
-  debug_store_hw(SPR, src);
+  if(DEBUG_MEM) debug_push(SPR, src);
 }
 
 void i_pushpc(const Instruction insn)
@@ -595,8 +601,7 @@ void i_pop(const Instruction insn)
 
   SPR += 4;
 
-  DEBUGLD("[Pop  ] Addr: 0x%08x, Data: 0x%08x, PC: 0x%08x\n", SPR - 4, *dest, PCR);
-  debug_load_hw(SPR - 4, *dest);
+  if(DEBUG_MEM) debug_pop(SPR - 4, *dest);
 }
 
 /* Branch */
@@ -625,8 +630,8 @@ void i_b(const Instruction insn)
 
   /* instruction_prefetch_flush(); */
 
-  /* for traceback */
 #if !NO_DEBUG
+  /* for traceback */
   if(!insn.jo1.is_immediate && insn.jo1.operand1 == GR_RET) {
     if(traceback > 0) {
       traceback_next--;
