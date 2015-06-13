@@ -867,7 +867,7 @@ static inline void i_srpflagw(const Instruction insn)
 
 static inline void i_srspadd(const Instruction insn)
 {
-  SPR += (int)SIGN_EXT16(insn.c.immediate << 2);
+  SPR += (int)SIGN_EXT16(insn.c.immediate) << 2;
 }
 
 static inline void i_nop(const Instruction insn)
