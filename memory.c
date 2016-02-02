@@ -14,6 +14,7 @@
 #include "io.h"
 #include "interrupt.h"
 #include "utils.h"
+#include "dps.h"
 
 PageEntry page_table[PAGE_ENTRY_NUM] __attribute__ ((aligned(64)));
 
@@ -84,6 +85,30 @@ void memory_free(void)
 
 void *memory_addr_mmio(Memory paddr, bool is_write)
 {
+  Memory offset;
+  static unsigned int dummy;
+
+  /* FIXME: Type-E support */
+  if(paddr == MMIO_KEYBOARD_START) {
+    paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE + GCI_NODE_SIZE;
+  }
+  else if(paddr > MMIO_KEYBOARD_START && paddr < MMIO_SCI_START) {
+    /* FIXME: keyboard FLAG */
+    return &dummy;
+  }
+  else if(paddr >= MMIO_SCI_START && paddr <= MMIO_SCI_CFG) {
+    offset = paddr - MMIO_SCI_START;
+    paddr = IOSR + DPS_SCITXD + offset;
+  }
+  else if (paddr == MMIO_DISPLAY_CLEAR) {
+    /* FIXME: hoge */
+    return &dummy;
+  }
+  else if (paddr >= MMIO_DISPLAY_PIXCEL && paddr < MMIO_DISPLAY_PIXCEL_END) {
+    offset = paddr - MMIO_DISPLAY_PIXCEL;
+    paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE + gci_hub_nodes[GCI_KMC_NUM].size + GCI_NODE_SIZE + GCI_DISPLAY_CHAR_SIZE + offset;
+  }
+
   if(paddr >= IOSR) {
     /* memory mapped IO area */
     if(paddr & 0x3) {
