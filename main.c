@@ -236,8 +236,10 @@ int main(int argc, char **argv)
   exec((Memory)header->e_entry);
 
   /* clean up */
+  /* FIXME: avoid TIME_WAIT */
   if(MONITOR) {
-    monitor_close();
+    monitor_disconnect();
+    //monitor_close();
   }
 
   io_close();
