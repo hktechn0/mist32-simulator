@@ -730,7 +730,7 @@ static inline void i_srpsr(const Instruction insn)
 
 static inline void i_srfrcr(const Instruction insn)
 {
-  FRCR = (unsigned long long)clock();
+  FRCR = (unsigned long long)clock() * (HARDWARE_CLOCK_HZ / CLOCKS_PER_SEC);
 }
 
 static inline void i_srfrclr(const Instruction insn)
