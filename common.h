@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* Hardware Clock: 50MHz */
+#define HARDWARE_CLOCK_HZ 50000000
+
 /* ELF magic */
 #define EM_MIST32 0x1032
 
