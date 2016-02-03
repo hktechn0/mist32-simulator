@@ -100,13 +100,24 @@ void *memory_addr_mmio(Memory paddr, bool is_write)
     offset = paddr - MMIO_SCI_START;
     paddr = IOSR + DPS_SCITXD + offset;
   }
-  else if (paddr == MMIO_DISPLAY_CLEAR) {
+  else if(paddr == MMIO_DISPLAY_CLEAR) {
     /* FIXME: hoge */
     return &dummy;
   }
-  else if (paddr >= MMIO_DISPLAY_PIXCEL && paddr < MMIO_DISPLAY_PIXCEL_END) {
+  else if(paddr >= MMIO_DISPLAY_PIXCEL && paddr < MMIO_DISPLAY_PIXCEL_END) {
     offset = paddr - MMIO_DISPLAY_PIXCEL;
     paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE + gci_hub_nodes[GCI_KMC_NUM].size + GCI_NODE_SIZE + GCI_DISPLAY_CHAR_SIZE + offset;
+  }
+  else if(paddr == MMIO_MMC_SDFLAG) {
+    /* FIXME: dummy flag */
+    dummy = 1;
+    return &dummy;
+  }
+  else if(paddr >= MMIO_MMC_SDINT && paddr < MMIO_MMC_SDBUF_END) {
+    offset = paddr - MMIO_MMC_SDINT;
+    paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE +
+      gci_hub_nodes[GCI_KMC_NUM].size + gci_hub_nodes[GCI_DISPLAY_NUM].size +
+      GCI_NODE_SIZE + offset;
   }
 
   if(paddr >= IOSR) {
