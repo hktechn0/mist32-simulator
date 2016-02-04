@@ -73,27 +73,32 @@ void dps_init(void)
   fifo_sci_rx_start = 0;
   fifo_sci_rx_end = 0;
 
-  /* Create SCI Socket */
-  sci_sock = socket(AF_UNIX, SOCK_STREAM, 0);
-  if(sci_sock == -1) {
-    err(EXIT_FAILURE, "SCI socket");
-  }
-  sockaddr.sun_family = AF_UNIX;
-  if(sci_sock_file) {
-    strcpy(sockaddr.sun_path, sci_sock_file);
+  if(SCI_USE_STDOUT) {
+    sci_sock = 1;
   }
   else {
-    /* socket file is not specified, use default */
-    strcpy(sockaddr.sun_path, SOCKET_SCI_DEFAULT);
-  }
+    /* Create SCI Socket */
+    sci_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if(sci_sock == -1) {
+      err(EXIT_FAILURE, "SCI socket");
+    }
+    sockaddr.sun_family = AF_UNIX;
+    if(sci_sock_file) {
+      strcpy(sockaddr.sun_path, sci_sock_file);
+    }
+    else {
+      /* socket file is not specified, use default */
+      strcpy(sockaddr.sun_path, SOCKET_SCI_DEFAULT);
+    }
 
-  while(connect(sci_sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr_un)) == -1) {
+    while(connect(sci_sock, (struct sockaddr *)&sockaddr, sizeof(struct sockaddr_un)) == -1) {
 #if !NO_DEBUG
-    DEBUGIO("Waiting SCI...\n");
-    sleep(1);
+      DEBUGIO("Waiting SCI...\n");
+      sleep(1);
 #else
-    err(EXIT_FAILURE, "SCI connect");
+      err(EXIT_FAILURE, "SCI connect");
 #endif
+    }
   }
 
   /* MI */
@@ -117,7 +122,9 @@ void dps_close(void)
     timer_delete(utim64b_timer[i]);
   }
 
-  close(sci_sock);
+  if(!SCI_USE_STDOUT) {
+    close(sci_sock);
+  }
   free(dps);
 }
 

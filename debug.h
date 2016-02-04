@@ -52,7 +52,7 @@
 
 /* Debug flags */
 extern bool DEBUG, DEBUG_LD, DEBUG_ST, DEBUG_JMP, DEBUG_HW, DEBUG_PHY, DEBUG_INT, DEBUG_MMU;
-extern bool MONITOR, TESTSUITE_MODE, QUIET_MODE;
+extern bool MONITOR, TESTSUITE_MODE, QUIET_MODE, SCI_USE_STDIN, SCI_USE_STDOUT;
 extern bool step_by_step;
 
 /* utils.c */
