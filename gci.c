@@ -305,7 +305,7 @@ void gci_mmcc_write(Memory addr, Memory offset, void *mem)
     DEBUGIO("[I/O] MMCC INIT_COMMAND\n");
   }
   else if(offset == GCI_MMCC_SECTOR_READ) {
-    if(lseek(fd_mmcc, mmcc->sector_read, SEEK_SET) == -1) {
+    if(lseek(fd_mmcc, mmcc->sector_read << 9, SEEK_SET) == -1) {
       errx(EXIT_FAILURE, "MMCC READ lseek");
     }
     if(read(fd_mmcc, buf, MMCC_SECTOR_SIZE) == -1) {
@@ -317,14 +317,14 @@ void gci_mmcc_write(Memory addr, Memory offset, void *mem)
       *value = __builtin_bswap32(*value);
     }
 
-    DEBUGIO("[I/O] MMCC READ Sector: %d\n", mmcc->sector_read >> 9);
+    DEBUGIO("[I/O] MMCC READ Sector: %d\n", mmcc->sector_read);
   }
   else if(offset == GCI_MMCC_SECTOR_WRITE) {
     // temporary buffer
     char writebuf[MMCC_SECTOR_SIZE];
     uint32_t *wbuf;
 
-    if(lseek(fd_mmcc, mmcc->sector_write, SEEK_SET) == -1) {
+    if(lseek(fd_mmcc, mmcc->sector_write << 9, SEEK_SET) == -1) {
       errx(EXIT_FAILURE, "MMCC WRITE lseek");
     }
 
@@ -339,6 +339,6 @@ void gci_mmcc_write(Memory addr, Memory offset, void *mem)
       errx(EXIT_FAILURE, "MMCC WRITE write");
     }
 
-    DEBUGIO("[I/O] MMCC WRITE Sector: %d\n", mmcc->sector_write >> 9);
+    DEBUGIO("[I/O] MMCC WRITE Sector: %d\n", mmcc->sector_write);
   }
 }
