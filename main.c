@@ -26,6 +26,8 @@ bool DEBUG_HW = false, DEBUG_PHY = false;
 bool MONITOR = false;
 bool TESTSUITE_MODE = false;
 bool QUIET_MODE = false;
+bool SCI_USE_STDIN = false;
+bool SCI_USE_STDOUT = false;
 
 int return_code = 0;
 
@@ -56,8 +58,16 @@ int main(int argc, char **argv)
 
   void *allocp;
 
-  while ((opt = getopt(argc, argv, "dvhpmb:c:s:Tq")) != -1) {
+  while ((opt = getopt(argc, argv, "01dvhpmb:c:s:Tq")) != -1) {
     switch (opt) {
+    case '0':
+      /* use standard input to SCI TX */
+      break;
+    case '1':
+      /* use standard output from SCI RX */
+      SCI_USE_STDOUT = true;
+      QUIET_MODE = true;
+      break;
     case 'd':
       /* debug mode */
       DEBUG = true;

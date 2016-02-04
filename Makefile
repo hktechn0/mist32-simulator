@@ -8,7 +8,7 @@ CFLAGS += -O3
 #CFLAGS += -fprofile-arcs -ftest-coverage
 
 OBJS = simulator.o utils.o main.o memory.o interrupt.o io.o dps.o gci.o monitor.o
-SCI_SOCKET = sci.sock
+SCI_SOCKET = /tmp/sci.sock
 
 mist32_simulator: $(OBJS) $(FIFO)
 	$(CC) $(CFLAGS) -lrt -lelf -lmsgpack -o $@ $(OBJS)
