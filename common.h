@@ -17,7 +17,7 @@
 #define STACK_DEFAULT MEMORY_MAX_ADDR
 
 /* Default filenames */
-#define SOCKET_SCI_DEFAULT "./sci.sock"
+#define SOCKET_SCI_DEFAULT "/tmp/sci.sock"
 #define FIFO_DISPLAY_CHAR_DEFAULT "./gci_display_char"
 
 /* SCI socket / Display FIFO filename from options */
