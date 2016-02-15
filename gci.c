@@ -277,7 +277,7 @@ void gci_display_write(Memory addr, Memory offset, void *mem)
     DPUTS("[I/O] DISPLAY BITMAP %3dx%3d %x\n", x, y, c);
 
     if(MONITOR) {
-      monitor_display_draw(x, y, c);
+      monitor_display_queue_draw(x, y, c);
     }
   }
 }

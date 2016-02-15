@@ -211,6 +211,7 @@ int exec(Memory entry_p)
 
       if(MONITOR) {
 	monitor_method_recv();
+	monitor_send_queue();
       }
     }
 
