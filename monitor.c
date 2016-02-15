@@ -17,11 +17,20 @@
 #include "gci.h"
 #include "monitor.h"
 
-int sock, sock_listen;
-struct sockaddr_in addr_client;
+static int sock, sock_listen;
+static struct sockaddr_in addr_client;
 
-msgpack_unpacker *up;
-msgpack_sbuffer *sbuf;
+static msgpack_unpacker *up;
+static msgpack_sbuffer *sbuf, *draw_sbuf;
+static msgpack_packer *draw_pk;
+
+struct pixel {
+  unsigned int x;
+  unsigned int y;
+  unsigned int color;
+};
+static struct pixel draw_queue[DISPLAY_WIDTH];
+static unsigned int draw_queue_n = 0;
 
 void monitor_init(void)
 {
@@ -29,6 +38,7 @@ void monitor_init(void)
   socklen_t len;
 
   sbuf = msgpack_sbuffer_new();
+  draw_sbuf = msgpack_sbuffer_new();
   up = msgpack_unpacker_new(MONITOR_BUF_SIZE);
 
   /* TCP socket */
@@ -57,26 +67,31 @@ void monitor_close(void)
   close(sock_listen);
 
   msgpack_sbuffer_free(sbuf);
+  msgpack_sbuffer_free(draw_sbuf);
   msgpack_unpacker_free(up);
 }
 
-static inline msgpack_packer *monitor_method_new(char *method)
+static inline void monitor_method_add(char *method, msgpack_packer *pk)
 {
-  msgpack_packer *pk;
-
-  msgpack_sbuffer_clear(sbuf);
-
-  pk = msgpack_packer_new(sbuf, msgpack_sbuffer_write);
   msgpack_pack_array(pk, 2);
   msgpack_pack_raw(pk, strlen(method));
   msgpack_pack_raw_body(pk, method, strlen(method));
+}
+
+static inline msgpack_packer *monitor_method_new(char *method, msgpack_sbuffer *sbuffer)
+{
+  msgpack_packer *pk;
+
+  msgpack_sbuffer_clear(sbuffer);
+  pk = msgpack_packer_new(sbuffer, msgpack_sbuffer_write);
+  monitor_method_add(method, pk);
 
   return pk;
 }
 
-static inline void monitor_method_send(void)
+static inline void monitor_method_send(msgpack_sbuffer *sbuffer)
 {
-  write(sock, sbuf->data, sbuf->size);
+  write(sock, sbuffer->data, sbuffer->size);
 }
 
 void monitor_method_recv(void)
@@ -163,7 +178,7 @@ void monitor_method_recv(void)
 	obj = data->via.array.ptr;
 	n = data->via.array.size;
       }
-      else if(data->via.array.ptr->type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
+      else if(data->type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
 	obj = data;
 	n = 1;
       }
@@ -201,24 +216,51 @@ void monitor_disconnect(void)
 {
   msgpack_packer *pk;
 
-  pk = monitor_method_new("DISCONNECT");
+  pk = monitor_method_new("DISCONNECT", sbuf);
   msgpack_pack_nil(pk);
-  monitor_method_send();
+  monitor_method_send(sbuf);
   msgpack_packer_free(pk);
 }
 
-void monitor_display_draw(unsigned int x, unsigned int y, unsigned int color)
+void monitor_pack_draw_queue(void)
 {
-  msgpack_packer *pk;
+  unsigned int i;
 
-  pk = monitor_method_new("DISPLAY_DRAW");
+  if(!draw_pk) {
+    draw_pk = monitor_method_new("DISPLAY_DRAW", draw_sbuf);
+  }
+  else {
+    monitor_method_add("DISPLAY_DRAW", draw_pk);
+  }
 
-  msgpack_pack_array(pk, 3);
-  msgpack_pack_int(pk, x);
-  msgpack_pack_int(pk, y);
-  msgpack_pack_int(pk, color);
+  msgpack_pack_array(draw_pk, draw_queue_n);
+  for(i = 0; i < draw_queue_n; i++) {
+    msgpack_pack_array(draw_pk, 3);
+    msgpack_pack_int(draw_pk, draw_queue[i].x);
+    msgpack_pack_int(draw_pk, draw_queue[i].y);
+    msgpack_pack_int(draw_pk, draw_queue[i].color);
+  }
 
-  monitor_method_send();
+  draw_queue_n = 0;
+}
 
-  msgpack_packer_free(pk);
+void monitor_send_queue(void)
+{
+  if(draw_pk) {
+    monitor_pack_draw_queue();
+    monitor_method_send(draw_sbuf);
+    msgpack_packer_free(draw_pk);
+    draw_pk = NULL;
+  }
+}
+
+void monitor_display_queue_draw(unsigned int x, unsigned int y, unsigned int color)
+{
+  draw_queue[draw_queue_n].x = x;
+  draw_queue[draw_queue_n].y = y;
+  draw_queue[draw_queue_n].color = color;
+
+  if(++draw_queue_n >= DISPLAY_WIDTH) {
+    monitor_pack_draw_queue();
+  }
 }
