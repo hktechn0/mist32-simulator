@@ -92,8 +92,9 @@ void *memory_addr_mmio(Memory paddr, bool is_write)
   if(paddr == MMIO_KEYBOARD_START) {
     paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE + GCI_NODE_SIZE;
   }
-  else if(paddr > MMIO_KEYBOARD_START && paddr < MMIO_SCI_START) {
-    /* FIXME: keyboard FLAG */
+  else if(paddr == MMIO_KEYBOARD_START + 4) {
+    /* FIXME: Keyboard FLAG: alias to GCI Node Info IRF */
+    gci_nodes[GCI_KMC_NUM].int_issued = false;
     return &dummy;
   }
   else if(paddr >= MMIO_SCI_START && paddr <= MMIO_SCI_CFG) {
@@ -106,7 +107,9 @@ void *memory_addr_mmio(Memory paddr, bool is_write)
   }
   else if(paddr >= MMIO_DISPLAY_PIXCEL && paddr < MMIO_DISPLAY_PIXCEL_END) {
     offset = paddr - MMIO_DISPLAY_PIXCEL;
-    paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE + gci_hub_nodes[GCI_KMC_NUM].size + GCI_NODE_SIZE + GCI_DISPLAY_CHAR_SIZE + offset;
+    paddr = IOSR + DPS_SIZE + GCI_HUB_SIZE +
+      gci_hub_nodes[GCI_KMC_NUM].size +
+      GCI_NODE_SIZE + GCI_DISPLAY_CHAR_SIZE + offset;
   }
   else if(paddr == MMIO_MMC_SDFLAG) {
     /* FIXME: dummy flag */
