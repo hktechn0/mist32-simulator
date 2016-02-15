@@ -163,7 +163,7 @@ void monitor_method_recv(void)
 	obj = data->via.array.ptr;
 	n = data->via.array.size;
       }
-      else if(data->via.array.ptr->type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
+      else if(data->type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
 	obj = data;
 	n = 1;
       }
