@@ -3,10 +3,13 @@
 
 import sys
 import socket
-
+import threading
 import msgpack
 
 # PyGI for GTK+ 3
+import gi
+gi.require_version('Gtk', '3.0')
+
 from gi.repository import Gtk, GLib, Gdk, GdkPixbuf
 from scancode import scancode, breakcode
 
@@ -26,8 +29,6 @@ class Monitor(object):
         self.drawing.connect("draw", self.on_draw)
         self.window.add(self.drawing)
 
-        #elf.GdkPixbuf
-
         # TCP socket
         self.sock = socket.create_connection((host, port), 10)
         self.fsock = self.sock.makefile()
@@ -38,6 +39,7 @@ class Monitor(object):
 
         self.watchtag = list()
         self.canvas = dict()
+        self.canvas_update = False
 
         self.window.show_all()
 
@@ -78,9 +80,13 @@ class Monitor(object):
 
         for name, data in self.unpacker:
             if name == "DISPLAY_DRAW":
-                x, y, color = data
-                self.canvas[(x, y)] = color
-                self.drawing.queue_draw()
+                for x, y, color in data:
+                    self.canvas[(x, y)] = color
+
+                #self.drawing.queue_draw()
+                if not self.canvas_update:
+                    self.canvas_update = True
+                    GLib.idle_add(self.on_idle)
             elif name == "DISCONNECT":
                 self.destroy()
                 break
@@ -92,6 +98,11 @@ class Monitor(object):
     def method_hup(self, source, condition):
         print "HUP"
         self.destroy()
+
+    def on_idle(self):
+        self.canvas_update = False
+        self.drawing.queue_draw()
+        return False
 
     def main(self):
         # watch socket
