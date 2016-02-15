@@ -8,11 +8,11 @@ scancode = [
 
     # 0x1x
     0x3d, 0x3e, 0x46, 0x45, None, None, None, None,
-    None, None, None, None, None, None, None, None,
+    None, 0x1d, None, None, None, None, None, None,
 
     # 0x2x
-    None, None, None, None, None, None, None, None,
-    None, None, None, None, None, None, None, None,
+    None, None, None, None, None, None, 0x1c, 0x1b,
+    0x23, None, None, None, None, None, None, None,
 
     # 0x3x
     None, None, None, None, None, None, None, None,
