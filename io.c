@@ -104,7 +104,7 @@ void io_load(Memory addr)
     for(i = 0; i < GCI_NODE_MAX; i++) {
       if(offset < p + GCI_NODE_SIZE) {
 	/* GCI Node Info */
-	if(offset < p + GCI_NODE_SIZE + 8) {
+	if(offset == p + GCI_NODE_IRF_OFFSET) {
 	  /* GCND_IRF (interrupt factor) */
 	  gci_nodes[i].int_issued = false;
 	  DEBUGIO("[I/O] GCI Interrupt ACK %d\n", i);
