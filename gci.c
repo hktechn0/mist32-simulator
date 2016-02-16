@@ -20,12 +20,11 @@ gci_hub_info *gci_hub;
 gci_hub_node *gci_hub_nodes;
 gci_node gci_nodes[4];
 
-gci_mmcc *mmcc;
-
 unsigned char fifo_scancode[KMC_FIFO_SCANCODE_SIZE];
 unsigned int fifo_scancode_start, fifo_scancode_end;
 
-int fd_dispchar, fd_mmcc;
+static gci_mmcc *mmcc;
+static int fd_dispchar, fd_mmcc;
 
 void gci_init(void)
 {
