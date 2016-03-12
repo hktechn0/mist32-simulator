@@ -27,6 +27,11 @@
 /* SOFTWARE IRQ */
 #define IDT_SWIRQ_START_NUM 64
 
+/* TYPE-E Device */
+#define IDT_TYPEE_KEYBOARD_NUM 4
+#define IDT_TYPEE_SCI_NUM 5
+#define IDT_TYPEE_MMC_NUM 6
+
 /* Check IDT */
 #define IDT_ISVALID(num)			\
   (idt_cache[num].flags & IDT_FLAGS_VALID)

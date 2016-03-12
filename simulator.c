@@ -79,17 +79,9 @@ static inline void interrupt_dispatcher(void)
     return;
   }
 
-  if(IDT_ISENABLE(IDT_DPS_UTIM64_NUM) && dps_utim64_interrupt()) {
-    /* DPS UTIM64 */
-    interrupt_entry(IDT_DPS_UTIM64_NUM);
-  }
-  else if(IDT_ISENABLE(IDT_GCI_KMC_NUM) && gci_kmc_interrupt()) {
+  if(IDT_ISENABLE(IDT_TYPEE_KEYBOARD_NUM) && gci_kmc_interrupt()) {
     /* GCI KMC */
-    interrupt_entry(IDT_GCI_KMC_NUM);
-  }
-  else if(IDT_ISENABLE(IDT_DPS_LS_NUM) && dps_sci_interrupt()) {
-    /* DPS LS */
-    interrupt_entry(IDT_DPS_LS_NUM);
+    interrupt_entry(IDT_TYPEE_KEYBOARD_NUM);
   }
 }
 
